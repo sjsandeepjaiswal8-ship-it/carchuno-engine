@@ -1,0 +1,13 @@
+﻿name: Keep-Alive 24-7
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Engine
+        run: curl -s https://carchuno-engine.onrender.com/health
