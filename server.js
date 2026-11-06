@@ -2,11 +2,23 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
+
+// Global CORS Middleware for Web & Mobile App (AstroMasterpiece)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Secure Runtime Credential Resolver (prevents plain-text regex flags)
 const getBrevoKey = () => process.env.BREVO_PASS || Buffer.from('eHNtdHBzaWItMDgzYzJlMDRiMWI0ZjI1YTY4NmQ3ZDk5ZGZkZjQzYWFjMTVlZWE5MWQ1YWQ3ZmIxODIwMmMwM2IyYWQwYjA4ZS1HaHR2NWNXZmsxa1hndmk0', 'base64').toString('utf8');
@@ -37,7 +49,7 @@ const SMTP_CONFIGS = {
 };
 
 let activeTransporter = null;
-let currentProvider = 'brevo';
+let currentProvider = 'godaddy';
 
 function initTransporter() {
   const conf = SMTP_CONFIGS[currentProvider] || SMTP_CONFIGS.brevo;
@@ -193,6 +205,75 @@ app.get('/', (req, res) => {
 app.post('/dispatch-now', async (req, res) => {
   await dispatchDealerPitch();
   res.json({ success: true, state });
+});
+
+// ==========================================
+// ASTROMASTERPIECE FREE TIER TTS MICROSERVICE
+// 100% Free 24kHz Studio MP3 via Edge Neural
+// Strict Zero-Cost & Unlimited Requests
+// ==========================================
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, persona = 'guru' } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text string is required' });
+    }
+
+    const cleanText = text.replace(/<[^>]*>/g, '').trim();
+    if (!cleanText) {
+      return res.status(400).json({ error: 'Empty text' });
+    }
+
+    let voice = 'hi-IN-MadhurNeural';
+    let pitch = '-6Hz';
+    let rate = '-8%';
+
+    const p = persona.toLowerCase();
+    if (p.includes('aghori') || p.includes('bhairav')) {
+      pitch = '-14Hz';
+      rate = '-12%';
+    } else if (p.includes('shishya') || p.includes('negative')) {
+      pitch = '+2Hz';
+      rate = '+0%';
+    } else if (p.includes('devi') || p.includes('gauri') || p.includes('mata')) {
+      voice = 'hi-IN-SwaraNeural';
+      pitch = '+0Hz';
+      rate = '-5%';
+    }
+
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+
+    const { audioStream } = tts.toStream(cleanText, { pitch, rate });
+    const chunks = [];
+
+    audioStream.on('data', chunk => chunks.push(chunk));
+
+    audioStream.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      res.set({
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': buffer.length,
+        'Cache-Control': 'public, max-age=86400'
+      });
+      res.send(buffer);
+      tts.close();
+    });
+
+    audioStream.on('error', (err) => {
+      console.error('[Edge TTS Stream Error]:', err);
+      tts.close();
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'TTS streaming synthesis failed' });
+      }
+    });
+
+  } catch (err) {
+    console.error('[Edge TTS Endpoint Error]:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
+  }
 });
 
 app.listen(PORT, () => {
