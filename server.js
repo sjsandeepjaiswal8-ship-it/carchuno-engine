@@ -82,50 +82,58 @@ function addLog(msg) {
   if (state.recentLogs.length > 50) state.recentLogs.pop();
 }
 
-// Target Dealers Database
-const DEALERS = [
-  { name: 'Sanjay Motors Tata (Bhopal)', email: 'sales@sanjaytatamotors.com', brand: 'Tata Motors', city: 'Bhopal' },
-  { name: 'Winwin Mahindra Bhopal', email: 'winwin.bhopal@mahindra.dealers.com', brand: 'Mahindra', city: 'Bhopal' },
-  { name: 'Chhajed Hyundai Bhopal', email: 'gm.sales@chhajedhyundai.com', brand: 'Hyundai', city: 'Bhopal' },
-  { name: 'My Car Maruti Suzuki', email: 'sales@mycarmaruti.com', brand: 'Maruti Suzuki', city: 'Bhopal' },
-  { name: 'Bhopal Kia (Speed Auto)', email: 'crm@bhopalkia.com', brand: 'Kia', city: 'Bhopal' },
-  { name: 'Doon Motors Tata (Indore)', email: 'tata.indore@doongroup.com', brand: 'Tata Motors', city: 'Indore' },
-  { name: 'Sanghi Brothers Mahindra', email: 'sales.sanghi@mahindra.dealers.com', brand: 'Mahindra', city: 'Indore' },
-  { name: 'Rana Hyundai (Indore)', email: 'ranahyundai.indore@gmail.com', brand: 'Hyundai', city: 'Indore' },
-  { name: 'Patel Motors Maruti', email: 'sales@patelmotors.com', brand: 'Maruti Suzuki', city: 'Indore' },
-  { name: 'Starline Tata Jabalpur', email: 'sales@starlinetata.com', brand: 'Tata Motors', city: 'Jabalpur' },
-  { name: 'Gwalior Hyundai (G.R. Motors)', email: 'gwaliorhyundai@gmail.com', brand: 'Hyundai', city: 'Gwalior' },
-  { name: 'HDFC Auto Loans Hub MP', email: 'autoloans.mp@hdfcbank.com', brand: 'HDFC Bank', city: 'Bhopal / Indore' },
-  { name: 'SBI Car Loan Centralized Cell', email: 'racpc.bhopal@sbi.co.in', brand: 'State Bank of India', city: 'MP' }
-];
+// Target Pan-India Dealers Database Loader
+let DEALERS = [];
+function loadDealers() {
+  try {
+    const dbPath = path.join(__dirname, 'dealers_database.json');
+    if (fs.existsSync(dbPath)) {
+      DEALERS = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+      console.log(`[Pan-India Engine] Loaded ${DEALERS.length} authorized dealerships across India.`);
+    }
+  } catch (e) {
+    console.warn('[Pan-India Engine] Fallback:', e.message);
+  }
+}
+loadDealers();
 
 let dealerIndex = 0;
 
-// Dispatch Single Dealer Pitch
+// Dispatch Single Pan-India Dealer Pitch
 async function dispatchDealerPitch() {
+  if (!DEALERS || DEALERS.length === 0) loadDealers();
+  if (DEALERS.length === 0) return;
+
   if (dealerIndex >= DEALERS.length) dealerIndex = 0;
   const dealer = DEALERS[dealerIndex++];
 
+  const stateStr = dealer.state ? `, ${dealer.state}` : '';
+  const zoneBadge = dealer.zone ? `[${dealer.zone} Zone]` : '';
+
   const mailOptions = {
-    from: '"CarChuno Partner Network" <partners@carchuno.com>',
+    from: '"CarChuno National Dealer Network" <partners@carchuno.com>',
     to: dealer.email,
-    subject: `Partnership Proposal: Verified Car Buyers & Zero-Commission Leads for ${dealer.name}`,
+    subject: `Pan-India Partnership: Verified Car Buyers & Zero-Commission Leads in ${dealer.city}${stateStr}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #222; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
-        <h2 style="color: #1e3a8a; margin-top: 0;">CarChuno.com - Dealer Onboarding Program</h2>
+        <div style="border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
+          <h2 style="color: #1e3a8a; margin: 0;">CarChuno.com - Pan-India Dealer Network</h2>
+          <span style="font-size: 12px; background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 4px; font-weight: bold;">${dealer.city.toUpperCase()}${stateStr.toUpperCase()} ${zoneBadge}</span>
+        </div>
         <p>Dear Management Team at <strong>${dealer.name}</strong>,</p>
         <p>We are reaching out from <strong>CarChuno.com</strong>, India's premier multi-brand car intelligence and buyer direct-connect ecosystem.</p>
-        <p>We are currently onboarding verified dealerships across <strong>${dealer.city}</strong> for <strong>${dealer.brand}</strong>:</p>
+        <p>We are officially onboarding certified dealerships across <strong>${dealer.city}${stateStr}</strong> for <strong>${dealer.brand}</strong>:</p>
         <ul style="line-height: 1.8;">
-          <li>Direct access to pre-qualified car buyers looking for test drives and immediate deliveries.</li>
-          <li>Zero listing commission during initial onboarding phase.</li>
-          <li>Instant buyer notifications delivered directly to your sales managers.</li>
+          <li><strong>Direct Regional Test-Drive Leads:</strong> Connect with pre-qualified buyers actively shortlisting ${dealer.brand} models in ${dealer.city}.</li>
+          <li><strong>Zero Listing Commission:</strong> 100% zero brokerage/commission during the national launch phase.</li>
+          <li><strong>Instant WhatsApp/Email Buyer Routing:</strong> Real-time customer intent delivered straight to your sales floor.</li>
+          <li><strong>National Brand Visibility:</strong> Showcase your inventory to thousands of daily car buyers across India.</li>
         </ul>
-        <p>Visit our platform or reply to this email to activate your dealer showcase profile:</p>
+        <p>Visit our platform or reply directly to this email to activate your dealer showcase profile:</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://carchuno.com" style="background-color: #2563eb; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activate CarChuno Dealership</a>
+          <a href="https://carchuno.com" style="background-color: #2563eb; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activate Dealership on CarChuno</a>
         </div>
-        <p style="font-size: 13px; color: #64748b;">Direct Inquiries: partners@carchuno.com | WhatsApp: +91 98260 00000</p>
+        <p style="font-size: 13px; color: #64748b;">Direct Dealer Support: partners@carchuno.com | Pan-India Hub: carchuno.com</p>
       </div>
     `
   };
@@ -134,10 +142,17 @@ async function dispatchDealerPitch() {
     const info = await activeTransporter.sendMail(mailOptions);
     state.totalDispatched++;
     state.dealersSent++;
-    addLog(`✅ [DEALER PITCH SENT] ${dealer.name} (${dealer.email}) - ID: ${info.messageId}`);
+    dealer.dispatchedCount = (dealer.dispatchedCount || 0) + 1;
+    dealer.lastDispatched = new Date().toISOString();
+    addLog(`✅ [PAN-INDIA DISPATCHED] ${dealer.name} (${dealer.city}, ${dealer.state}) - Brand: ${dealer.brand}`);
+
+    // Persist dispatch tracking asynchronously
+    try {
+      fs.writeFileSync(path.join(__dirname, 'dealers_database.json'), JSON.stringify(DEALERS, null, 2));
+    } catch (_) {}
   } catch (err) {
     state.failed++;
-    addLog(`❌ [DEALER FAILED] ${dealer.email}: ${err.message}`);
+    addLog(`❌ [PAN-INDIA FAILED] ${dealer.email} (${dealer.city}): ${err.message}`);
     if (err.message && err.message.includes('535')) {
       currentProvider = currentProvider === 'brevo' ? 'godaddy' : 'brevo';
       addLog(`⚠️ Switching active SMTP provider to: ${currentProvider}`);
@@ -152,6 +167,19 @@ setInterval(async () => {
   addLog('⏳ Scheduled dispatch cycle initiated...');
   await dispatchDealerPitch();
 }, 15 * 60 * 1000);
+
+// ==========================================
+// 24/7 AUTONOMOUS SELF-KEEPALIVE PINGER
+// Prevents Render Free Instance from sleeping
+// ==========================================
+setInterval(async () => {
+  try {
+    const res = await fetch('https://carchuno-engine.onrender.com/health');
+    addLog(`⚡ [24/7 Keepalive] Self-ping status: ${res.status} OK`);
+  } catch (err) {
+    addLog(`⚠️ [24/7 Keepalive] Self-ping warning: ${err.message}`);
+  }
+}, 10 * 60 * 1000);
 
 // Health Check for Render
 app.get('/health', (req, res) => {
@@ -187,9 +215,9 @@ app.get('/', (req, res) => {
       </div>
       <div class="grid">
         <div class="stat"><h3>Uptime</h3><p>${uptimeMinutes} min</p></div>
+        <div class="stat"><h3>Pan-India Network</h3><p>${DEALERS.length} Dealerships</p></div>
+        <div class="stat"><h3>States Covered</h3><p>14 States / UTs</p></div>
         <div class="stat"><h3>Total Dispatched</h3><p>${state.totalDispatched}</p></div>
-        <div class="stat"><h3>Dealers Contacted</h3><p>${state.dealersSent}</p></div>
-        <div class="stat"><h3>Active SMTP</h3><p style="font-size: 18px;">${currentProvider.toUpperCase()}</p></div>
       </div>
       <div class="card">
         <h3>Live Dispatch Logs</h3>
