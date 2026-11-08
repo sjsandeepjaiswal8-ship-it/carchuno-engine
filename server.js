@@ -4,6 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
+// Strict Anti-Ban & Safety Guardrails (Zero-Ban Tolerance Policy)
+const { SAFETY_POLICY, AntiBanController } = require('./safety_guardrails');
+const GeminiKeyRotator = require('./gemini_rotator');
+const geminiRotator = new GeminiKeyRotator();
+
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
