@@ -29,6 +29,27 @@ try {
   console.warn('[Server Startup] omnicraft_autonomous_daemon load skipped:', e.message);
 }
 
+let runArchCraft360;
+try {
+  ({ runArchCraft360 } = require('./archcraft_360_engine'));
+} catch (e) {
+  console.warn('[Server Startup] archcraft_360_engine load skipped:', e.message);
+}
+
+let runCyberShield360, probeLiveSecurityHeaders;
+try {
+  ({ runCyberShield360, probeLiveSecurityHeaders } = require('./cybershield_security_engine'));
+} catch (e) {
+  console.warn('[Server Startup] cybershield_security_engine load skipped:', e.message);
+}
+
+let processInboundInquiry;
+try {
+  ({ processInboundInquiry } = require('./closetesters_auto_responder'));
+} catch (e) {
+  console.warn('[Server Startup] closetesters_auto_responder load skipped:', e.message);
+}
+
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -537,6 +558,65 @@ app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
   }
 });
 
+// POST /api/archcraft/blueprint - Suite B: ArchCraft 360° Blueprint Generation
+app.post('/api/archcraft/blueprint', async (req, res) => {
+  if (!runArchCraft360) return res.status(503).json({ success: false, error: 'ArchCraft 360 Engine not loaded' });
+  const appMetadata = req.body || {};
+  try {
+    addLog(`[ArchCraft 360° Engine] Generating Architectural Blueprint for: ${appMetadata.appName || 'Client App'}`);
+    const result = await runArchCraft360(appMetadata);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/cybershield/probe - Suite C: Instant Live DAST Header & SSL Probe
+app.post('/api/cybershield/probe', async (req, res) => {
+  if (!probeLiveSecurityHeaders) return res.status(503).json({ success: false, error: 'DAST Prober not loaded' });
+  const { url } = req.body || {};
+  try {
+    const probeResult = await probeLiveSecurityHeaders(url);
+    res.json({ success: true, probe: probeResult });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/cybershield/audit - Suite C: CyberShield 360° Security Audit
+app.post('/api/cybershield/audit', async (req, res) => {
+  if (!runCyberShield360) return res.status(503).json({ success: false, error: 'CyberShield 360 Engine not loaded' });
+  const appMetadata = req.body || {};
+  try {
+    addLog(`[CyberShield 360° Engine] Initiating Security Audit for: ${appMetadata.appName || 'Client App'}`);
+    const result = await runCyberShield360(appMetadata);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/suites/health - 4-Suite Enterprise Ecosystem Health Status
+app.get('/api/suites/health', (req, res) => {
+  res.json({
+    status: 'online',
+    orchestrator: 'Hermes Autonomous Agent v4.2',
+    suites: {
+      suiteA: { name: 'OmniCraft 360°™', role: 'Design, UX, 120Hz Spring Physics & Speed Lab', price: '$99 / ₹7,999', status: runOmniCraft360 ? 'READY' : 'OFFLINE' },
+      suiteB: { name: 'ArchCraft 360°™', role: 'System Architecture & Screen Flow Dossier', price: '$149 / ₹11,999', status: runArchCraft360 ? 'READY' : 'OFFLINE' },
+      suiteC: { name: 'CyberShield 360°™', role: 'Dynamic DAST Security, Live Header Probe & Gemini 3.8 Flash Privacy Audit', price: '$149 / ₹11,999', status: runCyberShield360 ? 'READY' : 'OFFLINE' },
+      suiteD: { name: 'GeoCraft 360°™', role: 'Generative Engine Optimization & AI Search Citations', price: '$99 / ₹7,999', status: 'READY' }
+    },
+    bundleOffer: {
+      name: 'All-In-One Sovereign Quad-Stack Bundle (Suites A+B+C+D)',
+      regularPrice: '$596 / ₹47,996',
+      bundlePrice: '$299 / ₹23,999',
+      savings: 'Save 50%'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // GET /api/omnicraft/health - Health check and capabilities
 app.get('/api/omnicraft/health', (req, res) => {
   res.json({
@@ -554,6 +634,70 @@ app.get('/api/omnicraft/health', (req, res) => {
     agentSupport: 'Hermes Agent Autonomous Synthesis & Dynamic Code Repair',
     timestamp: new Date().toISOString()
   });
+});
+
+// POST /api/closetesters/inquiry - Dispatches standardized auto-responder to client & alert to support@closetesters.com
+app.post('/api/closetesters/inquiry', async (req, res) => {
+  if (!processInboundInquiry) return res.status(503).json({ success: false, error: 'Auto-responder not loaded' });
+  try {
+    const result = await processInboundInquiry(req.body || {});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/web-audit/book - Autonomous Web Audit Slot Booking
+app.post('/api/web-audit/book', async (req, res) => {
+  if (!processInboundInquiry) return res.status(503).json({ success: false, error: 'Auto-responder not loaded' });
+  try {
+    const data = {
+      name: req.body.name || req.body.founderName || 'Founder',
+      email: req.body.email,
+      phone: req.body.phone || 'N/A',
+      appName: req.body.domain || req.body.url || 'Web Platform',
+      targetUrl: req.body.url || req.body.domain || '',
+      needType: req.body.suite || '360° Full-Stack Web Audit',
+      message: req.body.message || 'Booked 360° Website/App Audit Slot',
+      source: 'Web Audit Booking Modal'
+    };
+    const result = await processInboundInquiry(data);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/sla/execute-agreement - Digital Master SLA / NDA Ratification
+app.post('/api/sla/execute-agreement', async (req, res) => {
+  try {
+    addLog(`[SLA Desk] Bilateral Master NDA Executed for: ${req.body.partyBName || req.body.email || 'Client'}`);
+    if (processInboundInquiry && req.body.email) {
+      await processInboundInquiry({
+        name: req.body.partyBName || 'Client Representative',
+        email: req.body.email,
+        appName: req.body.appName || 'Android App',
+        needType: 'Bilateral Master SLA & Mutual NDA Ratification',
+        message: `SLA Order ID: ${req.body.orderId || 'N/A'}. Master bilateral agreement electronically sealed.`,
+        source: 'SLA Digital Sign Desk'
+      }).catch(e => console.warn('SLA auto-reply error:', e.message));
+    }
+    res.json({
+      success: true,
+      orderId: req.body.orderId || `SLA-${Date.now()}`,
+      status: 'EXECUTED_AND_LOGGED',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/proposal/landed - Telemetry tracking when a client views proposal
+app.post('/api/proposal/landed', (req, res) => {
+  const { ref, visitorId, region } = req.body || {};
+  addLog(`[Proposal Telemetry] Client landed on proposal: ref=${ref || 'direct'}, region=${region || 'global'}`);
+  res.json({ success: true, timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
