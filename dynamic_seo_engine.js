@@ -14,7 +14,13 @@ const cheerio = require('cheerio');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
-const { inspectWithPlaywright } = require('./playwright_auditor');
+
+let inspectWithPlaywright = null;
+try {
+  ({ inspectWithPlaywright } = require('./playwright_auditor'));
+} catch (e) {
+  // Playwright auditor optional on cloud deployments
+}
 
 const API_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '')
   .split(',')
@@ -322,9 +328,10 @@ async function crawlAndAudit(targetUrl) {
 
   // --- 1.5 Playwright Headless Browser Inspection (Visual & Device Emulation) ---
   let playwrightData = null;
-  try {
-    playwrightData = await inspectWithPlaywright(normalizedUrl);
-    if (playwrightData) {
+  if (inspectWithPlaywright) {
+    try {
+      playwrightData = await inspectWithPlaywright(normalizedUrl);
+      if (playwrightData) {
       // Check if Playwright found an H1 tag that Cheerio missed (dynamic React hydration)
       if (h1Elements.length === 0 && playwrightData.desktop?.h1 && playwrightData.desktop.h1.length > 0) {
         h1Elements.push(...playwrightData.desktop.h1);
@@ -367,6 +374,7 @@ async function crawlAndAudit(targetUrl) {
   } catch (pwErr) {
     console.warn('[DynamicSEO] Playwright inspection bypass:', pwErr.message);
   }
+}
 
   score = Math.max(0, Math.min(100, score));
 

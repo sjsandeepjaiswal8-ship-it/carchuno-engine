@@ -8,9 +8,26 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const { SAFETY_POLICY, AntiBanController } = require('./safety_guardrails');
 const GeminiKeyRotator = require('./gemini_rotator');
 const geminiRotator = new GeminiKeyRotator();
-const { crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport } = require('./dynamic_seo_engine');
-const { runOmniCraft360, OMNICRAFT_DESIGN_TOKENS } = require('./omnicraft_360_engine');
-const { processAutonomousLead } = require('./omnicraft_autonomous_daemon');
+let crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport;
+try {
+  ({ crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport } = require('./dynamic_seo_engine'));
+} catch (e) {
+  console.warn('[Server Startup] dynamic_seo_engine load skipped:', e.message);
+}
+
+let runOmniCraft360, OMNICRAFT_DESIGN_TOKENS;
+try {
+  ({ runOmniCraft360, OMNICRAFT_DESIGN_TOKENS } = require('./omnicraft_360_engine'));
+} catch (e) {
+  console.warn('[Server Startup] omnicraft_360_engine load skipped:', e.message);
+}
+
+let processAutonomousLead;
+try {
+  ({ processAutonomousLead } = require('./omnicraft_autonomous_daemon'));
+} catch (e) {
+  console.warn('[Server Startup] omnicraft_autonomous_daemon load skipped:', e.message);
+}
 
 
 const app = express();
@@ -397,6 +414,7 @@ app.post('/api/tts', async (req, res) => {
 
 // POST /api/seo/audit - Full JSON Analysis & Generated AI Optimization
 app.post('/api/seo/audit', async (req, res) => {
+  if (!crawlAndAudit) return res.status(503).json({ success: false, error: 'Dynamic SEO Engine not loaded' });
   try {
     const { url, brandName, targetCity, targetRegion, businessType, clientName, generateReport = true } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
@@ -428,6 +446,9 @@ app.post('/api/seo/audit', async (req, res) => {
 
 // GET /api/seo/audit-view - Renders the Interactive Client Audit Dossier directly in Browser
 app.get('/api/seo/audit-view', async (req, res) => {
+  if (!crawlAndAudit || !generateAiOptimization || !generateExecutiveHtmlReport) {
+    return res.status(503).send('Dynamic SEO Engine not loaded');
+  }
   try {
     const targetUrl = req.query.url;
     if (!targetUrl) return res.status(400).send('Please provide ?url=https://example.com in the URL');
@@ -472,6 +493,7 @@ app.get('/api/seo/health', (req, res) => {
 
 // POST /api/omnicraft/audit - Autonomous 7-Tool Audit & Hermes Synthesis
 app.post('/api/omnicraft/audit', async (req, res) => {
+  if (!runOmniCraft360) return res.status(503).json({ success: false, error: 'OmniCraft 360 Engine not loaded' });
   try {
     const { url, brandName, niche } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
@@ -492,6 +514,7 @@ app.post('/api/omnicraft/audit', async (req, res) => {
 
 // POST /api/omnicraft/autonomous-lead - 100% Zero-Touch Autonomous Pipeline
 app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
+  if (!processAutonomousLead) return res.status(503).json({ success: false, error: 'OmniCraft Daemon not loaded' });
   try {
     const { url, clientEmail, clientName, brandName, niche, autoEmail = true } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'Website URL is required' });
