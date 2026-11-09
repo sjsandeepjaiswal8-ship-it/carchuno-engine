@@ -8,6 +8,9 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const { SAFETY_POLICY, AntiBanController } = require('./safety_guardrails');
 const GeminiKeyRotator = require('./gemini_rotator');
 const geminiRotator = new GeminiKeyRotator();
+const { crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport } = require('./dynamic_seo_engine');
+const { runOmniCraft360, OMNICRAFT_DESIGN_TOKENS } = require('./omnicraft_360_engine');
+const { processAutonomousLead } = require('./omnicraft_autonomous_daemon');
 
 
 const app = express();
@@ -242,6 +245,84 @@ app.post('/dispatch-now', async (req, res) => {
 });
 
 // ==========================================
+// CARCHUNO META WHATSAPP OFFICIAL CLOUD API WEBHOOK
+// 24/7 Cloud Autonomous Webhook Receiver & Dispatcher on Render
+// ==========================================
+
+// 1. GET Verification Challenge from Meta Developers
+app.get('/api/webhook/whatsapp', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (
+    mode === 'subscribe' &&
+    (token === 'carchuno_omnisales_secret_2026' ||
+      token === 'omnisales_agent_2026_verify')
+  ) {
+    console.log('✅ [Meta Webhook] Verification Challenge Successful on Render!');
+    res.setHeader('Content-Type', 'text/plain');
+    return res.status(200).send(challenge);
+  }
+  console.warn('⚠️ [Meta Webhook] Verification Rejected. Token mismatch:', token);
+  return res.status(403).send('Forbidden: Invalid verify token');
+});
+
+// 2. POST Incoming Messages from Customer / Dealer
+app.post('/api/webhook/whatsapp', async (req, res) => {
+  try {
+    const payload = req.body;
+    const entry = payload.entry?.[0];
+    const change = entry?.changes?.[0];
+    const value = change?.value;
+    const message = value?.messages?.[0];
+
+    if (!message) {
+      return res.status(200).json({ status: 'no_message_event' });
+    }
+
+    const fromPhone = message.from;
+    const customerName = value?.contacts?.[0]?.profile?.name || 'Customer';
+    const messageText = message.text?.body || message.interactive?.button_reply?.title || '';
+
+    addLog(`📩 [Inbound WhatsApp] From: ${customerName} (${fromPhone}) | Msg: "${messageText}"`);
+
+    // Intelligent Autonomous CarChuno Reply
+    const replyText = `नमस्ते ${customerName}! CarChuno.com में आपका स्वागत है। 🚗\n\nहमें आपका संदेश मिल गया है:\n"${messageText}"\n\nहमारी टीम आपके शहर के सभी अधिकृत OEM डीलरों के बीच तुरंत रिवर्स बिडिंग शुरू कर रही है ताकि आपको सबसे बड़ा कैश डिस्काउंट और 6.99% बैंक लोन ऑफर मिल सके।\n\nआप सीधे अपनी कार का 360° स्टूडियो और लाइव डील्स यहाँ भी देख सकते हैं:\n👉 https://www.carchuno.com\n\n- टीम CarChuno.com (Norcos Industries Pvt Ltd)`;
+
+    const token = process.env.WHATSAPP_TOKEN || '';
+    const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+
+    if (token && phoneId) {
+      const graphUrl = `https://graph.facebook.com/v21.0/${phoneId}/messages`;
+      const metaRes = await fetch(graphUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: fromPhone,
+          type: 'text',
+          text: { preview_url: true, body: replyText }
+        })
+      });
+      const metaData = await metaRes.json();
+      addLog(`✅ [Outbound WhatsApp Sent via Meta]: ${JSON.stringify(metaData)}`);
+    } else {
+      addLog(`🤖 [WhatsApp Auto-Reply Prepared]:\n${replyText}`);
+    }
+
+    return res.status(200).json({ status: 'success', customer: customerName });
+  } catch (err) {
+    addLog(`❌ [Meta Webhook Error]: ${err.message}`);
+    return res.status(200).json({ status: 'error', message: err.message });
+  }
+});
+
+// ==========================================
 // ASTROMASTERPIECE FREE TIER TTS MICROSERVICE
 // 100% Free 24kHz Studio MP3 via Edge Neural
 // Strict Zero-Cost & Unlimited Requests
@@ -308,6 +389,148 @@ app.post('/api/tts', async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   }
+});
+
+// ==========================================
+// Autonomous Dynamic SEO & GEO (AEO) Engine
+// ==========================================
+
+// POST /api/seo/audit - Full JSON Analysis & Generated AI Optimization
+app.post('/api/seo/audit', async (req, res) => {
+  try {
+    const { url, brandName, targetCity, targetRegion, businessType, clientName, generateReport = true } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
+
+    addLog(`[DynamicSEO Engine] Running real-time audit for: ${url}`);
+    const auditData = await crawlAndAudit(url);
+    
+    let aiOptimization = null;
+    let dossierHtml = null;
+
+    if (generateReport) {
+      aiOptimization = await generateAiOptimization(auditData, { brandName, targetCity, targetRegion, businessType });
+      dossierHtml = generateExecutiveHtmlReport(auditData, aiOptimization, clientName || brandName || 'Valued Client');
+    }
+
+    res.json({
+      success: true,
+      url,
+      timestamp: new Date().toISOString(),
+      audit: auditData,
+      aiOptimization,
+      dossierHtml
+    });
+  } catch (err) {
+    console.error('[DynamicSEO API Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/seo/audit-view - Renders the Interactive Client Audit Dossier directly in Browser
+app.get('/api/seo/audit-view', async (req, res) => {
+  try {
+    const targetUrl = req.query.url;
+    if (!targetUrl) return res.status(400).send('Please provide ?url=https://example.com in the URL');
+
+    addLog(`[DynamicSEO Engine] Rendering Live Browser Audit Dossier for: ${targetUrl}`);
+    const auditData = await crawlAndAudit(targetUrl);
+    const aiOptimization = await generateAiOptimization(auditData, {
+      brandName: req.query.brand,
+      targetCity: req.query.city,
+      targetRegion: req.query.region,
+      businessType: req.query.type
+    });
+    const dossierHtml = generateExecutiveHtmlReport(auditData, aiOptimization, req.query.client || 'Valued Client');
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(dossierHtml);
+  } catch (err) {
+    res.status(500).send(`Dynamic SEO Audit Error: ${err.message}`);
+  }
+});
+
+// GET /api/seo/health - Engine Telemetry
+app.get('/api/seo/health', (req, res) => {
+  res.json({
+    status: 'online',
+    engine: 'CloseTesters Autonomous Dynamic SEO & GEO Engine v2.0',
+    capabilities: [
+      'Live Deep Crawling & TTFB Latency Analysis',
+      'Technical SEO Health Scoring (0-100)',
+      'Schema.org Triple-A Knowledge Graph Auto-Generation',
+      'Regional GEO Directives (geo.region, geo.placename, ICBM)',
+      'AEO / Generative Engine Optimization for ChatGPT & Perplexity',
+      'Executive HTML Audit Dossier Generation'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ==============================================================
+// OMNICRAFT 360° HYBRID ENGINE (7 Tools + Hermes Agent Integration)
+// ==============================================================
+
+// POST /api/omnicraft/audit - Autonomous 7-Tool Audit & Hermes Synthesis
+app.post('/api/omnicraft/audit', async (req, res) => {
+  try {
+    const { url, brandName, niche } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
+
+    addLog(`[OmniCraft 360° Engine] Initiating 7-Tool Hybrid Audit for: ${url}`);
+    const omniResult = await runOmniCraft360(url, { brandName, niche });
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      data: omniResult
+    });
+  } catch (err) {
+    console.error('[OmniCraft 360° API Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/omnicraft/autonomous-lead - 100% Zero-Touch Autonomous Pipeline
+app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
+  try {
+    const { url, clientEmail, clientName, brandName, niche, autoEmail = true } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'Website URL is required' });
+
+    addLog(`[OmniCraft Daemon] Triggering 100% Autonomous Zero-Touch Pipeline for: ${url}`);
+    
+    // Background execution without blocking caller if desired
+    processAutonomousLead({ url, clientEmail, clientName, brandName, niche, autoEmail })
+      .then(result => addLog(`[OmniCraft Daemon] Completed autonomous pipeline for ${url}. Email sent: ${result.record.emailDispatched}`))
+      .catch(err => console.error('[OmniCraft Daemon Error]:', err.message));
+
+    res.json({
+      success: true,
+      message: 'Autonomous OmniCraft 360° pipeline initiated. Zero human touch required.',
+      url,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/omnicraft/health - Health check and capabilities
+app.get('/api/omnicraft/health', (req, res) => {
+  res.json({
+    status: 'online',
+    engine: 'OmniCraft 360° Autonomous Design & QA Engine v3.0',
+    integratedTools: [
+      '1. Design Lang (Automated Design Tokens & Theme Extraction)',
+      '2. Taste Skill (Refined Aesthetic Grading & Typography Pairing)',
+      '3. Impeccable (Empirical Layout Heuristics & WCAG AA/AAA Compliance)',
+      '4. React Bits (Modern Glassmorphic & Bento Grid Component Catalog)',
+      '5. Transitions.dev (Cinematic Micro-Interactions & Cubic-Bezier Presets)',
+      '6. GSAP Skill (Hardware-Accelerated Timeline Orchestration & 3D Tilt)',
+      '7. Playwright CLI (Headless Real-Chrome Multi-Viewport Inspector)'
+    ],
+    agentSupport: 'Hermes Agent Autonomous Synthesis & Dynamic Code Repair',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.listen(PORT, () => {
