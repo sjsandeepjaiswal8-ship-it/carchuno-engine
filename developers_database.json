@@ -1,0 +1,202 @@
+[
+  {
+    "name": "Sarah Jenkins",
+    "company": "Apex Mobile Studios",
+    "role": "Director of QA & Release Engineering",
+    "appName": "Apex Casual Games Portfolio (5 Apps)",
+    "email": "s.jenkins@apexstudios.io",
+    "category": "Gaming & Interactive Media",
+    "tierType": "studio_growth",
+    "country": "Austin, TX, USA"
+  },
+  {
+    "name": "Brandon Scott",
+    "company": "Catalyst Mobile Labs",
+    "role": "VP of Engineering",
+    "appName": "Catalyst Workflow Automation Suite",
+    "email": "b.scott@catalystlabs.tech",
+    "category": "Enterprise Productivity SaaS",
+    "tierType": "enterprise",
+    "country": "San Francisco, CA, USA"
+  },
+  {
+    "name": "Emily Vance",
+    "company": "NovaByte Software Corp",
+    "role": "Director of Mobile Development",
+    "appName": "NovaPay Mobile POS & Split Billing",
+    "email": "emily.vance@novabyte.co",
+    "category": "Fintech & POS Systems",
+    "tierType": "studio_growth",
+    "country": "New York, NY, USA"
+  },
+  {
+    "name": "Alex Tremblay",
+    "company": "MapleDev Studios",
+    "role": "Head of QA & Play Store Operations",
+    "appName": "FitTrack Pro Nordic Training App",
+    "email": "alex@mapledev.ca",
+    "category": "Health & Fitness",
+    "tierType": "agency_starter",
+    "country": "Toronto, Canada"
+  },
+  {
+    "name": "Jason Miller",
+    "company": "Ironclad Security Technologies",
+    "role": "Chief Technology Officer (CTO)",
+    "appName": "IronKey 2FA & Hardware Authenticator",
+    "email": "j.miller@ironcladsec.net",
+    "category": "Cybersecurity & Utilities",
+    "tierType": "single_pro",
+    "country": "Seattle, WA, USA"
+  },
+  {
+    "name": "Rajesh Seshadri",
+    "company": "FinScale Technologies",
+    "role": "VP of Engineering & Mobile Platforms",
+    "appName": "FinScale Payments & Merchant POS",
+    "email": "rajesh.seshadri@finscale.tech",
+    "category": "Fintech & Neo-Banking",
+    "tierType": "enterprise",
+    "country": "Bengaluru, India"
+  },
+  {
+    "name": "Anand Verma",
+    "company": "QuickDev Solutions",
+    "role": "Head of Mobile & Client Delivery",
+    "appName": "Client App Release Pipeline (4 Apps/mo)",
+    "email": "anand.verma@quickdev.in",
+    "category": "Mobile Dev Agency",
+    "tierType": "agency_starter",
+    "country": "Gurugram, India"
+  },
+  {
+    "name": "Vikram Malhotra",
+    "company": "Khatabook Software Labs",
+    "role": "Co-Founder & Android Tech Lead",
+    "appName": "Khatabook Tracker Lite",
+    "email": "vikram@fintechcreators.in",
+    "category": "SMB Ledger & Invoicing",
+    "tierType": "single_pro",
+    "country": "Pune, India"
+  },
+  {
+    "name": "Pooja Krishnamurthy",
+    "company": "AppZenith Interactive",
+    "role": "Director of Product Quality",
+    "appName": "Zenith EduTech Learning Portal",
+    "email": "pooja.k@appzenith.in",
+    "category": "EdTech & Learning Platforms",
+    "tierType": "studio_growth",
+    "country": "Hyderabad, India"
+  },
+  {
+    "name": "Siddharth Rao",
+    "company": "Mobix Ventures",
+    "role": "Founder & Technical Architect",
+    "appName": "Mobix Hyperlocal Logistics Partner",
+    "email": "siddharth@mobixventures.com",
+    "category": "Quick Commerce & Logistics",
+    "tierType": "enterprise",
+    "country": "Noida, India"
+  },
+  {
+    "name": "Michael Brandt",
+    "company": "Veloce Health Systems",
+    "role": "Chief Technology Officer (CTO)",
+    "appName": "Veloce Patient Monitor & VitalSync",
+    "email": "m.brandt@velocehealth.de",
+    "category": "HealthTech & MedDevice",
+    "tierType": "enterprise",
+    "country": "Berlin, Germany"
+  },
+  {
+    "name": "Marcus Thorne",
+    "company": "CloudVault Security",
+    "role": "Technical Head - Mobile Systems",
+    "appName": "QuickScan AI Document Vault",
+    "email": "marcus@docvault.dev",
+    "category": "Document Management SaaS",
+    "tierType": "studio_growth",
+    "country": "London, United Kingdom"
+  },
+  {
+    "name": "Elena Rostova",
+    "company": "HabitForge Labs",
+    "role": "Founder & Lead Architect",
+    "appName": "HabitForge 3D Habit Gamifier",
+    "email": "elena@habitforge.app",
+    "category": "Lifestyle & Productivity",
+    "tierType": "single_pro",
+    "country": "Munich, Germany"
+  },
+  {
+    "name": "Antoine Dubois",
+    "company": "Lumiere Interactive",
+    "role": "Director of Mobile Operations",
+    "appName": "CineScore Movie Critic AI",
+    "email": "a.dubois@lumiere-apps.fr",
+    "category": "Media & Streaming",
+    "tierType": "agency_starter",
+    "country": "Paris, France"
+  },
+  {
+    "name": "Lars Lindqvist",
+    "company": "Nordic Wave Digital",
+    "role": "VP of Quality Assurance",
+    "appName": "Nordic Bank Mobile ID Suite",
+    "email": "lars@nordicwave.se",
+    "category": "Identity & Banking",
+    "tierType": "enterprise",
+    "country": "Stockholm, Sweden"
+  },
+  {
+    "name": "David Chen",
+    "company": "Nexus AI Mobility",
+    "role": "VP of Product Engineering",
+    "appName": "NexusFleet Driver & Dispatch Suite",
+    "email": "d.chen@nexusmobility.net",
+    "category": "Fleet Telematics & Mobility",
+    "tierType": "enterprise",
+    "country": "Singapore"
+  },
+  {
+    "name": "Tariq Al-Mansoor",
+    "company": "Oasis Digital Labs",
+    "role": "Head of Mobile Development",
+    "appName": "Oasis Pay Real Estate Escrow App",
+    "email": "t.mansoor@oasisdigital.ae",
+    "category": "PropTech & Real Estate",
+    "tierType": "studio_growth",
+    "country": "Dubai, UAE"
+  },
+  {
+    "name": "Chloe Harrison",
+    "company": "Pacific Coast Studios",
+    "role": "Lead QA Release Manager",
+    "appName": "ReefTracker Marine Conservation",
+    "email": "chloe@pacificcoastapps.com.au",
+    "category": "Non-Profit & Marine Sciences",
+    "tierType": "single_pro",
+    "country": "Sydney, Australia"
+  },
+  {
+    "name": "Kenji Sato",
+    "company": "Hyperion Tokyo Interactive",
+    "role": "Chief Technology Officer",
+    "appName": "Hyperion Kanji Flash AR",
+    "email": "kenji.sato@hyperiontokyo.jp",
+    "category": "AR Education & Language",
+    "tierType": "agency_starter",
+    "country": "Tokyo, Japan"
+  },
+  {
+    "name": "Fahad Al-Hassan",
+    "company": "Riyadh App Foundry",
+    "role": "Director of Engineering",
+    "appName": "Naqil Logistics Partner Delivery",
+    "email": "fahad@riyadhfoundry.sa",
+    "category": "Supply Chain & Delivery",
+    "tierType": "enterprise",
+    "country": "Riyadh, Saudi Arabia"
+  }
+]

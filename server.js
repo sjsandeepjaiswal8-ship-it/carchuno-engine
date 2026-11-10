@@ -50,6 +50,16 @@ try {
   console.warn('[Server Startup] closetesters_auto_responder load skipped:', e.message);
 }
 
+let ApexOmniStudioEngine, ApexHermesPoster;
+try {
+  ApexOmniStudioEngine = require('./apex_omni_studio_engine');
+  ApexHermesPoster = require('./apex_hermes_poster');
+  console.log('[Server Startup] APEX OMNI STUDIO™ & Hermes Poster modules loaded.');
+} catch (e) {
+  console.warn('[Server Startup] apex_omni_studio load skipped:', e.message);
+}
+
+
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -233,8 +243,47 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), state });
 });
 
-// Main Dashboard UI
+// ==========================================
+// 24/7 OMNISALES AGENT CLOUD MISSION CONTROL
+// ==========================================
+let omnisalesRouter;
+try {
+  const createOmniSalesRouter = require('./omnisales_router');
+  omnisalesRouter = createOmniSalesRouter({
+    state,
+    DEALERS,
+    activeTransporter,
+    currentProvider,
+    SMTP_CONFIGS,
+    geminiRotator,
+    dispatchDealerPitch,
+    addLog
+  });
+  app.use(omnisalesRouter);
+  console.log('[Server Startup] ⚡ OmniSales 24/7 Cloud Router mounted with 35+ APIs.');
+} catch (e) {
+  console.warn('[Server Startup] omnisales_router load skipped:', e.message);
+}
+
+// Serve Static Assets (OmniSales Agent™ Executive Mission Control)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// OmniSales Direct Route
+app.get('/omnisales', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Main Dashboard: Serves OmniSales 24/7 Mission Control
 app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.redirect('/legacy-dashboard');
+});
+
+// Legacy Dashboard UI
+app.get('/legacy-dashboard', (req, res) => {
   const uptimeMinutes = Math.floor(process.uptime() / 60);
   res.send(`
     <!DOCTYPE html>
@@ -698,6 +747,79 @@ app.post('/api/proposal/landed', (req, res) => {
   const { ref, visitorId, region } = req.body || {};
   addLog(`[Proposal Telemetry] Client landed on proposal: ref=${ref || 'direct'}, region=${region || 'global'}`);
   res.json({ success: true, timestamp: new Date().toISOString() });
+});
+
+// ==============================================================================
+// APEX OMNI STUDIO™ & HERMES SOCIAL PUBLISHER SUITE ENDPOINTS
+// ==============================================================================
+
+// GET /api/apex/channels - Retrieve Master Social Channels & Credentials Vault
+app.get('/api/apex/channels', (req, res) => {
+  const vaultPath = path.join(__dirname, 'social_channels_vault.json');
+  if (fs.existsSync(vaultPath)) {
+    const data = JSON.parse(fs.readFileSync(vaultPath, 'utf8'));
+    return res.json({ success: true, ...data });
+  }
+  res.status(404).json({ success: false, error: 'Channels vault not found' });
+});
+
+// GET /api/apex/status - APEX Omni Studio Engine Health & Capability
+app.get('/api/apex/status', (req, res) => {
+  const ffmpegExists = fs.existsSync('C:/Users/HP/Desktop/AI_Video_Engine/node_modules/ffmpeg-static/ffmpeg.exe');
+  const chromeExists = fs.existsSync('C:/Program Files/Google/Chrome/Application/chrome.exe');
+  res.json({
+    success: true,
+    engine: 'APEX OMNI STUDIO™ Autonomous Video & Social Publisher',
+    version: '4.5.0-PRO',
+    status: ApexOmniStudioEngine ? 'ONLINE' : 'DEGRADED',
+    capabilities: [
+      '1. 100% Dynamic Storyboarding (Gemini AI Rotator)',
+      '2. Neural Broadcast Voice (MsEdgeTTS - hi-IN-Madhur, hi-IN-Swara, en-US-Christopher)',
+      '3. 60FPS Kinetic Canvas Motion Compositor (Zero 2D Slideshows)',
+      '4. SFX & Ambient Drone Ducking Sub-Engine',
+      '5. FFmpeg H.264 Broadcast Export',
+      '6. Hermes Stealth Autonomous Web & Social Publisher'
+    ],
+    infrastructure: {
+      ffmpeg: ffmpegExists ? 'AVAILABLE' : 'MISSING',
+      chrome: chromeExists ? 'AVAILABLE' : 'MISSING',
+      rendersDir: path.join(__dirname, 'renders'),
+      brandAssets: path.join(__dirname, 'assets', 'brand_visuals')
+    },
+    brandsSupported: ['CarChuno', 'CloseTesters', 'AstroMasterpiece'],
+    timestamp: new Date().toISOString()
+  });
+});
+
+// POST /api/apex/generate-campaign - Autonomously generate full 60FPS video production
+app.post('/api/apex/generate-campaign', async (req, res) => {
+  if (!ApexOmniStudioEngine) {
+    return res.status(503).json({ success: false, error: 'Apex Omni Studio Engine not loaded' });
+  }
+  const { brand = 'CarChuno', prompt = '' } = req.body || {};
+  try {
+    addLog(`[APEX Omni Studio] Initiating full video production for: ${brand}`);
+    const production = await ApexOmniStudioEngine.runFullProduction(brand, prompt);
+    res.json({ success: true, production });
+  } catch (err) {
+    addLog(`[APEX Omni Studio Error]: ${err.message}`);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/apex/publish-youtube - Autonomous YouTube Studio publishing via Hermes Stealth
+app.post('/api/apex/publish-youtube', async (req, res) => {
+  if (!ApexHermesPoster) {
+    return res.status(503).json({ success: false, error: 'Apex Hermes Poster not loaded' });
+  }
+  const { videoPath, metadata = {}, options = {} } = req.body || {};
+  try {
+    const poster = new ApexHermesPoster({ headless: options.headless !== undefined ? options.headless : false });
+    const result = await poster.publishToYouTube(videoPath, metadata, options);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

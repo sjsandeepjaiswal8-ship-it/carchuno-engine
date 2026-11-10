@@ -1,3 +1,13 @@
 node_modules/
 .env
 npm-debug.log
+*.png
+*.txt
+*.zip
+inspect_*.js
+test_*.js
+extract_*.js
+apply_cloud_bridge.js
+renders/
+stack_tf/
+

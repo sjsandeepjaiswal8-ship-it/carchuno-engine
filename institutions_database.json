@@ -1,0 +1,178 @@
+[
+  {
+    "name": "HDFC Bank (Auto Loan Division)",
+    "type": "bank",
+    "institution": "HDFC Bank Limited",
+    "department": "National Head - Auto Loans & Digital Alliances",
+    "contactPerson": "Executive VP - Retail Assets",
+    "email": "autoloan.partnerships@hdfcbank.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Auto Loans & Vehicle Finance",
+    "scope": "Instant In-App Loan Sanction & Special Interest Rate Grid"
+  },
+  {
+    "name": "ICICI Bank (Vehicle Loans & Digital Tie-Ups)",
+    "type": "bank",
+    "institution": "ICICI Bank Limited",
+    "department": "Head of Strategic Alliances - Auto Loans",
+    "contactPerson": "Senior General Manager - Secured Lending",
+    "email": "carloan.alliances@icicibank.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Auto Loans & Vehicle Finance",
+    "scope": "Pre-Approved Car Loans for Verified CarChuno Buyers"
+  },
+  {
+    "name": "State Bank of India (SBI Car Loan Corporate Desk)",
+    "type": "bank",
+    "institution": "State Bank of India",
+    "department": "Chief General Manager - Personal Banking & Auto Loans",
+    "contactPerson": "National Automotive Tie-Up Cell",
+    "email": "cgm.auto@sbi.co.in",
+    "city": "Mumbai, Maharashtra",
+    "category": "PSU Auto Loans",
+    "scope": "Lowest Interest Rate Auto Finance Integration & Zero Foreclosure Options"
+  },
+  {
+    "name": "Axis Bank (Retail Lending & FinTech Partnerships)",
+    "type": "bank",
+    "institution": "Axis Bank Limited",
+    "department": "Head - Auto Loans & FinTech Ecosystems",
+    "contactPerson": "VP - Retail Lending Alliances",
+    "email": "retailassets.alliances@axisbank.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Auto Loans & Vehicle Finance",
+    "scope": "1-Click Digital Sanction for Tier 1 & Tier 2 City Buyers"
+  },
+  {
+    "name": "Kotak Mahindra Bank (Vehicle Finance)",
+    "type": "bank",
+    "institution": "Kotak Mahindra Prime Limited",
+    "department": "Head - Dealer & Automotive Aggregator Partnerships",
+    "contactPerson": "Commercial Lead - Vehicle Finance",
+    "email": "carloans.corporate@kotak.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Auto Loans & Vehicle Finance",
+    "scope": "Fast-Track Auto Loan Disbursals on CarChuno Reverse Bidding Bookings"
+  },
+  {
+    "name": "Bank of Baroda (Baroda Auto Loan Retail Desk)",
+    "type": "bank",
+    "institution": "Bank of Baroda",
+    "department": "General Manager - Retail Assets & Auto Finance",
+    "contactPerson": "Auto Lending Partnerships Cell",
+    "email": "retail.assets@bankofbaroda.com",
+    "city": "Vadodara / Mumbai",
+    "category": "PSU Auto Loans",
+    "scope": "Government & Salaried Buyer Pre-Approved Loan Bundles"
+  },
+  {
+    "name": "Tata Capital Financial Services",
+    "type": "bank",
+    "institution": "Tata Capital Limited",
+    "department": "Head - Auto Loans & Digital Platform Alliances",
+    "contactPerson": "VP - Consumer Finance Alliances",
+    "email": "autofinance.tieup@tatacapital.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "NBFC Auto Finance",
+    "scope": "Flexible Tenure & Custom EMI Plans for New Car Buyers"
+  },
+  {
+    "name": "Bajaj Finance (Auto & Personal Lending)",
+    "type": "bank",
+    "institution": "Bajaj Finance Limited",
+    "department": "National Head - Digital Vehicle Finance",
+    "contactPerson": "Head of Strategic Partnerships",
+    "email": "autoalliances@bajajfinserv.in",
+    "city": "Pune, Maharashtra",
+    "category": "NBFC Auto Finance",
+    "scope": "Instant Paperless Approval & Hybrid EMI Programs"
+  },
+  {
+    "name": "ICICI Lombard General Insurance",
+    "type": "insurance",
+    "institution": "ICICI Lombard General Insurance Co. Ltd.",
+    "department": "National Head - Motor Insurance & InsurTech Alliances",
+    "contactPerson": "Executive VP - Underwriting & Digital Channels",
+    "email": "motor.partnerships@icicilombard.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Comprehensive Motor Insurance",
+    "scope": "Seamless 1-Year OD + 3-Year TP Policy Issuance with Cashless Garage Network"
+  },
+  {
+    "name": "HDFC ERGO General Insurance",
+    "type": "insurance",
+    "institution": "HDFC ERGO General Insurance Co. Ltd.",
+    "department": "Head - Digital & OEM Alliances",
+    "contactPerson": "VP - Strategic Business Alliances",
+    "email": "digitalalliances@hdfcergo.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Comprehensive Motor Insurance",
+    "scope": "Zero Dep (Bumper-to-Bumper), Engine Protect & Return to Invoice Add-on Bundles"
+  },
+  {
+    "name": "Bajaj Allianz General Insurance",
+    "type": "insurance",
+    "institution": "Bajaj Allianz General Insurance Co. Ltd.",
+    "department": "Head - Motor Business & Platform Partnerships",
+    "contactPerson": "Senior General Manager - Motor Underwriting",
+    "email": "motor.tieups@bajajallianz.co.in",
+    "city": "Pune, Maharashtra",
+    "category": "Comprehensive Motor Insurance",
+    "scope": "Instant Digital Policy Delivery & 24/7 Spot Settlement Integration"
+  },
+  {
+    "name": "Tata AIG General Insurance",
+    "type": "insurance",
+    "institution": "Tata AIG General Insurance Co. Ltd.",
+    "department": "National Head - Auto Retail & Strategic Partnerships",
+    "contactPerson": "VP - Affinity & Platform Alliances",
+    "email": "autoalliances@tataaig.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Comprehensive Motor Insurance",
+    "scope": "Competitive Premium Rates & Comprehensive Roadside Assistance (RSA)"
+  },
+  {
+    "name": "Go Digit General Insurance",
+    "type": "insurance",
+    "institution": "Go Digit General Insurance Limited",
+    "department": "Head - InsurTech & Ecosystem Alliances",
+    "contactPerson": "Head of Strategic Growth",
+    "email": "partnerships@godigit.com",
+    "city": "Bengaluru, Karnataka",
+    "category": "InsurTech Motor Insurance",
+    "scope": "Full API-Driven Instant Quotes & Smartphone Paperless Inspection"
+  },
+  {
+    "name": "Acko General Insurance",
+    "type": "insurance",
+    "institution": "Acko General Insurance Limited",
+    "department": "VP - Automotive OEM & Platform Partnerships",
+    "contactPerson": "Strategic Partnership Director",
+    "email": "auto.partnerships@acko.com",
+    "city": "Bengaluru, Karnataka",
+    "category": "Direct-to-Consumer Motor Insurance",
+    "scope": "Direct Digital Pricing Advantage with Zero Agent Markups for Buyers"
+  },
+  {
+    "name": "The New India Assurance Co. Ltd.",
+    "type": "insurance",
+    "institution": "The New India Assurance Company Limited",
+    "department": "Chief General Manager - Motor Technical Department",
+    "contactPerson": "Corporate Motor Tie-Up Cell",
+    "email": "ho.motor@newindia.co.in",
+    "city": "Mumbai, Maharashtra",
+    "category": "PSU General Insurance",
+    "scope": "Pan-India Government Guaranteed Underwriting & Institutional Fleet Protection"
+  },
+  {
+    "name": "SBI General Insurance",
+    "type": "insurance",
+    "institution": "SBI General Insurance Company Limited",
+    "department": "Head - Motor Underwriting & Retail Tie-Ups",
+    "contactPerson": "General Manager - Corporate Alliances",
+    "email": "motoralliances@sbigeneral.in",
+    "city": "Mumbai, Maharashtra",
+    "category": "Comprehensive Motor Insurance",
+    "scope": "Combined SBI Auto Loan + SBI Motor Insurance Seamless Packages"
+  }
+]
