@@ -89,42 +89,99 @@ app.use((req, res, next) => {
 const getBrevoKey = () => process.env.BREVO_PASS || Buffer.from('eHNtdHBzaWItMDgzYzJlMDRiMWI0ZjI1YTY4NmQ3ZDk5ZGZkZjQzYWFjMTVlZWE5MWQ1YWQ3ZmIxODIwMmMwM2IyYWQwYjA4ZS1HaHR2NWNXZmsxa1hndmk0', 'base64').toString('utf8');
 const getGodaddyPass = () => process.env.GODADDY_PASS || Buffer.from('Q2xvc2V0ZXN0ZXJzQDEx', 'base64').toString('utf8');
 
-// SMTP Providers Configuration
-const SMTP_CONFIGS = {
-  brevo: {
-    name: 'Brevo Cloud Relay',
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com',
-      pass: getBrevoKey()
-    }
-  },
-  godaddy: {
-    name: 'GoDaddy SecureServer',
+// Multi-Relay SMTP Providers Configuration (with strict timeouts to prevent socket hangs)
+const SMTP_CHAIN = [
+  {
+    id: 'godaddy-465',
+    name: 'GoDaddy SecureServer (465 SSL)',
     host: 'smtpout.secureserver.net',
     port: 465,
     secure: true,
-    auth: {
-      user: process.env.GODADDY_USER || 'partners@carchuno.com',
-      pass: getGodaddyPass()
+    auth: { user: process.env.GODADDY_USER || 'partners@carchuno.com', pass: getGodaddyPass() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  },
+  {
+    id: 'godaddy-587',
+    name: 'GoDaddy SecureServer (587 STARTTLS)',
+    host: 'smtpout.secureserver.net',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.GODADDY_USER || 'partners@carchuno.com', pass: getGodaddyPass() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  },
+  {
+    id: 'brevo-2525',
+    name: 'Brevo Cloud Relay (2525)',
+    host: 'smtp-relay.brevo.com',
+    port: 2525,
+    secure: false,
+    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  },
+  {
+    id: 'brevo-587',
+    name: 'Brevo Cloud Relay (587)',
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  }
+];
+
+const SMTP_CONFIGS = {
+  brevo: SMTP_CHAIN[2],
+  godaddy: SMTP_CHAIN[0]
+};
+
+let currentProvider = 'godaddy';
+
+// Failover-aware Virtual Transporter (drop-in compatible with nodemailer.sendMail)
+const activeTransporter = {
+  async sendMail(mailOptions) {
+    const errors = [];
+    for (const conf of SMTP_CHAIN) {
+      try {
+        const t = nodemailer.createTransport(conf);
+        const info = await t.sendMail(mailOptions);
+        currentProvider = conf.id.startsWith('brevo') ? 'brevo' : 'godaddy';
+        return { ...info, usedProvider: conf.id };
+      } catch (err) {
+        errors.push(`${conf.id}: ${err.message}`);
+      }
     }
+    throw new Error(`All SMTP relays failed -> ${errors.join(' | ')}`);
+  },
+  async verify() {
+    const errors = [];
+    for (const conf of SMTP_CHAIN) {
+      try {
+        const t = nodemailer.createTransport(conf);
+        await t.verify();
+        currentProvider = conf.id.startsWith('brevo') ? 'brevo' : 'godaddy';
+        return true;
+      } catch (err) {
+        errors.push(`${conf.id}: ${err.message}`);
+      }
+    }
+    throw new Error(errors.join(' | '));
   }
 };
 
-let activeTransporter = null;
-let currentProvider = 'godaddy';
-
 function initTransporter() {
-  const conf = SMTP_CONFIGS[currentProvider] || SMTP_CONFIGS.brevo;
-  console.log(`[Cloud Engine] Initializing SMTP transporter with ${conf.name}...`);
-  activeTransporter = nodemailer.createTransport({
-    ...conf,
-    pool: true,
-    maxConnections: 1,
-    rateLimit: 1
-  });
+  console.log('[Cloud Engine] Multi-Relay Failover SMTP Active (GoDaddy 465/587 -> Brevo 2525/587).');
 }
 initTransporter();
 
@@ -978,6 +1035,27 @@ app.post('/api/closetesters/dispatch-now', async (req, res) => {
   }
   const result = await closeTestersOutreach.dispatchNextLead(activeTransporter, addLog, sovereignDb);
   res.json({ ...result, status: closeTestersOutreach.getStatus() });
+});
+
+app.get('/api/email/probe-all', async (req, res) => {
+  let egressIp = 'unknown';
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
+    egressIp = (await ipRes.json()).ip;
+  } catch (_) {}
+
+  const results = await Promise.all(SMTP_CHAIN.map(async (conf) => {
+    const start = Date.now();
+    try {
+      const t = nodemailer.createTransport({ ...conf, connectionTimeout: 5000, greetingTimeout: 5000 });
+      await t.verify();
+      return { id: conf.id, host: conf.host, port: conf.port, status: 'OK', latencyMs: Date.now() - start };
+    } catch (err) {
+      return { id: conf.id, host: conf.host, port: conf.port, status: 'FAIL', error: err.message, latencyMs: Date.now() - start };
+    }
+  }));
+
+  res.json({ success: true, renderEgressIp: egressIp, results });
 });
 
 app.listen(PORT, () => {
