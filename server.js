@@ -870,6 +870,19 @@ app.post('/api/oracle/trigger', async (req, res) => {
   }
 });
 
+// ==============================================================================
+// HERMES SOVEREIGN MIRROR & FAILOVER AUDIT
+// ==============================================================================
+const hermesWatchdog = require('./hermes_mirror_watchdog');
+app.get('/api/hermes/mirror-status', async (req, res) => {
+  try {
+    const auditReport = await hermesWatchdog.auditAll();
+    res.json({ success: true, ...auditReport });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   addLog(`🚀 Cloud Sales Engine server running on port ${PORT}`);
   
