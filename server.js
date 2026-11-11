@@ -883,6 +883,63 @@ app.get('/api/hermes/mirror-status', async (req, res) => {
   }
 });
 
+// ==============================================================================
+// HERMES SOVEREIGN AUTONOMOUS DATABASE & CLOUD MIRROR REST API
+// ==============================================================================
+const sovereignDb = require('./sovereign_db_engine');
+
+// GET /api/sovereign/status - Live database metrics & collection counts
+app.get('/api/sovereign/status', (req, res) => {
+  res.json({ success: true, ...sovereignDb.getStats() });
+});
+
+// GET /api/sovereign/:collection - Retrieve all documents with optional filters
+app.get('/api/sovereign/:collection', (req, res) => {
+  const { collection } = req.params;
+  const docs = sovereignDb.getAll(collection, req.query);
+  res.json({ success: true, collection, count: docs.length, data: docs });
+});
+
+// GET /api/sovereign/:collection/:id - Retrieve single document by ID
+app.get('/api/sovereign/:collection/:id', (req, res) => {
+  const { collection, id } = req.params;
+  const doc = sovereignDb.getById(collection, id);
+  if (!doc) return res.status(404).json({ success: false, error: 'Document not found' });
+  res.json({ success: true, data: doc });
+});
+
+// POST /api/sovereign/:collection - Insert / Upsert document
+app.post('/api/sovereign/:collection', (req, res) => {
+  const { collection } = req.params;
+  const created = sovereignDb.insert(collection, req.body || {});
+  res.status(201).json({ success: true, data: created });
+});
+
+// PUT /api/sovereign/:collection/:id - Update document
+app.put('/api/sovereign/:collection/:id', (req, res) => {
+  const { collection, id } = req.params;
+  const updated = sovereignDb.update(collection, id, req.body || {});
+  if (!updated) return res.status(404).json({ success: false, error: 'Document not found' });
+  res.json({ success: true, data: updated });
+});
+
+// DELETE /api/sovereign/:collection/:id - Delete document
+app.delete('/api/sovereign/:collection/:id', (req, res) => {
+  const { collection, id } = req.params;
+  const deleted = sovereignDb.delete(collection, id);
+  res.json({ success: deleted });
+});
+
+// POST /api/sovereign/batch-sync - Batch sync from Firebase
+app.post('/api/sovereign/batch-sync', (req, res) => {
+  const { collection, documents } = req.body || {};
+  if (!collection || !Array.isArray(documents)) {
+    return res.status(400).json({ success: false, error: 'Provide collection name and documents array' });
+  }
+  const result = sovereignDb.batchSync(collection, documents);
+  res.json({ success: true, collection, ...result });
+});
+
 app.listen(PORT, () => {
   addLog(`🚀 Cloud Sales Engine server running on port ${PORT}`);
   
