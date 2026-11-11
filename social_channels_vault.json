@@ -1,0 +1,52 @@
+{
+  "updatedAt": "2026-11-10T19:09:59.442Z",
+  "channels": [
+    {
+      "brand": "CarChuno (कार चुनो)",
+      "niche": "Automotive Marketplace (Like CarDekho, MotorOctane, DDS, CarWale)",
+      "ytName": "CarChuno Official",
+      "ytHandle": "@CarChunoOfficial",
+      "instaHandle": "@carchuno.official",
+      "userId": "carchuno.media@gmail.com",
+      "password": "CarChuno@2026#ApexAuto",
+      "businessEmail": "partners@carchuno.com",
+      "phoneVerification": "User Real Phone (+91) required for 1-time SMS OTP",
+      "website": "https://carchuno.com",
+      "color": "#FF1E27",
+      "accent": "#FFD700",
+      "tagline": "Bharat Ka Smartest Car Buying & Reverse Bidding Platform",
+      "stats": "61 Verified OEM Dealerships | 14 Indian States"
+    },
+    {
+      "brand": "CloseTesters Labs",
+      "niche": "Android 20-Tester Rack & Play Store Production Approval",
+      "ytName": "CloseTesters Labs",
+      "ytHandle": "@CloseTestersLabs",
+      "instaHandle": "@closetesters.labs",
+      "userId": "closetesters.hq@gmail.com",
+      "password": "CloseTesters@2026#DevRack",
+      "existingInstaLogin": "closetesters / Closetesters@11",
+      "phoneVerification": "User Real Phone (+91) required for 1-time SMS OTP",
+      "website": "https://closetesters.com",
+      "color": "#F43F5E",
+      "accent": "#10B981",
+      "tagline": "100% Guaranteed Google Play 20-Tester Approval in 14 Days",
+      "stats": "20 Real Hardware OEM Devices | Zero Emulators"
+    },
+    {
+      "brand": "AstroMasterpiece",
+      "niche": "Vedic Astrology, Navgrah & Akashic Kundali Intelligence",
+      "ytName": "AstroMasterpiece Official",
+      "ytHandle": "@AstroMasterpieceOfficial",
+      "instaHandle": "@astromasterpiece.official (Alt: @cosmicdristi1)",
+      "userId": "astromasterpiece.media@gmail.com",
+      "password": "AstroMaster@2026#ApexOm",
+      "whatsappBooking": "+91 91313 65866",
+      "website": "https://astromasterpiece.com",
+      "color": "#8B5CF6",
+      "accent": "#FBBF24",
+      "tagline": "Vedic Horoscope, Navgrah Remedies & Akashic Engine",
+      "stats": "1-on-1 Confidential Consultation | 100% Anonymous"
+    }
+  ]
+}

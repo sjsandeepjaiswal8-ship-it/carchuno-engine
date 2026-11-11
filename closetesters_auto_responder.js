@@ -230,11 +230,11 @@ async function processInboundInquiry(data) {
   </html>
   `;
 
-  // 1. Dispatch to Client with Reply-To set to support@closetesters.com
+  // 1. Dispatch to Client with Reply-To set to partners@closetesters.com
   const clientMailOptions = {
-    from: '"CloseTesters Labs Compliance Desk" <partners@carchuno.com>',
+    from: '"CloseTesters Strategic Partnerships & QA Desk" <partners@carchuno.com>',
     to: email,
-    replyTo: 'support@closetesters.com',
+    replyTo: 'partners@closetesters.com',
     subject: `[${ticketId}] Request Acknowledged: Autonomous Telemetry & Production Clearance Desk`,
     html: emailHtml
   };
@@ -258,7 +258,7 @@ async function processInboundInquiry(data) {
 
   const internalMailOptions = {
     from: '"CloseTesters Sentry Bot" <partners@carchuno.com>',
-    to: 'support@closetesters.com',
+    to: 'partners@closetesters.com',
     subject: `[INBOUND ALERT] [${ticketId}] New Client Request from ${name} (${appName || email})`,
     html: internalAlertHtml
   };

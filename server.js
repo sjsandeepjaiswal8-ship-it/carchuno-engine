@@ -59,6 +59,14 @@ try {
   console.warn('[Server Startup] apex_omni_studio load skipped:', e.message);
 }
 
+let startOracleCloudCatcher, attemptProvision, getOracleStatus;
+try {
+  ({ startOracleCloudCatcher, attemptProvision, getOracleStatus } = require('./oracle_cloud_catcher'));
+  console.log('[Server Startup] ORACLE CLOUD 24/7 CAPACITY CATCHER module loaded.');
+} catch (e) {
+  console.warn('[Server Startup] oracle_cloud_catcher load skipped:', e.message);
+}
+
 
 
 const app = express();
@@ -822,6 +830,52 @@ app.post('/api/apex/publish-youtube', async (req, res) => {
   }
 });
 
+// ==============================================================================
+// ORACLE CLOUD INFRASTRUCTURE (OCI) 24/7 CAPACITY CATCHER ENDPOINTS
+// ==============================================================================
+
+// GET /api/oracle/status - Live stats, attempt counts, server status & logs
+app.get('/api/oracle/status', (req, res) => {
+  if (!getOracleStatus) {
+    return res.status(503).json({ success: false, error: 'Oracle Cloud Catcher not loaded' });
+  }
+  const status = getOracleStatus();
+  res.json({
+    success: true,
+    platform: 'Render.com Cloud Worker (24/7 Autonomous)',
+    ...status
+  });
+});
+
+// GET /api/oracle/logs - Plain text logs of recent attempts
+app.get('/api/oracle/logs', (req, res) => {
+  if (!getOracleStatus) {
+    return res.status(503).send('Oracle Cloud Catcher not loaded');
+  }
+  const { recentLogs = [] } = getOracleStatus();
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.send(recentLogs.join('\n') || 'No logs recorded yet.');
+});
+
+// POST /api/oracle/trigger - Trigger immediate launch request
+app.post('/api/oracle/trigger', async (req, res) => {
+  if (!attemptProvision) {
+    return res.status(503).json({ success: false, error: 'Oracle Cloud Catcher not loaded' });
+  }
+  try {
+    const isSuccess = await attemptProvision();
+    res.json({ success: true, allocated: isSuccess, status: getOracleStatus() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   addLog(`🚀 Cloud Sales Engine server running on port ${PORT}`);
+  
+  // Auto-start Oracle 24/7 Cloud Catcher Daemon on Render
+  if (startOracleCloudCatcher) {
+    startOracleCloudCatcher();
+    addLog(`🎯 [Oracle Cloud] 24/7 Autonomous Catcher loop started on Render!`);
+  }
 });

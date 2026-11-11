@@ -26,7 +26,6 @@ const decodeKey = (b64) => Buffer.from(b64, 'base64').toString('utf8');
 const DEFAULT_GEMINI_KEYS = [
   decodeKey("QVEuQWI4Uk42SW1zY1M4bFdGeTNjb2pXS1dTV3lUMnU0SnlxTEJibGhfWXZqNDBQVFI1U0E="),
   decodeKey("QVEuQWI4Uk42S2p1TEJpLTZjN2FEVGhPYzhMaXVwZmttRUJRS2ZOcDRvVnUtWklkNER6NVE="),
-  decodeKey("QVEuQWI4Uk42SXhxaTdBQnlCeHBzZXR3azJUQVliWEY1aVAtY3RFSWxqOVB5MkdiX1oxNUE="),
   decodeKey("QVEuQWI4Uk42SmRVal93RFM0d1hlZ3hYZnVZNEh2V01hUmlDTGhsZTlqUFAyWXNENlU1eXc=")
 ];
 
@@ -46,10 +45,10 @@ function getNextKey() {
 }
 
 /**
- * Call Gemini 3.6 / 3.8 Flash with auto-retry and key rotation
+ * Call Gemini Flash with auto-retry and key rotation
  */
 async function callGeminiAI(prompt, systemInstruction = '', maxTokens = 2048) {
-  const models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
+  const models = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
   let lastError = null;
 
   for (let attempt = 0; attempt < API_KEYS.length * models.length; attempt++) {
@@ -88,7 +87,8 @@ async function callGeminiAI(prompt, systemInstruction = '', maxTokens = 2048) {
           return data.candidates[0].content.parts[0].text;
         }
       } else if (res.status === 503 || res.status === 429) {
-        console.warn(`[DynamicSEO Engine] Key ...${apiKey.slice(-5)} Model ${model} rate-limited (${res.status}). Rotating...`);
+        console.warn(`[DynamicSEO Engine] Key ...${apiKey.slice(-5)} Model ${model} rate-limited (${res.status}). Cooling down 2s...`);
+        await new Promise(r => setTimeout(r, 2000));
       } else {
         const errText = await res.text();
         console.warn(`[DynamicSEO Engine] Key ...${apiKey.slice(-5)} returned ${res.status}: ${errText.slice(0, 100)}`);
