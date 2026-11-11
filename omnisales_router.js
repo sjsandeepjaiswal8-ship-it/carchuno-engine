@@ -198,9 +198,14 @@ function createOmniSalesRouter(serverContext) {
       </div>
     `;
 
+    if (targetEmail.toLowerCase().includes('business@closetesters.com')) {
+      return res.status(400).json({ success: false, error: 'business@closetesters.com is reserved for manual founder use only.' });
+    }
+
     try {
       const mailOptions = {
-        from: '"CloseTesters Enterprise" <partners@closetesters.com>',
+        from: '"CloseTesters Global Partnerships" <partners@closetesters.com>',
+        replyTo: 'partners@closetesters.com',
         to: targetEmail,
         subject,
         html: htmlBody

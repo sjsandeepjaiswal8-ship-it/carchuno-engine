@@ -226,12 +226,24 @@ async function dispatchDealerPitch() {
   }
 }
 
-// Scheduled Background Loop: Runs every 15 minutes smoothly
-setInterval(async () => {
+let closeTestersOutreach = null;
+try {
+  closeTestersOutreach = require('./closetesters_autonomous_outreach');
+} catch (e) {
+  console.warn('[Server Startup] closetesters_autonomous_outreach skipped:', e.message);
+}
+
+// Scheduled Background Loop: Runs every 12 minutes smoothly (Anti-Ban Safe Rate)
+async function runUnifiedDispatchCycle() {
   state.lastRun = new Date().toISOString();
-  addLog('⏳ Scheduled dispatch cycle initiated...');
+  addLog('⏳ [OmniSales 24/7] Unified Multi-Brand Dispatch Cycle initiated...');
   await dispatchDealerPitch();
-}, 15 * 60 * 1000);
+  if (closeTestersOutreach && typeof closeTestersOutreach.dispatchNextLead === 'function') {
+    await closeTestersOutreach.dispatchNextLead(activeTransporter, addLog, typeof sovereignDb !== 'undefined' ? sovereignDb : null);
+  }
+}
+
+setInterval(runUnifiedDispatchCycle, 12 * 60 * 1000);
 
 // ==========================================
 // 24/7 AUTONOMOUS SELF-KEEPALIVE PINGER
@@ -940,6 +952,34 @@ app.post('/api/sovereign/batch-sync', (req, res) => {
   res.json({ success: true, collection, ...result });
 });
 
+// ==============================================================================
+// CLOSETESTERS 24/7 AUTONOMOUS OUTREACH TELEMETRY & MANUAL TRIGGER
+// ==============================================================================
+app.get('/api/closetesters/campaign-status', (req, res) => {
+  let consumerCohortCount = 0;
+  try {
+    const p = path.join(__dirname, 'carchuno_verified_13k_leads.json');
+    if (fs.existsSync(p)) consumerCohortCount = JSON.parse(fs.readFileSync(p, 'utf8')).length;
+  } catch (_) {}
+
+  res.json({
+    success: true,
+    platform: 'OmniSales 24/7 Render Cloud',
+    officialSender: 'partners@closetesters.com',
+    strictlyBlocked: ['business@closetesters.com'],
+    indianConsumerCohortLoaded: consumerCohortCount,
+    outreach: closeTestersOutreach ? closeTestersOutreach.getStatus() : { active: false }
+  });
+});
+
+app.post('/api/closetesters/dispatch-now', async (req, res) => {
+  if (!closeTestersOutreach) {
+    return res.status(503).json({ success: false, error: 'CloseTesters Outreach Engine not loaded' });
+  }
+  const result = await closeTestersOutreach.dispatchNextLead(activeTransporter, addLog, sovereignDb);
+  res.json({ ...result, status: closeTestersOutreach.getStatus() });
+});
+
 app.listen(PORT, () => {
   addLog(`🚀 Cloud Sales Engine server running on port ${PORT}`);
   
@@ -948,4 +988,10 @@ app.listen(PORT, () => {
     startOracleCloudCatcher();
     addLog(`🎯 [Oracle Cloud] 24/7 Autonomous Catcher loop started on Render!`);
   }
+
+  // Trigger initial OmniSales dispatch 20s after boot on Render
+  setTimeout(() => {
+    addLog('⚡ [OmniSales Boot] Triggering initial 24/7 verified outreach dispatch...');
+    runUnifiedDispatchCycle().catch(e => addLog(`Boot dispatch notice: ${e.message}`));
+  }, 20000);
 });
