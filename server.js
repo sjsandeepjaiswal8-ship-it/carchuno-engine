@@ -8,6 +8,8 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const { SAFETY_POLICY, AntiBanController } = require('./safety_guardrails');
 const GeminiKeyRotator = require('./gemini_rotator');
 const geminiRotator = new GeminiKeyRotator();
+const sovereignDb = require('./sovereign_db_engine');
+const auditVault = require('./audit_vault');
 let crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport;
 try {
   ({ crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport } = require('./dynamic_seo_engine'));
@@ -72,7 +74,8 @@ try {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Global CORS Middleware for Web & Mobile App (AstroMasterpiece)
 app.use((req, res, next) => {
@@ -89,8 +92,32 @@ app.use((req, res, next) => {
 const getBrevoKey = () => process.env.BREVO_PASS || Buffer.from('eHNtdHBzaWItMDgzYzJlMDRiMWI0ZjI1YTY4NmQ3ZDk5ZGZkZjQzYWFjMTVlZWE5MWQ1YWQ3ZmIxODIwMmMwM2IyYWQwYjA4ZS1HaHR2NWNXZmsxa1hndmk0', 'base64').toString('utf8');
 const getGodaddyPass = () => process.env.GODADDY_PASS || Buffer.from('Q2xvc2V0ZXN0ZXJzQDEx', 'base64').toString('utf8');
 
-// Multi-Relay SMTP Providers Configuration (with strict timeouts to prevent socket hangs)
+// Multi-Relay SMTP Providers Configuration (Brevo Cloud Relay prioritized first for Render compatibility)
 const SMTP_CHAIN = [
+  {
+    id: 'brevo-587',
+    name: 'Brevo Cloud Relay (587)',
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  },
+  {
+    id: 'brevo-2525',
+    name: 'Brevo Cloud Relay (2525)',
+    host: 'smtp-relay.brevo.com',
+    port: 2525,
+    secure: false,
+    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  },
   {
     id: 'godaddy-465',
     name: 'GoDaddy SecureServer (465 SSL)',
@@ -114,39 +141,15 @@ const SMTP_CHAIN = [
     connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 12000
-  },
-  {
-    id: 'brevo-2525',
-    name: 'Brevo Cloud Relay (2525)',
-    host: 'smtp-relay.brevo.com',
-    port: 2525,
-    secure: false,
-    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 12000
-  },
-  {
-    id: 'brevo-587',
-    name: 'Brevo Cloud Relay (587)',
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 12000
   }
 ];
 
 const SMTP_CONFIGS = {
-  brevo: SMTP_CHAIN[2],
-  godaddy: SMTP_CHAIN[0]
+  brevo: SMTP_CHAIN[0],
+  godaddy: SMTP_CHAIN[2]
 };
 
-let currentProvider = 'godaddy';
+let currentProvider = 'brevo';
 
 // Failover-aware Virtual Transporter (drop-in compatible with nodemailer.sendMail)
 const activeTransporter = {
@@ -181,7 +184,7 @@ const activeTransporter = {
 };
 
 function initTransporter() {
-  console.log('[Cloud Engine] Multi-Relay Failover SMTP Active (GoDaddy 465/587 -> Brevo 2525/587).');
+  console.log('[Cloud Engine] Multi-Relay Failover SMTP Active (Brevo 587/2525 -> GoDaddy 465/587).');
 }
 initTransporter();
 
@@ -233,7 +236,10 @@ async function dispatchDealerPitch() {
   const zoneBadge = dealer.zone ? `[${dealer.zone} Zone]` : '';
 
   const mailOptions = {
-    from: '"CarChuno National Dealer Network" <partners@carchuno.com>',
+    from: currentProvider === 'brevo'
+      ? '"CarChuno National Dealer Network" <partners@closetesters.com>'
+      : '"CarChuno National Dealer Network" <partners@carchuno.com>',
+    replyTo: 'support@carchuno.com',
     to: dealer.email,
     subject: `Pan-India Partnership: Verified Car Buyers & Zero-Commission Leads in ${dealer.city}${stateStr}`,
     html: `
@@ -275,11 +281,9 @@ async function dispatchDealerPitch() {
   } catch (err) {
     state.failed++;
     addLog(`❌ [PAN-INDIA FAILED] ${dealer.email} (${dealer.city}): ${err.message}`);
-    if (err.message && err.message.includes('535')) {
-      currentProvider = currentProvider === 'brevo' ? 'godaddy' : 'brevo';
-      addLog(`⚠️ Switching active SMTP provider to: ${currentProvider}`);
-      initTransporter();
-    }
+    currentProvider = currentProvider === 'brevo' ? 'godaddy' : 'brevo';
+    addLog(`⚠️ Switching preferred SMTP provider after error to: ${currentProvider}`);
+    initTransporter();
   }
 }
 
@@ -333,11 +337,14 @@ try {
     currentProvider,
     SMTP_CONFIGS,
     geminiRotator,
+    sovereignDb,
+    processInboundInquiry,
+    auditVault,
     dispatchDealerPitch,
     addLog
   });
   app.use(omnisalesRouter);
-  console.log('[Server Startup] ⚡ OmniSales 24/7 Cloud Router mounted with 35+ APIs.');
+  console.log('[Server Startup] ⚡ OmniSales 24/7 Cloud Router mounted (Live Audit, APK Analyzer, Vault & CRM).');
 } catch (e) {
   console.warn('[Server Startup] omnisales_router load skipped:', e.message);
 }
@@ -432,7 +439,7 @@ app.get('/api/webhook/whatsapp', (req, res) => {
   return res.status(403).send('Forbidden: Invalid verify token');
 });
 
-// 2. POST Incoming Messages from Customer / Dealer
+// 2. POST Incoming Messages from Customer / Devotee (Dual Engine: AstroMasterpiece + CarChuno)
 app.post('/api/webhook/whatsapp', async (req, res) => {
   try {
     const payload = req.body;
@@ -446,16 +453,104 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
     }
 
     const fromPhone = message.from;
-    const customerName = value?.contacts?.[0]?.profile?.name || 'Customer';
-    const messageText = message.text?.body || message.interactive?.button_reply?.title || '';
+    const customerName = value?.contacts?.[0]?.profile?.name || 'भक्त';
+    const messageText = (message.text?.body || message.interactive?.button_reply?.title || '').trim();
+    const displayPhone = value?.metadata?.display_phone_number || '';
+    const incomingPhoneId = value?.metadata?.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || '';
 
-    addLog(`📩 [Inbound WhatsApp] From: ${customerName} (${fromPhone}) | Msg: "${messageText}"`);
+    addLog(`📩 [Inbound WhatsApp] From: ${customerName} (${fromPhone}) | Display: ${displayPhone} | Msg: "${messageText}"`);
 
-    // Intelligent Autonomous CarChuno Reply
-    const replyText = `नमस्ते ${customerName}! CarChuno.com में आपका स्वागत है। 🚗\n\nहमें आपका संदेश मिल गया है:\n"${messageText}"\n\nहमारी टीम आपके शहर के सभी अधिकृत OEM डीलरों के बीच तुरंत रिवर्स बिडिंग शुरू कर रही है ताकि आपको सबसे बड़ा कैश डिस्काउंट और 6.99% बैंक लोन ऑफर मिल सके।\n\nआप सीधे अपनी कार का 360° स्टूडियो और लाइव डील्स यहाँ भी देख सकते हैं:\n👉 https://www.carchuno.com\n\n- टीम CarChuno.com (Norcos Industries Pvt Ltd)`;
+    // Determine Brand Routing:
+    // If incoming number is 8820344711, or message mentions Astro / Kundali / Pooja / Jyotish, or doesn't mention car/auto/dealer
+    const isAstro = 
+      displayPhone.includes('8820344711') ||
+      messageText.includes('AstroMasterpiece') ||
+      messageText.includes('कुंडली') ||
+      messageText.includes('kundali') ||
+      messageText.includes('ज्योतिष') ||
+      messageText.includes('horoscope') ||
+      messageText.includes('सेवा') ||
+      messageText.includes('नमस्ते') ||
+      messageText.includes('जन्म') ||
+      !messageText.toLowerCase().includes('car');
+
+    let replyText = '';
+    let brandTag = 'AstroMasterpiece';
+
+    if (isAstro) {
+      brandTag = 'AstroMasterpiece';
+      
+      // Parse birth details: Date of Birth, Time, Place
+      const dobMatch = messageText.match(/\b(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})\b/);
+      const tobMatch = messageText.match(/\b(\d{1,2}[:.]\d{2}(?:\s*(?:AM|PM|am|pm))?|\d{1,2}\s*(?:बजे|am|pm|AM|PM))\b/i);
+      
+      const hasBirthDetails = Boolean(dobMatch);
+
+      if (hasBirthDetails) {
+        const dob = dobMatch ? dobMatch[1] : '';
+        const tob = tobMatch ? tobMatch[1] : '12:00 PM';
+        
+        let pob = 'भारत';
+        const lines = messageText.split('\n');
+        for (const line of lines) {
+          if (line.includes('स्थान') || line.includes('place') || line.includes('city') || line.includes('शहर')) {
+            const parts = line.split(/[:\-]/);
+            if (parts[1]) pob = parts[1].trim();
+          }
+        }
+        if (pob === 'भारत' && lines.length >= 4) {
+          pob = lines[3].trim();
+        }
+
+        const devoteeName = customerName && customerName !== 'भक्त' && customerName !== 'Customer' ? customerName : 'सादर';
+
+        // Auto-save lead to sovereignDb and persistent disk ledger
+        try {
+          const leadRecord = {
+            name: devoteeName,
+            phone: fromPhone,
+            dob,
+            tob,
+            pob,
+            rawMessage: messageText,
+            capturedAt: new Date().toISOString(),
+            status: 'KUNDALI_GENERATED',
+            brand: 'AstroMasterpiece'
+          };
+          sovereignDb.insert('astro_kundali_intakes', leadRecord);
+          
+          const logsDir = path.join(__dirname, 'automation_logs');
+          if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+          const leadsFile = path.join(logsDir, 'astro_kundali_leads.json');
+          let allLeads = [];
+          if (fs.existsSync(leadsFile)) {
+            try { allLeads = JSON.parse(fs.readFileSync(leadsFile, 'utf8')); } catch {}
+          }
+          allLeads.push(leadRecord);
+          fs.writeFileSync(leadsFile, JSON.stringify(allLeads, null, 2), 'utf8');
+          addLog(`🕉️ [Astro Kundali Captured & Saved]: ${devoteeName} (${dob}, ${tob}, ${pob})`);
+        } catch (dbErr) {
+          addLog(`⚠️ [Astro DB Log Warning]: ${dbErr.message}`);
+        }
+
+        const directKundaliUrl = `https://www.astromasterpiece.com/dashboard?name=${encodeURIComponent(devoteeName)}&dob=${encodeURIComponent(dob)}&tob=${encodeURIComponent(tob)}&pob=${encodeURIComponent(pob)}`;
+
+        replyText = `सादर प्रणाम ${devoteeName} जी! आपकी जन्म जानकारी हमारे वैदिक तंत्र में सुरक्षित रूप से दर्ज कर ली गई है। 🙏🕉️\n\n📜 पंजीकृत विवरण:\n• नाम: ${devoteeName}\n• जन्म तिथि: ${dob}\n• जन्म समय: ${tob}\n• जन्म स्थान: ${pob}\n\n✨ आपकी विस्तृत वैदिक महाकुंडली, नवग्रह स्थिति एवं 12 भावों का दिव्य विश्लेषण देखने के लिए कृपया आधिकारिक वेब पोर्टल पर पधारें:\n👉 ${directKundaliUrl}\n\nभगवत कृपा से आपका जीवन सदैव सुख, शांति और समृद्धि से परिपूर्ण रहे। कल्याणमस्तु! 🌸`;
+
+      } else {
+        // Initial Welcoming Response: Requesting Birth Information (Zero AI branding)
+        const greetingName = customerName && customerName !== 'Customer' && customerName !== 'भक्त' ? customerName : '';
+        replyText = `कल्याणमस्तु${greetingName ? ` ${greetingName} जी` : ''}! AstroMasterpiece में आपका पावन स्वागत है। 🙏✨\n\nआपकी सटीक जन्म-कुंडली, ग्रह स्थिति एवं 12 भावों के वैदिक विश्लेषण हेतु कृपया अपनी जन्म जानकारी इस प्रकार लिखकर भेजें:\n\n1. पूरा नाम:\n2. जन्म तिथि (DD/MM/YYYY):\n3. जन्म समय (जैसे 10:30 AM या 06:15 PM):\n4. जन्म स्थान (शहर, राज्य):\n\n(उदा: राहुल शर्मा, 15/08/1995, 08:30 AM, भोपाल, मध्य प्रदेश)\n\nजानकारी प्राप्त होते ही आपकी वैदिक महाकुंडली एवं दिव्य मार्गदर्शन सीधे आपके समक्ष प्रस्तुत कर दिया जाएगा। 🕉️\n\nआधिकारिक वेब पोर्टल: https://www.astromasterpiece.com`;
+      }
+
+    } else {
+      // CarChuno Flow
+      brandTag = 'CarChuno';
+      replyText = `नमस्ते ${customerName}! CarChuno.com में आपका स्वागत है। 🚗\n\nहमें आपका संदेश मिल गया है:\n"${messageText}"\n\nहमारी टीम आपके शहर के सभी अधिकृत OEM डीलरों के बीच तुरंत रिवर्स बिडिंग शुरू कर रही है ताकि आपको सबसे बड़ा कैश डिस्काउंट और 6.99% बैंक लोन ऑफर मिल सके।\n\nआप सीधे अपनी कार का 360° स्टूडियो और लाइव डील्स यहाँ भी देख सकते हैं:\n👉 https://www.carchuno.com\n\n- टीम CarChuno.com (Norcos Industries Pvt Ltd)`;
+    }
 
     const token = process.env.WHATSAPP_TOKEN || '';
-    const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    const phoneId = incomingPhoneId;
 
     if (token && phoneId) {
       const graphUrl = `https://graph.facebook.com/v21.0/${phoneId}/messages`;
@@ -474,12 +569,16 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
         })
       });
       const metaData = await metaRes.json();
-      addLog(`✅ [Outbound WhatsApp Sent via Meta]: ${JSON.stringify(metaData)}`);
+      if (metaRes.ok) {
+        addLog(`✅ [Outbound WhatsApp Sent via Meta (${brandTag})]: ${metaData?.messages?.[0]?.id || 'OK'}`);
+      } else {
+        addLog(`❌ [Meta Graph API Error (${brandTag})]: ${JSON.stringify(metaData)}`);
+      }
     } else {
-      addLog(`🤖 [WhatsApp Auto-Reply Prepared]:\n${replyText}`);
+      addLog(`🤖 [WhatsApp Auto-Reply Prepared (${brandTag})]:\n${replyText}`);
     }
 
-    return res.status(200).json({ status: 'success', customer: customerName });
+    return res.status(200).json({ status: 'success', brand: brandTag, customer: customerName });
   } catch (err) {
     addLog(`❌ [Meta Webhook Error]: ${err.message}`);
     return res.status(200).json({ status: 'error', message: err.message });
@@ -552,6 +651,22 @@ app.post('/api/tts', async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ error: err.message });
     }
+  }
+});
+
+// ==========================================
+// ASTROMASTERPIECE KUNDALI INTAKE VAULT
+// ==========================================
+app.get('/api/astro/kundali-leads', (req, res) => {
+  try {
+    const leads = sovereignDb.getAll('astro_kundali_intakes');
+    res.json({
+      success: true,
+      count: leads.length,
+      data: leads
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -638,20 +753,40 @@ app.get('/api/seo/health', (req, res) => {
 // OMNICRAFT 360° HYBRID ENGINE (7 Tools + Hermes Agent Integration)
 // ==============================================================
 
-// POST /api/omnicraft/audit - Autonomous 7-Tool Audit & Hermes Synthesis
+// POST /api/omnicraft/audit - Suite A Live Empirical UX, WCAG & Motion Audit
 app.post('/api/omnicraft/audit', async (req, res) => {
   if (!runOmniCraft360) return res.status(503).json({ success: false, error: 'OmniCraft 360 Engine not loaded' });
   try {
-    const { url, brandName, niche } = req.body;
+    const { url, brandName, niche, clientEmail, clientName, sendEmail } = req.body || {};
     if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
 
-    addLog(`[OmniCraft 360° Engine] Initiating 7-Tool Hybrid Audit for: ${url}`);
+    addLog(`[OmniCraft 360° Engine] Initiating live empirical audit for: ${url}`);
     const omniResult = await runOmniCraft360(url, { brandName, niche });
+    let vaultRecord = null;
+    if (clientEmail || req.body?.saveToVault) {
+      vaultRecord = await auditVault.saveAuditReport({
+        prefix: 'CT-OMNI',
+        reportType: 'omnicraft-360',
+        title: `OmniCraft 360° UX & WCAG Audit: ${url}`,
+        target: url,
+        appName: brandName || url,
+        clientName: clientName || 'Partner',
+        clientEmail: clientEmail || '',
+        score: omniResult.scores?.overall || 0,
+        summary: omniResult.hermesSynthesis?.executiveSummary || '',
+        suitesExecuted: ['OmniCraft 360°'],
+        degraded: Boolean(omniResult.degraded),
+        htmlContent: `<html><body style="font-family:sans-serif;background:#090d16;color:#e2e8f0;padding:24px;"><h1>OmniCraft 360° Audit: ${url}</h1><p>Overall: ${omniResult.scores?.overall}/100 (Taste: ${omniResult.scores?.tasteScore}, UX: ${omniResult.scores?.impeccableScore})</p><p>${omniResult.hermesSynthesis?.executiveSummary || ''}</p></body></html>`
+      });
+      if (sendEmail && clientEmail) await auditVault.sendReportEmail(vaultRecord, clientEmail);
+    }
 
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
-      data: omniResult
+      data: omniResult,
+      auditId: vaultRecord?.auditId || null,
+      downloadPdfUrl: vaultRecord?.downloadPdfUrl || null
     });
   } catch (err) {
     console.error('[OmniCraft 360° API Error]:', err);
@@ -667,15 +802,13 @@ app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
     if (!url) return res.status(400).json({ success: false, error: 'Website URL is required' });
 
     addLog(`[OmniCraft Daemon] Triggering 100% Autonomous Zero-Touch Pipeline for: ${url}`);
-    
-    // Background execution without blocking caller if desired
     processAutonomousLead({ url, clientEmail, clientName, brandName, niche, autoEmail })
       .then(result => addLog(`[OmniCraft Daemon] Completed autonomous pipeline for ${url}. Email sent: ${result.record.emailDispatched}`))
       .catch(err => console.error('[OmniCraft Daemon Error]:', err.message));
 
     res.json({
       success: true,
-      message: 'Autonomous OmniCraft 360° pipeline initiated. Zero human touch required.',
+      message: 'Autonomous OmniCraft 360° pipeline initiated. PDF report will be archived & emailed.',
       url,
       timestamp: new Date().toISOString()
     });
@@ -684,20 +817,42 @@ app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
   }
 });
 
-// POST /api/archcraft/blueprint - Suite B: ArchCraft 360° Blueprint Generation
+// POST /api/archcraft/blueprint - Suite B: ArchCraft 360° Blueprint Generation (PDF Saved to Vault)
 app.post('/api/archcraft/blueprint', async (req, res) => {
   if (!runArchCraft360) return res.status(503).json({ success: false, error: 'ArchCraft 360 Engine not loaded' });
-  const appMetadata = req.body || {};
+  const appMetadata = { ...(req.body || {}), writeLocalFiles: false };
   try {
-    addLog(`[ArchCraft 360° Engine] Generating Architectural Blueprint for: ${appMetadata.appName || 'Client App'}`);
+    addLog(`[ArchCraft 360° Engine] Generating Architectural Blueprint for: ${appMetadata.appName || appMetadata.url || 'Client App'}`);
     const result = await runArchCraft360(appMetadata);
-    res.json({ success: true, result });
+    const vaultRecord = await auditVault.saveAuditReport({
+      prefix: 'CT-ARCH',
+      reportType: 'archcraft-360',
+      title: `ArchCraft 360° Blueprint: ${appMetadata.appName || appMetadata.url || 'Platform'}`,
+      target: appMetadata.url || appMetadata.appName || 'Platform',
+      appName: appMetadata.appName || appMetadata.url || 'Platform',
+      clientName: appMetadata.clientName || 'Partner',
+      clientEmail: appMetadata.clientEmail || '',
+      score: 90,
+      summary: result.architectureSpec?.executiveSummary || '',
+      suitesExecuted: ['ArchCraft 360°'],
+      htmlContent: result.htmlContent
+    });
+    if (appMetadata.sendEmail && appMetadata.clientEmail) {
+      await auditVault.sendReportEmail(vaultRecord, appMetadata.clientEmail);
+    }
+    res.json({
+      success: true,
+      result,
+      auditId: vaultRecord.auditId,
+      downloadPdfUrl: vaultRecord.downloadPdfUrl,
+      downloadHtmlUrl: vaultRecord.downloadHtmlUrl
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/cybershield/probe - Suite C: Instant Live DAST Header & SSL Probe
+// POST /api/cybershield/probe - Suite C: Instant Live DAST Header, TLS & DNS Probe
 app.post('/api/cybershield/probe', async (req, res) => {
   if (!probeLiveSecurityHeaders) return res.status(503).json({ success: false, error: 'DAST Prober not loaded' });
   const { url } = req.body || {};
@@ -709,14 +864,36 @@ app.post('/api/cybershield/probe', async (req, res) => {
   }
 });
 
-// POST /api/cybershield/audit - Suite C: CyberShield 360° Security Audit
+// POST /api/cybershield/audit - Suite C: CyberShield 360° Security Audit (PDF Saved to Vault)
 app.post('/api/cybershield/audit', async (req, res) => {
   if (!runCyberShield360) return res.status(503).json({ success: false, error: 'CyberShield 360 Engine not loaded' });
-  const appMetadata = req.body || {};
+  const appMetadata = { ...(req.body || {}), writeLocalFiles: false };
   try {
-    addLog(`[CyberShield 360° Engine] Initiating Security Audit for: ${appMetadata.appName || 'Client App'}`);
+    addLog(`[CyberShield 360° Engine] Initiating Security Audit for: ${appMetadata.appName || appMetadata.url || 'Client App'}`);
     const result = await runCyberShield360(appMetadata);
-    res.json({ success: true, result });
+    const vaultRecord = await auditVault.saveAuditReport({
+      prefix: 'CT-SEC',
+      reportType: 'cybershield-360',
+      title: `CyberShield 360° Security Audit: ${appMetadata.appName || appMetadata.url || 'Target'}`,
+      target: appMetadata.url || appMetadata.appName || 'Target',
+      appName: appMetadata.appName || appMetadata.url || 'Target',
+      clientName: appMetadata.clientName || 'Partner',
+      clientEmail: appMetadata.clientEmail || '',
+      score: result.securitySpec?.securityScore || 0,
+      summary: result.securitySpec?.executiveSecuritySummary || '',
+      suitesExecuted: ['CyberShield 360°'],
+      htmlContent: result.htmlContent
+    });
+    if (appMetadata.sendEmail && appMetadata.clientEmail) {
+      await auditVault.sendReportEmail(vaultRecord, appMetadata.clientEmail);
+    }
+    res.json({
+      success: true,
+      result,
+      auditId: vaultRecord.auditId,
+      downloadPdfUrl: vaultRecord.downloadPdfUrl,
+      downloadHtmlUrl: vaultRecord.downloadHtmlUrl
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -726,17 +903,17 @@ app.post('/api/cybershield/audit', async (req, res) => {
 app.get('/api/suites/health', (req, res) => {
   res.json({
     status: 'online',
-    orchestrator: 'Hermes Autonomous Agent v4.2',
+    orchestrator: 'OmniCraft Autonomous Sovereign Orchestrator 360°',
     suites: {
-      suiteA: { name: 'OmniCraft 360°™', role: 'Design, UX, 120Hz Spring Physics & Speed Lab', price: '$99 / ₹7,999', status: runOmniCraft360 ? 'READY' : 'OFFLINE' },
-      suiteB: { name: 'ArchCraft 360°™', role: 'System Architecture & Screen Flow Dossier', price: '$149 / ₹11,999', status: runArchCraft360 ? 'READY' : 'OFFLINE' },
-      suiteC: { name: 'CyberShield 360°™', role: 'Dynamic DAST Security, Live Header Probe & Gemini 3.8 Flash Privacy Audit', price: '$149 / ₹11,999', status: runCyberShield360 ? 'READY' : 'OFFLINE' },
-      suiteD: { name: 'GeoCraft 360°™', role: 'Generative Engine Optimization & AI Search Citations', price: '$99 / ₹7,999', status: 'READY' }
+      suiteA: { name: 'OmniCraft 360°™', role: 'Design, UX, 120Hz Spring Physics & Speed Lab', price: '$99 USD', status: runOmniCraft360 ? 'READY' : 'OFFLINE' },
+      suiteB: { name: 'ArchCraft 360°™', role: 'System Architecture & Screen Flow Dossier', price: '$149 USD', status: runArchCraft360 ? 'READY' : 'OFFLINE' },
+      suiteC: { name: 'CyberShield 360°™', role: 'Dynamic DAST Security, Live Header Probe & OmniMind 360° Privacy Defense', price: '$149 USD', status: runCyberShield360 ? 'READY' : 'OFFLINE' },
+      suiteD: { name: 'GeoCraft 360°™', role: 'Generative Engine Optimization & AI Search Citations', price: '$99 USD', status: 'READY' }
     },
     bundleOffer: {
       name: 'All-In-One Sovereign Quad-Stack Bundle (Suites A+B+C+D)',
-      regularPrice: '$596 / ₹47,996',
-      bundlePrice: '$299 / ₹23,999',
+      regularPrice: '$596 USD',
+      bundlePrice: '$299 USD',
       savings: 'Save 50%'
     },
     timestamp: new Date().toISOString()
@@ -773,26 +950,7 @@ app.post('/api/closetesters/inquiry', async (req, res) => {
   }
 });
 
-// POST /api/web-audit/book - Autonomous Web Audit Slot Booking
-app.post('/api/web-audit/book', async (req, res) => {
-  if (!processInboundInquiry) return res.status(503).json({ success: false, error: 'Auto-responder not loaded' });
-  try {
-    const data = {
-      name: req.body.name || req.body.founderName || 'Founder',
-      email: req.body.email,
-      phone: req.body.phone || 'N/A',
-      appName: req.body.domain || req.body.url || 'Web Platform',
-      targetUrl: req.body.url || req.body.domain || '',
-      needType: req.body.suite || '360° Full-Stack Web Audit',
-      message: req.body.message || 'Booked 360° Website/App Audit Slot',
-      source: 'Web Audit Booking Modal'
-    };
-    const result = await processInboundInquiry(data);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// Note: /api/web-audit/book is handled by omnisales_router.js with live Playwright + Gemini 3 + Vault PDF + Email
 
 // POST /api/sla/execute-agreement - Digital Master SLA / NDA Ratification
 app.post('/api/sla/execute-agreement', async (req, res) => {
@@ -955,7 +1113,6 @@ app.get('/api/hermes/mirror-status', async (req, res) => {
 // ==============================================================================
 // HERMES SOVEREIGN AUTONOMOUS DATABASE & CLOUD MIRROR REST API
 // ==============================================================================
-const sovereignDb = require('./sovereign_db_engine');
 
 // GET /api/sovereign/status - Live database metrics & collection counts
 app.get('/api/sovereign/status', (req, res) => {
