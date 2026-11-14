@@ -5,7 +5,7 @@
  * Deployed on Render.com Cloud Container for True 24/7 Non-Stop Pitching.
  * Bypasses local sleep/power-off. Runs continuously in cloud background.
  *
- * Target: 4 OCPUs | 24 GB RAM | 150 GB Storage (Canonical Ubuntu 24.04 ARM64)
+ * Target: 2 OCPUs | 12 GB RAM | 100 GB Storage (Canonical Ubuntu 24.04 ARM64)
  * Region: ap-hyderabad-1 | AD: PGML:AP-HYDERABAD-1-AD-1 (Always Free)
  * ==============================================================================
  */
@@ -49,7 +49,7 @@ const ociState = {
   mode: 'RENDER_CLOUD_24_7',
   region: 'ap-hyderabad-1 (Hyderabad)',
   ad: AD,
-  shape: 'VM.Standard.A1.Flex (4 OCPU, 24 GB RAM, 150GB Storage)',
+  shape: 'VM.Standard.A1.Flex (2 OCPU, 12 GB RAM, 100GB Storage)',
   attempts: 0,
   lastAttemptTime: null,
   lastResult: 'Initialized. Starting 24/7 cloud loop...',
@@ -115,7 +115,7 @@ async function attemptProvision() {
       instanceId: existing.id,
       name: existing.displayName,
       publicIp: ip,
-      specs: '4 OCPUs | 24 GB RAM | 150 GB Storage (Always Free)',
+      specs: '2 OCPUs | 12 GB RAM | 100 GB Storage (Always Free)',
       sshCommand: `ssh ubuntu@${ip}`
     };
     ociState.lastResult = `SERVER ALREADY ONLINE (${existing.displayName}) at ${ip}!`;
@@ -130,16 +130,16 @@ async function attemptProvision() {
       launchInstanceDetails: {
         compartmentId: TENANCY_ID,
         availabilityDomain: AD,
-        displayName: 'oracle-24gb-ampere-server',
+        displayName: 'oracle-ampere-server',
         shape: 'VM.Standard.A1.Flex',
         shapeConfig: {
-          ocpus: 4,
-          memoryInGBs: 24
+          ocpus: 2,
+          memoryInGBs: 12
         },
         sourceDetails: {
           sourceType: 'image',
           imageId: IMAGE_ID,
-          bootVolumeSizeInGBs: 150
+          bootVolumeSizeInGBs: 100
         },
         createVnicDetails: {
           subnetId: SUBNET_ID,
@@ -153,7 +153,7 @@ async function attemptProvision() {
     });
 
     const newInst = launchRes.instance;
-    addOciLog('🎉🎉🎉 SUCCESS! 24GB AMPERE SERVER INSTANCE ALLOCATED! 🎉🎉🎉');
+    addOciLog('🎉🎉🎉 SUCCESS! AMPERE SERVER INSTANCE ALLOCATED! 🎉🎉🎉');
     addOciLog(`Instance OCID: ${newInst.id}`);
 
     // Wait 25 seconds for public IP assignment
@@ -168,9 +168,9 @@ async function attemptProvision() {
       sshCommand: `ssh ubuntu@${publicIp}`,
       specs: {
         shape: 'VM.Standard.A1.Flex',
-        ocpus: 4,
-        ramGB: 24,
-        storageGB: 150,
+        ocpus: 2,
+        ramGB: 12,
+        storageGB: 100,
         os: 'Ubuntu 24.04 Minimal aarch64',
         cost: '$0.00 / month (Always Free)'
       },
@@ -212,7 +212,7 @@ async function startOracleCloudCatcher() {
 
   addOciLog('================================================================');
   addOciLog('🚀 ORACLE CLOUD 24/7 CAPACITY CATCHER ACTIVE ON RENDER CLOUD!');
-  addOciLog('Specs: 4 OCPUs | 24 GB RAM | 150 GB Boot Volume (Ubuntu 24.04 ARM64)');
+  addOciLog('Specs: 2 OCPUs | 12 GB RAM | 100 GB Boot Volume (Ubuntu 24.04 ARM64)');
   addOciLog('Region: ap-hyderabad-1 | Target AD: PGML:AP-HYDERABAD-1-AD-1');
   addOciLog('================================================================');
 
