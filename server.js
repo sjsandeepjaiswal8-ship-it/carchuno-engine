@@ -1194,6 +1194,19 @@ app.post('/api/closetesters/dispatch-now', async (req, res) => {
   res.json({ ...result, status: closeTestersOutreach.getStatus() });
 });
 
+app.post('/api/closetesters/harvest-leads', async (req, res) => {
+  try {
+    const CloseTestersLeadGenerator = require('./closetesters_lead_generator');
+    const generator = new CloseTestersLeadGenerator();
+    const count = parseInt(req.body?.count || 10, 10);
+    const result = await generator.harvestBatch(count);
+    addLog(`🌾 [Lead Harvester] Harvested ${result.addedCount} fresh leads (Total: ${result.totalLeads})`);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/email/probe-all', async (req, res) => {
   let egressIp = 'unknown';
   try {

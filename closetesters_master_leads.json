@@ -19272,5 +19272,115 @@
     "solution": "Studio Growth Whitelabel Retainer (8 Apps/Mo) ($69/mo)",
     "hook": "Outsource mandatory 14-day 20 testers tracking under whitelabel NDA with 80%+ profit margins.",
     "dispatchedCount": 0
+  },
+  {
+    "name": "Khatabook Mobile Labs Engineering Lead",
+    "email": "contact@khatabook.com",
+    "company": "Khatabook Mobile Labs",
+    "country": "India",
+    "packageId": "com.kyteapp",
+    "appName": "Khatabook Ledger & Billing",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Khatabook Ledger & Billing",
+    "discoveredAt": "2026-11-14T08:55:25.117Z"
+  },
+  {
+    "name": "Jar Gold & Savings Engineering Lead",
+    "email": "contact@myjar.app",
+    "company": "Jar Gold & Savings",
+    "country": "India",
+    "packageId": "com.jar.app",
+    "appName": "Jar Daily Gold Savings",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Jar Daily Gold Savings",
+    "discoveredAt": "2026-11-14T08:55:25.165Z"
+  },
+  {
+    "name": "Navi Technologies QA Engineering Lead",
+    "email": "contact@navi.com",
+    "company": "Navi Technologies QA",
+    "country": "India",
+    "packageId": "com.naviapp",
+    "appName": "Navi Mutual Funds & Loans",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Navi Mutual Funds & Loans",
+    "discoveredAt": "2026-11-14T08:55:25.199Z"
+  },
+  {
+    "name": "Jupiter Money Engineering Engineering Lead",
+    "email": "contact@jupiter.money",
+    "company": "Jupiter Money Engineering",
+    "country": "India",
+    "packageId": "money.jupiter",
+    "appName": "Jupiter 1-Click Banking",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Jupiter 1-Click Banking",
+    "discoveredAt": "2026-11-14T08:55:25.246Z"
+  },
+  {
+    "name": "Fi Money Mobile Engineering Lead",
+    "email": "contact@fi.money",
+    "company": "Fi Money Mobile",
+    "country": "India",
+    "packageId": "money.fi",
+    "appName": "Fi Money & Savings",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Fi Money & Savings",
+    "discoveredAt": "2026-11-14T08:55:25.292Z"
+  },
+  {
+    "name": "Khatabook Mobile Labs Engineering Lead",
+    "email": "support@khatabook.com",
+    "company": "Khatabook Mobile Labs",
+    "country": "India",
+    "packageId": "com.kyteapp",
+    "appName": "Khatabook Ledger & Billing",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Khatabook Ledger & Billing",
+    "discoveredAt": "2026-11-14T08:56:35.141Z"
+  },
+  {
+    "name": "Jar Gold & Savings Engineering Lead",
+    "email": "support@myjar.app",
+    "company": "Jar Gold & Savings",
+    "country": "India",
+    "packageId": "com.jar.app",
+    "appName": "Jar Daily Gold Savings",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Jar Daily Gold Savings",
+    "discoveredAt": "2026-11-14T08:56:35.159Z"
+  },
+  {
+    "name": "Navi Technologies QA Engineering Lead",
+    "email": "support@navi.com",
+    "company": "Navi Technologies QA",
+    "country": "India",
+    "packageId": "com.naviapp",
+    "appName": "Navi Mutual Funds & Loans",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Navi Mutual Funds & Loans",
+    "discoveredAt": "2026-11-14T08:56:35.202Z"
+  },
+  {
+    "name": "Jupiter Money Engineering Engineering Lead",
+    "email": "support@jupiter.money",
+    "company": "Jupiter Money Engineering",
+    "country": "India",
+    "packageId": "money.jupiter",
+    "appName": "Jupiter 1-Click Banking",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Jupiter 1-Click Banking",
+    "discoveredAt": "2026-11-14T08:56:35.217Z"
+  },
+  {
+    "name": "Fi Money Mobile Engineering Lead",
+    "email": "support@fi.money",
+    "company": "Fi Money Mobile",
+    "country": "India",
+    "packageId": "money.fi",
+    "appName": "Fi Money & Savings",
+    "tier": "TIER_2_PLAYSTORE_INDIA_ACTIVE",
+    "hook": "Google Play 2026 Target SDK 35 & 16KB ELF compliance verification required for Fi Money & Savings",
+    "discoveredAt": "2026-11-14T08:56:35.232Z"
   }
 ]

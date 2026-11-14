@@ -114,6 +114,20 @@ class HermesPermanentDaemon {
       this.auditCampaign()
     ]);
 
+    // Automated daily lead harvesting check (every 20 cycles)
+    if (this.cycleCount % 20 === 1) {
+      try {
+        const CloseTestersLeadGenerator = require('./closetesters_lead_generator');
+        const gen = new CloseTestersLeadGenerator();
+        const harvestRes = await gen.harvestBatch(5);
+        if (harvestRes.addedCount > 0) {
+          this.log(`🌾 Harvested & Added ${harvestRes.addedCount} fresh leads (Total: ${harvestRes.totalLeads})`);
+        }
+      } catch (err) {
+        this.log(`Lead harvest warning: ${err.message}`);
+      }
+    }
+
     this.log(`  -> Render: ${this.state.renderStatus} | Oracle Catcher: ${this.state.oracleCatcherStatus} | Campaign: ${this.state.campaignStatus}`);
     this.saveState();
   }

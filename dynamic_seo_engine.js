@@ -1,171 +1,140 @@
 /**
- * Autonomous Enterprise Dynamic SEO & GEO (AEO) Engine
- * Developed for CloseTesters.com & OmniSales Agent
- * 
+ * ==============================================================================
+ * GEOCRAFT 360° / AUTONOMOUS ENTERPRISE DYNAMIC SEO & GEO (AEO) ENGINE (SUITE D)
+ * ==============================================================================
  * Features:
- * 1. Live Deep Crawler & Technical SEO Auditor (Cheerio + HTTP Latency)
- * 2. Multi-Key Gemini AI Rotator for Autonomous GEO & Schema.org Synthesis
- * 3. AI Generative Engine Optimization (AEO) for ChatGPT, Perplexity & Gemini Answer Citations
- * 4. Executive SEO Audit Dossier Generator (Client-Facing Branded HTML Report)
- * 5. Dynamic XML Sitemap & robots.txt Generator
+ *  1. Live Technical Crawler (Cheerio + shared Playwright result if supplied)
+ *  2. Live Crawlability & AI Bot Readiness Probe (/robots.txt, /sitemap.xml, /llms.txt)
+ *  3. Gemini 3 Rotator AI Synthesis for Schema.org JSON-LD, GEO Tags & llms.txt
+ *  4. Executive Client-Facing HTML Dossier Generator
+ * ==============================================================================
  */
 
 const cheerio = require('cheerio');
-const https = require('https');
-const http = require('http');
 const { URL } = require('url');
+const { getSharedRotator, generateContent, generateJson } = require('./gemini_rotator');
 
 let inspectWithPlaywright = null;
 try {
   ({ inspectWithPlaywright } = require('./playwright_auditor'));
-} catch (e) {
-  // Playwright auditor optional on cloud deployments
-}
-
-const decodeKey = (b64) => Buffer.from(b64, 'base64').toString('utf8');
-const DEFAULT_GEMINI_KEYS = [
-  decodeKey("QVEuQWI4Uk42SW1zY1M4bFdGeTNjb2pXS1dTV3lUMnU0SnlxTEJibGhfWXZqNDBQVFI1U0E="),
-  decodeKey("QVEuQWI4Uk42S2p1TEJpLTZjN2FEVGhPYzhMaXVwZmttRUJRS2ZOcDRvVnUtWklkNER6NVE="),
-  decodeKey("QVEuQWI4Uk42SmRVal93RFM0d1hlZ3hYZnVZNEh2V01hUmlDTGhsZTlqUFAyWXNENlU1eXc=")
-];
-
-const ENV_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '')
-  .split(',')
-  .map(k => k.trim())
-  .filter(Boolean);
-
-const API_KEYS = ENV_KEYS.length > 0 ? ENV_KEYS : DEFAULT_GEMINI_KEYS;
-
-let currentKeyIndex = 0;
-
-function getNextKey() {
-  const key = API_KEYS[currentKeyIndex];
-  currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
-  return key;
-}
+} catch (_) {}
 
 /**
- * Call Gemini Flash with auto-retry and key rotation
+ * Legacy-compatible Gemini text generator backed by shared Gemini 3 Rotator
  */
 async function callGeminiAI(prompt, systemInstruction = '', maxTokens = 2048) {
-  const models = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
-  let lastError = null;
+  return generateContent(prompt, {
+    systemInstruction,
+    maxOutputTokens: Math.max(1024, maxTokens),
+    temperature: 0.3,
+    responseMimeType: 'application/json'
+  });
+}
 
-  for (let attempt = 0; attempt < API_KEYS.length * models.length; attempt++) {
-    const apiKey = getNextKey();
-    const model = models[attempt % models.length];
-
+async function probeAiDiscoveryFiles(origin) {
+  const check = async (filePath) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 5000);
     try {
-      const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json"
-        }
-      };
-
-      if (systemInstruction) {
-        payload.systemInstruction = { parts: [{ text: systemInstruction }] };
-      }
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeout);
-
-      if (res.status === 200) {
-        const data = await res.json();
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-          return data.candidates[0].content.parts[0].text;
-        }
-      } else if (res.status === 503 || res.status === 429) {
-        console.warn(`[DynamicSEO Engine] Key ...${apiKey.slice(-5)} Model ${model} rate-limited (${res.status}). Cooling down 2s...`);
-        await new Promise(r => setTimeout(r, 2000));
-      } else {
-        const errText = await res.text();
-        console.warn(`[DynamicSEO Engine] Key ...${apiKey.slice(-5)} returned ${res.status}: ${errText.slice(0, 100)}`);
-      }
-    } catch (err) {
-      lastError = err;
+      const res = await fetch(`${origin}${filePath}`, { signal: controller.signal, redirect: 'follow' });
+      const text = res.ok ? await res.text() : '';
+      return { ok: res.status === 200 && text.trim().length > 0, statusCode: res.status, size: text.length, preview: text.slice(0, 600) };
+    } catch (e) {
+      return { ok: false, statusCode: 0, error: e.message, preview: '' };
+    } finally {
+      clearTimeout(t);
     }
-  }
+  };
 
-  throw new Error(`Gemini AI service unavailable: ${lastError ? lastError.message : 'All keys and models busy'}`);
+  const [robots, sitemap, llms] = await Promise.all([
+    check('/robots.txt'),
+    check('/sitemap.xml'),
+    check('/llms.txt')
+  ]);
+
+  const robotsLower = (robots.preview || '').toLowerCase();
+  const blocksAiBots = /user-agent:\s*(gptbot|perplexitybot|claudebot|google-extended|oai-searchbot)[\s\S]{0,80}disallow:\s*\//i.test(robotsLower);
+  const sitemapUrlsCount = sitemap.ok ? (sitemap.preview.match(/<loc>/gi) || []).length : 0;
+
+  return {
+    robotsTxtPresent: robots.ok,
+    robotsStatus: robots.statusCode,
+    blocksAiCrawlers: blocksAiBots,
+    sitemapPresent: sitemap.ok,
+    sitemapStatus: sitemap.statusCode,
+    sitemapLocSampleCount: sitemapUrlsCount,
+    llmsTxtPresent: llms.ok,
+    llmsStatus: llms.statusCode
+  };
 }
 
 /**
- * 1. Live Deep Crawler & Technical SEO Auditor
+ * 1. Live Deep Crawler & Technical SEO + GEO Auditor
  */
-async function crawlAndAudit(targetUrl) {
+async function crawlAndAudit(targetUrl, options = {}) {
   const startTime = Date.now();
-  let normalizedUrl = targetUrl.trim();
-  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
-    normalizedUrl = 'https://' + normalizedUrl;
-  }
+  let normalizedUrl = String(targetUrl || '').trim();
+  if (!normalizedUrl) normalizedUrl = 'https://closetesters.com';
+  if (!/^https?:\/\//i.test(normalizedUrl)) normalizedUrl = 'https://' + normalizedUrl;
 
   const parsedUrl = new URL(normalizedUrl);
   const isHttps = parsedUrl.protocol === 'https:';
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  // Use prefetched playwright result if available to avoid double launching browser
+  const pw = options.prefetchedPlaywright || null;
+  let html = pw?.desktop?.html || '';
+  let statusCode = pw?.statusCode || 0;
+  let finalUrl = pw?.finalUrl || normalizedUrl;
+  let ttfb = pw?.coreWebVitals?.ttfbMs || 0;
 
-  let response;
-  try {
-    response = await fetch(normalizedUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 CloseTestersBot/2.0 (+https://closetesters.com)',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8'
-      },
-      redirect: 'follow',
-      signal: controller.signal
-    });
-  } finally {
-    clearTimeout(timeout);
+  if (!html) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 14000);
+    try {
+      const response = await fetch(normalizedUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 CloseTestersGeoBot/3.0 (+https://closetesters.com)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      ttfb = Date.now() - startTime;
+      statusCode = response.status;
+      finalUrl = response.url;
+      html = await response.text();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  const ttfb = Date.now() - startTime;
-  const statusCode = response.status;
-  const finalUrl = response.url;
-  const html = await response.text();
-  const totalPageSizeKb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(1);
+  const totalPageSizeKb = (Buffer.byteLength(html || '', 'utf8') / 1024).toFixed(1);
+  const $ = cheerio.load(html || '');
 
-  const $ = cheerio.load(html);
-
-  // --- Title & Description ---
-  const title = $('title').text().trim() || '';
+  const title = $('title').text().trim() || pw?.desktop?.title || '';
   const metaDescription = $('meta[name="description" i]').attr('content')?.trim() || '';
   const metaKeywords = $('meta[name="keywords" i]').attr('content')?.trim() || '';
   const canonicalUrl = $('link[rel="canonical" i]').attr('href')?.trim() || '';
   const robotsMeta = $('meta[name="robots" i]').attr('content')?.trim() || 'index, follow (default)';
 
-  // --- Headings ---
   const h1Elements = [];
-  $('h1').each((_, el) => h1Elements.push($(el).text().trim()));
+  $('h1').each((_, el) => {
+    const t = $(el).text().trim();
+    if (t) h1Elements.push(t);
+  });
+  if (h1Elements.length === 0 && pw?.desktop?.h1?.length) h1Elements.push(...pw.desktop.h1);
+
   const h2Count = $('h2').length;
   const h3Count = $('h3').length;
 
-  // --- Images ---
   let totalImages = 0;
   let missingAltImages = 0;
   $('img').each((_, el) => {
     totalImages++;
-    const alt = $(el).attr('alt');
-    if (!alt || alt.trim() === '') {
-      missingAltImages++;
-    }
+    if (!$(el).attr('alt')?.trim()) missingAltImages++;
   });
 
-  // --- Links ---
   let internalLinks = 0;
   let externalLinks = 0;
   $('a[href]').each((_, el) => {
@@ -173,31 +142,23 @@ async function crawlAndAudit(targetUrl) {
     if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
     try {
       const linkUrl = new URL(href, normalizedUrl);
-      if (linkUrl.hostname === parsedUrl.hostname) {
-        internalLinks++;
-      } else {
-        externalLinks++;
-      }
-    } catch (e) {}
+      if (linkUrl.hostname === parsedUrl.hostname) internalLinks++;
+      else externalLinks++;
+    } catch (_) {}
   });
 
-  // --- Open Graph & Social ---
   const ogTitle = $('meta[property="og:title" i]').attr('content')?.trim() || '';
   const ogDescription = $('meta[property="og:description" i]').attr('content')?.trim() || '';
   const ogImage = $('meta[property="og:image" i]').attr('content')?.trim() || '';
   const ogUrl = $('meta[property="og:url" i]').attr('content')?.trim() || '';
   const twitterCard = $('meta[name="twitter:card" i]').attr('content')?.trim() || '';
-
-  // --- Mobile Viewport ---
   const viewport = $('meta[name="viewport" i]').attr('content')?.trim() || '';
 
-  // --- GEO Directives ---
   const geoRegion = $('meta[name="geo.region" i]').attr('content')?.trim() || '';
   const geoPlacename = $('meta[name="geo.placename" i]').attr('content')?.trim() || '';
   const geoPosition = $('meta[name="geo.position" i]').attr('content')?.trim() || '';
   const icbm = $('meta[name="ICBM" i]').attr('content')?.trim() || '';
 
-  // --- Schema.org Structured Data ---
   const schemaScripts = [];
   let detectedSchemaTypes = [];
   $('script[type="application/ld+json"]').each((_, el) => {
@@ -206,195 +167,85 @@ async function crawlAndAudit(targetUrl) {
       if (rawJson) {
         const parsed = JSON.parse(rawJson);
         schemaScripts.push(parsed);
-
         const extractTypes = (obj) => {
           if (!obj) return;
           if (obj['@type']) detectedSchemaTypes.push(obj['@type']);
-          if (Array.isArray(obj['@graph'])) {
-            obj['@graph'].forEach(extractTypes);
-          }
-          if (Array.isArray(obj)) {
-            obj.forEach(extractTypes);
-          }
+          if (Array.isArray(obj['@graph'])) obj['@graph'].forEach(extractTypes);
+          if (Array.isArray(obj)) obj.forEach(extractTypes);
         };
         extractTypes(parsed);
       }
-    } catch (e) {}
+    } catch (_) {}
   });
   detectedSchemaTypes = [...new Set(detectedSchemaTypes)];
 
-  // --- Text & Content Metrics ---
   $('script, style, noscript').remove();
   const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
-  const wordCount = bodyText.split(' ').filter(w => w.length > 2).length;
+  const wordCount = bodyText.split(' ').filter((w) => w.length > 2).length;
 
-  // --- Scoring Engine (0 to 100) ---
+  // Probe robots.txt, sitemap.xml, llms.txt in parallel
+  const aiDiscovery = await probeAiDiscoveryFiles(parsedUrl.origin);
+
+  // Run Playwright if not provided and not explicitly skipped
+  let playwrightData = pw;
+  if (!playwrightData && inspectWithPlaywright && !options.skipPlaywright) {
+    playwrightData = await inspectWithPlaywright(normalizedUrl, { skipScreenshots: true }).catch(() => null);
+  }
+
   let score = 100;
   const criticalIssues = [];
   const warnings = [];
   const passedChecks = [];
 
-  // Protocol & Status
-  if (!isHttps) {
-    score -= 20;
-    criticalIssues.push({ code: 'NO_HTTPS', msg: 'Website is not running on secure HTTPS protocol.' });
-  } else {
-    passedChecks.push({ code: 'HTTPS_ACTIVE', msg: 'Valid SSL/HTTPS encryption active.' });
-  }
+  if (!isHttps) { score -= 20; criticalIssues.push({ code: 'NO_HTTPS', msg: 'Site lacks HTTPS encryption.' }); }
+  else passedChecks.push({ code: 'HTTPS_ACTIVE', msg: 'Valid HTTPS active.' });
 
-  if (statusCode !== 200) {
-    score -= 30;
-    criticalIssues.push({ code: 'HTTP_STATUS_NOT_200', msg: `Server returned non-200 HTTP code: ${statusCode}` });
-  } else {
-    passedChecks.push({ code: 'STATUS_200', msg: 'Server responding with clean 200 OK.' });
-  }
+  if (statusCode !== 200) { score -= 25; criticalIssues.push({ code: 'NON_200', msg: `HTTP status returned ${statusCode}.` }); }
+  else passedChecks.push({ code: 'STATUS_200', msg: 'HTTP 200 OK.' });
 
-  // Latency / TTFB
-  if (ttfb > 1500) {
-    score -= 10;
-    warnings.push({ code: 'SLOW_TTFB', msg: `Slow initial response time: ${ttfb}ms (Recommended < 600ms).` });
-  } else {
-    passedChecks.push({ code: 'FAST_TTFB', msg: `Fast server latency: ${ttfb}ms.` });
-  }
+  if (!title) { score -= 15; criticalIssues.push({ code: 'MISSING_TITLE', msg: 'Missing <title> tag.' }); }
+  else if (title.length < 20 || title.length > 70) { score -= 5; warnings.push({ code: 'TITLE_LEN', msg: `Title is ${title.length} chars (optimal: 45-60).` }); }
+  else passedChecks.push({ code: 'TITLE_OPTIMAL', msg: `Optimal title (${title.length} chars).` });
 
-  // Title Audit
-  if (!title) {
-    score -= 15;
-    criticalIssues.push({ code: 'MISSING_TITLE', msg: 'Missing <title> tag. Critical for search engine ranking.' });
-  } else if (title.length < 25) {
-    score -= 5;
-    warnings.push({ code: 'SHORT_TITLE', msg: `Title is too short (${title.length} chars). Target 45-60 characters.` });
-  } else if (title.length > 70) {
-    score -= 5;
-    warnings.push({ code: 'LONG_TITLE', msg: `Title is too long (${title.length} chars). Truncated on Google SERP.` });
-  } else {
-    passedChecks.push({ code: 'TITLE_OPTIMAL', msg: `Optimal title length (${title.length} chars).` });
-  }
+  if (!metaDescription) { score -= 10; criticalIssues.push({ code: 'MISSING_META_DESC', msg: 'Missing meta description.' }); }
+  else if (metaDescription.length < 60 || metaDescription.length > 170) { score -= 4; warnings.push({ code: 'DESC_LEN', msg: `Meta description is ${metaDescription.length} chars (optimal: 120-160).` }); }
+  else passedChecks.push({ code: 'DESC_OPTIMAL', msg: `Meta description active (${metaDescription.length} chars).` });
 
-  // Meta Description
-  if (!metaDescription) {
-    score -= 10;
-    criticalIssues.push({ code: 'MISSING_META_DESC', msg: 'Missing meta description. Search engines will generate arbitrary snippets.' });
-  } else if (metaDescription.length < 60) {
-    score -= 5;
-    warnings.push({ code: 'SHORT_META_DESC', msg: `Meta description is too short (${metaDescription.length} chars). Target 130-160.` });
-  } else if (metaDescription.length > 170) {
-    score -= 5;
-    warnings.push({ code: 'LONG_META_DESC', msg: `Meta description is too long (${metaDescription.length} chars). Snippet will be cut off.` });
-  } else {
-    passedChecks.push({ code: 'META_DESC_OPTIMAL', msg: `Optimal meta description length (${metaDescription.length} chars).` });
-  }
+  if (h1Elements.length === 0) { score -= 10; criticalIssues.push({ code: 'MISSING_H1', msg: 'No <h1> heading found.' }); }
+  else passedChecks.push({ code: 'H1_FOUND', msg: `Primary H1 present: "${h1Elements[0].slice(0, 70)}"` });
 
-  // Headings
-  if (h1Elements.length === 0) {
-    score -= 10;
-    criticalIssues.push({ code: 'MISSING_H1', msg: 'Missing primary <h1> heading tag on page.' });
-  } else if (h1Elements.length > 1) {
-    score -= 5;
-    warnings.push({ code: 'MULTIPLE_H1', msg: `Found ${h1Elements.length} <h1> tags. Best practice is exactly 1 primary <h1>.` });
-  } else {
-    passedChecks.push({ code: 'H1_OPTIMAL', msg: 'Single authoritative <h1> tag found.' });
-  }
+  if (!viewport) { score -= 10; criticalIssues.push({ code: 'MISSING_VIEWPORT', msg: 'Missing responsive mobile viewport meta tag.' }); }
+  else passedChecks.push({ code: 'VIEWPORT_OK', msg: 'Mobile viewport configured.' });
 
-  // Viewport
-  if (!viewport) {
-    score -= 15;
-    criticalIssues.push({ code: 'MISSING_VIEWPORT', msg: 'Missing responsive mobile viewport tag.' });
-  } else {
-    passedChecks.push({ code: 'MOBILE_VIEWPORT', msg: 'Mobile responsive viewport tag detected.' });
-  }
+  if (detectedSchemaTypes.length === 0) { score -= 12; criticalIssues.push({ code: 'NO_SCHEMA', msg: 'No Schema.org JSON-LD found (critical for AI search).' }); }
+  else passedChecks.push({ code: 'SCHEMA_ACTIVE', msg: `Schema types active: ${detectedSchemaTypes.join(', ')}` });
 
-  // Images & Alt Tags
-  if (totalImages > 0 && missingAltImages > 0) {
-    score -= Math.min(10, missingAltImages * 2);
-    warnings.push({ code: 'MISSING_IMG_ALT', msg: `${missingAltImages} of ${totalImages} images are missing descriptive alt attributes.` });
-  } else if (totalImages > 0) {
-    passedChecks.push({ code: 'IMAGES_ACCESSIBLE', msg: `All ${totalImages} images have descriptive alt attributes.` });
-  }
+  if (!aiDiscovery.robotsTxtPresent) { score -= 4; warnings.push({ code: 'NO_ROBOTS', msg: 'robots.txt missing at root.' }); }
+  else if (aiDiscovery.blocksAiCrawlers) { score -= 8; warnings.push({ code: 'AI_BOT_BLOCKED', msg: 'robots.txt blocks AI crawlers (GPTBot / PerplexityBot).' }); }
+  else passedChecks.push({ code: 'ROBOTS_OK', msg: 'robots.txt allows search & AI discovery.' });
 
-  // Schema.org
-  if (detectedSchemaTypes.length === 0) {
-    score -= 15;
-    criticalIssues.push({ code: 'NO_SCHEMA_ORG', msg: 'No Schema.org structured data found. Invisible to Google Rich Snippets & AI Answer Engines.' });
-  } else {
-    passedChecks.push({ code: 'SCHEMA_ACTIVE', msg: `Schema.org Knowledge Graph active with: ${detectedSchemaTypes.join(', ')}.` });
-  }
+  if (!aiDiscovery.sitemapPresent) { score -= 5; warnings.push({ code: 'NO_SITEMAP', msg: '/sitemap.xml not found at origin.' }); }
+  else passedChecks.push({ code: 'SITEMAP_OK', msg: '/sitemap.xml detected.' });
 
-  // GEO Tags
-  if (!geoRegion && !geoPlacename) {
-    score -= 10;
-    warnings.push({ code: 'NO_GEO_TAGS', msg: 'Missing Regional GEO tags (geo.region, geo.placename) for localized search optimization.' });
-  } else {
-    passedChecks.push({ code: 'GEO_ACTIVE', msg: `Regional GEO targeting active: ${geoRegion || ''} ${geoPlacename || ''}.` });
-  }
+  if (!aiDiscovery.llmsTxtPresent) { warnings.push({ code: 'NO_LLMS_TXT', msg: '/llms.txt missing — recommended for Perplexity/ChatGPT entity indexing.' }); }
+  else passedChecks.push({ code: 'LLMS_TXT_OK', msg: '/llms.txt active for LLM crawler grounding.' });
 
-  // Open Graph
-  if (!ogTitle || !ogImage) {
-    score -= 5;
-    warnings.push({ code: 'INCOMPLETE_OPENGRAPH', msg: 'Incomplete Open Graph metadata. Social link previews on WhatsApp/LinkedIn will lack rich cards.' });
-  } else {
-    passedChecks.push({ code: 'OPENGRAPH_ACTIVE', msg: 'Full Open Graph cards configured.' });
-  }
+  if (!ogTitle || !ogImage) { score -= 4; warnings.push({ code: 'OG_INCOMPLETE', msg: 'Incomplete OpenGraph social tags (og:title / og:image).' }); }
+  else passedChecks.push({ code: 'OG_ACTIVE', msg: 'OpenGraph preview tags configured.' });
 
-  // --- 1.5 Playwright Headless Browser Inspection (Visual & Device Emulation) ---
-  let playwrightData = null;
-  if (inspectWithPlaywright) {
-    try {
-      playwrightData = await inspectWithPlaywright(normalizedUrl);
-      if (playwrightData) {
-      // Check if Playwright found an H1 tag that Cheerio missed (dynamic React hydration)
-      if (h1Elements.length === 0 && playwrightData.desktop?.h1 && playwrightData.desktop.h1.length > 0) {
-        h1Elements.push(...playwrightData.desktop.h1);
-        score += 10;
-        const missH1Idx = criticalIssues.findIndex(i => i.code === 'MISSING_H1');
-        if (missH1Idx !== -1) criticalIssues.splice(missH1Idx, 1);
-        passedChecks.push({ code: 'H1_HYDRATED', msg: `Primary <h1> dynamically rendered by JavaScript: "${playwrightData.desktop.h1[0]}"` });
-      }
-
-      // Check for Console Errors
-      if (playwrightData.consoleErrors && playwrightData.consoleErrors.length > 0) {
-        score -= Math.min(10, playwrightData.consoleErrors.length * 2);
-        warnings.push({
-          code: 'CONSOLE_JS_ERRORS',
-          msg: `Playwright trapped ${playwrightData.consoleErrors.length} unhandled JavaScript console errors.`
-        });
-      } else {
-        passedChecks.push({ code: 'CLEAN_CONSOLE', msg: 'Zero JavaScript runtime errors on Chromium.' });
-      }
-
-      // Check Mobile Horizontal Overflow
-      if (playwrightData.mobile?.hasHorizontalOverflow) {
-        score -= 10;
-        criticalIssues.push({
-          code: 'MOBILE_OVERFLOW',
-          msg: 'Mobile viewport has horizontal layout overflow (broken container width on iPhone/Pixel).'
-        });
-      } else if (playwrightData.mobile) {
-        passedChecks.push({ code: 'MOBILE_RESPONSIVE', msg: 'Mobile viewport responsive with 0 horizontal overflow.' });
-      }
-
-      // Check Tap Targets
-      if (playwrightData.mobile?.tapTargetIssues && playwrightData.mobile.tapTargetIssues.length > 0) {
-        warnings.push({
-          code: 'SMALL_TAP_TARGETS',
-          msg: `${playwrightData.mobile.tapTargetIssues.length} mobile buttons/links are under 32x32px (tough for thumbs).`
-        });
-      }
-    }
-  } catch (pwErr) {
-    console.warn('[DynamicSEO] Playwright inspection bypass:', pwErr.message);
-  }
-}
+  if (!canonicalUrl) { score -= 4; warnings.push({ code: 'NO_CANONICAL', msg: 'Missing rel="canonical" link tag.' }); }
 
   score = Math.max(0, Math.min(100, score));
 
-  // Generative Engine Optimization (GEO / AEO) Readiness Score (0 to 100)
-  let aeoScore = 0;
-  if (detectedSchemaTypes.includes('FAQPage')) aeoScore += 30;
-  if (detectedSchemaTypes.includes('Organization') || detectedSchemaTypes.includes('LocalBusiness')) aeoScore += 25;
-  if (detectedSchemaTypes.includes('SoftwareApplication') || detectedSchemaTypes.includes('Product') || detectedSchemaTypes.includes('Service')) aeoScore += 25;
-  if (geoRegion) aeoScore += 10;
-  if (wordCount > 300) aeoScore += 10;
+  // Real GEO / AEO Readiness Score
+  let aeoScore = 10;
+  if (detectedSchemaTypes.includes('FAQPage')) aeoScore += 25;
+  if (detectedSchemaTypes.includes('Organization') || detectedSchemaTypes.includes('LocalBusiness')) aeoScore += 20;
+  if (detectedSchemaTypes.includes('SoftwareApplication') || detectedSchemaTypes.includes('Product') || detectedSchemaTypes.includes('Service')) aeoScore += 15;
+  if (aiDiscovery.llmsTxtPresent) aeoScore += 15;
+  if (aiDiscovery.sitemapPresent && !aiDiscovery.blocksAiCrawlers) aeoScore += 10;
+  if (wordCount > 250) aeoScore += 5;
+  aeoScore = Math.min(100, aeoScore);
 
   return {
     url: normalizedUrl,
@@ -403,299 +254,127 @@ async function crawlAndAudit(targetUrl) {
     isHttps,
     ttfbMs: ttfb,
     pageSizeKb: totalPageSizeKb,
-    scores: {
-      technicalSeoScore: score,
-      generativeAeoScore: aeoScore
-    },
-    meta: {
-      title,
-      description: metaDescription,
-      keywords: metaKeywords,
-      canonical: canonicalUrl,
-      robots: robotsMeta,
-      viewport
-    },
-    headings: {
-      h1: h1Elements,
-      h2Count,
-      h3Count
-    },
-    images: {
-      total: totalImages,
-      missingAlt: missingAltImages
-    },
-    links: {
-      internal: internalLinks,
-      external: externalLinks
-    },
-    social: {
-      ogTitle,
-      ogDescription,
-      ogImage,
-      ogUrl,
-      twitterCard
-    },
-    geo: {
-      region: geoRegion,
-      placename: geoPlacename,
-      position: geoPosition,
-      icbm
-    },
-    schema: {
-      types: detectedSchemaTypes,
-      scriptCount: schemaScripts.length,
-      schemas: schemaScripts
-    },
-    content: {
-      wordCount,
-      excerpt: bodyText.slice(0, 350)
-    },
+    scores: { technicalSeoScore: score, generativeAeoScore: aeoScore },
+    aiDiscovery,
+    meta: { title, description: metaDescription, keywords: metaKeywords, canonical: canonicalUrl, robots: robotsMeta, viewport },
+    headings: { h1: h1Elements, h2Count, h3Count },
+    images: { total: totalImages, missingAlt: missingAltImages },
+    links: { internal: internalLinks, external: externalLinks },
+    social: { ogTitle, ogDescription, ogImage, ogUrl, twitterCard },
+    geo: { region: geoRegion, placename: geoPlacename, position: geoPosition, icbm },
+    schema: { types: detectedSchemaTypes, scriptCount: schemaScripts.length, schemas: schemaScripts },
+    content: { wordCount, excerpt: bodyText.slice(0, 450) },
     playwright: playwrightData,
-    audit: {
-      criticalIssues,
-      warnings,
-      passedChecks
-    }
+    audit: { criticalIssues, warnings, passedChecks }
   };
 }
 
 /**
- * 2. Autonomous Gemini AI GEO & Schema.org Synthesis Engine
+ * 2. Gemini 3 GEO, Schema.org JSON-LD & Ready-to-Deploy llms.txt Synthesizer
  */
 async function generateAiOptimization(auditData, targetOptions = {}) {
-  const brandName = targetOptions.brandName || auditData.meta.title.split(/[-|—]/)[0]?.trim() || 'Brand';
-  const targetCity = targetOptions.targetCity || auditData.geo.placename || 'India';
+  const brandName = targetOptions.brandName || auditData.meta.title.split(/[-|—]/)[0]?.trim() || new URL(auditData.url).hostname;
+  const targetCity = targetOptions.targetCity || auditData.geo.placename || 'Global';
   const targetRegion = targetOptions.targetRegion || auditData.geo.region || 'IN';
   const businessType = targetOptions.businessType || 'Organization';
 
-  const prompt = `
-You are Hermes Autonomous Agent, the Chief AI Growth & Generative Engine Optimization (GEO) Architect of GeoCraft 360°™.
-Analyze this crawled website data and generate an optimal, production-grade SEO package tailored for Google Search, ChatGPT, Perplexity AI, and Gemini Answer Engines.
+  const prompt = `You are GeoCraft 360° AI Search & Technical SEO Architect.
+Generate actionable optimizations grounded strictly in this live crawl of ${auditData.url}:
+- Current Title (${auditData.meta.title.length} chars): "${auditData.meta.title}"
+- Current Meta Description (${auditData.meta.description.length} chars): "${auditData.meta.description}"
+- Headings H1: ${JSON.stringify(auditData.headings.h1)}
+- Existing Schema Types: ${JSON.stringify(auditData.schema.types)}
+- robots.txt=${auditData.aiDiscovery?.robotsTxtPresent}, sitemap.xml=${auditData.aiDiscovery?.sitemapPresent}, llms.txt=${auditData.aiDiscovery?.llmsTxtPresent}, blocksAiBots=${auditData.aiDiscovery?.blocksAiCrawlers}
+- Body Excerpt: "${auditData.content.excerpt}"
 
---- CRAWLED DATA ---
-URL: ${auditData.url}
-Current Title: ${auditData.meta.title}
-Current Description: ${auditData.meta.description}
-Headings (H1): ${JSON.stringify(auditData.headings.h1)}
-Page Text Excerpt: ${auditData.content.excerpt}
-Target Brand: ${brandName}
-Target Location: ${targetCity}, ${targetRegion}
-Suggested Schema Category: ${businessType}
-
---- REQUIRED OUTPUT FORMAT (STRICT JSON ONLY) ---
-Return a clean, valid JSON object with EXACTLY this structure:
+Return ONLY valid JSON:
 {
-  "optimizedTitle": "Ultra high-CTR title (under 60 chars)",
-  "optimizedDescription": "High conversion meta description (130-155 chars)",
-  "primaryKeywords": ["3-5 high volume primary keywords"],
-  "longTailQuestions": ["3 user questions likely searched on Perplexity / Google"],
-  "geoTags": {
-    "region": "${targetRegion}",
-    "placename": "${targetCity}",
-    "position": "Coordinates (e.g. 22.7196;75.8577 for Indore or appropriate for targetCity)",
-    "icbm": "Coordinates"
-  },
+  "optimizedTitle": "45-60 char high-CTR title tailored to ${brandName}",
+  "optimizedDescription": "130-155 char compelling meta description",
+  "primaryKeywords": ["keyword 1", "keyword 2", "keyword 3", "keyword 4"],
+  "longTailQuestions": ["User query 1", "User query 2", "User query 3"],
+  "geoTags": { "region": "${targetRegion}", "placename": "${targetCity}", "position": "22.7196;75.8577", "icbm": "22.7196, 75.8577" },
   "schemaJsonLd": {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "${businessType}",
-        "@id": "${auditData.url}#${businessType.toLowerCase()}",
-        "name": "${brandName}",
-        "url": "${auditData.url}",
-        "description": "Short accurate description"
-      },
-      {
-        "@type": "WebSite",
-        "@id": "${auditData.url}#website",
-        "url": "${auditData.url}",
-        "name": "${brandName}"
-      },
-      {
-        "@type": "FAQPage",
-        "@id": "${auditData.url}#faq",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "FAQ Question 1?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Detailed, authoritative answer explaining the product/service."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "FAQ Question 2?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Authoritative answer highlighting guarantees or features."
-            }
-          }
-        ]
-      }
+      { "@type": "${businessType}", "name": "${brandName}", "url": "${auditData.url}" },
+      { "@type": "FAQPage", "mainEntity": [
+        { "@type": "Question", "name": "FAQ Question 1?", "acceptedAnswer": { "@type": "Answer", "text": "Concise factual answer." } }
+      ] }
     ]
   },
-  "chatGptCitationStrategy": "2-3 sentences explaining how this brand can be cited directly as the primary answer on Perplexity and ChatGPT.",
-  "recommendedActionPoints": [
-    "Specific technical fix 1",
-    "Specific technical fix 2",
-    "Specific technical fix 3"
-  ]
-}
-`;
+  "generatedLlmsTxt": "# ${brandName}\\n> Summary for AI crawlers\\n\\n## Core Capabilities\\n- Capability 1\\n- Capability 2\\n\\n## Canonical Links\\n- ${auditData.url}",
+  "chatGptCitationStrategy": "2-3 sentence strategy grounded in missing Schema/llms.txt/FAQ gaps found above.",
+  "recommendedActionPoints": ["Fix 1", "Fix 2", "Fix 3"]
+}`;
 
-  const aiRaw = await callGeminiAI(prompt, "You are an elite SEO & Schema.org engineer. Output ONLY valid parseable JSON without markdown ticks if possible, or inside standard json blocks.");
-  
-  // Extract JSON
-  let cleanJson = aiRaw.trim();
-  if (cleanJson.includes('```json')) {
-    cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
-  } else if (cleanJson.includes('```')) {
-    cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
+  try {
+    const aiRes = await generateJson(prompt, { temperature: 0.25, maxOutputTokens: 1800 });
+    return {
+      ...aiRes.data,
+      aiPowered: true,
+      modelUsed: aiRes.modelUsed
+    };
+  } catch (err) {
+    return {
+      aiPowered: false,
+      fallbackReason: err.message,
+      optimizedTitle: auditData.meta.title || `${brandName} — Official Portal`,
+      optimizedDescription: auditData.meta.description || `Explore ${brandName} features, verified services, and live workflows at ${auditData.url}.`,
+      primaryKeywords: [brandName, `${brandName} platform`, `${brandName} official`],
+      longTailQuestions: [`What does ${brandName} offer?`, `How to verify ${brandName} reliability?`],
+      geoTags: { region: targetRegion, placename: targetCity, position: '22.7196;75.8577', icbm: '22.7196, 75.8577' },
+      schemaJsonLd: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          { '@type': businessType, name: brandName, url: auditData.url },
+          { '@type': 'WebSite', name: brandName, url: auditData.url }
+        ]
+      },
+      generatedLlmsTxt: `# ${brandName}\n> Official platform at ${auditData.url}\n\n## Overview\n${auditData.content.excerpt.slice(0, 220)}`,
+      chatGptCitationStrategy: `Deploy /llms.txt and Schema.org FAQPage JSON-LD so Perplexity and ChatGPT crawlers cite ${brandName} accurately.`,
+      recommendedActionPoints: (auditData.audit.criticalIssues || []).concat(auditData.audit.warnings || []).slice(0, 4).map((x) => x.msg)
+    };
   }
-
-  const parsed = JSON.parse(cleanJson);
-  return parsed;
-}
-
-/**
- * 3. Executive SEO Audit Dossier Generator (Client-Facing HTML Report)
- */
-function generateExecutiveHtmlReport(auditData, aiOptimization, clientName = 'Valued Client') {
-  const seoScore = auditData.scores.technicalSeoScore;
-  const aeoScore = auditData.scores.generativeAeoScore;
-
-  const scoreColor = (s) => s >= 80 ? '#10b981' : s >= 60 ? '#f59e0b' : '#ef4444';
-  const scoreLabel = (s) => s >= 80 ? 'EXCELLENT' : s >= 60 ? 'NEEDS ATTENTION' : 'CRITICAL ACTION NEEDED';
-
-  const schemaScriptTag = `<script type="application/ld+json">\n${JSON.stringify(aiOptimization.schemaJsonLd, null, 2)}\n</script>`;
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Enterprise SEO & GEO Audit Dossier — ${auditData.url}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0f19; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.6; }
-    .container { max-width: 1000px; margin: 0 auto; background: #111827; border-radius: 12px; border: 1px solid #1f2937; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-    .header { background: linear-gradient(135deg, #1e3a8a, #0f172a); padding: 32px; border-bottom: 1px solid #374151; display: flex; justify-content: space-between; align-items: center; }
-    .header h1 { margin: 0; font-size: 24px; color: #f8fafc; font-weight: 700; letter-spacing: -0.5px; }
-    .header p { margin: 6px 0 0 0; color: #94a3b8; font-size: 14px; }
-    .badge { background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    .body-content { padding: 32px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-    .score-card { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; text-align: center; }
-    .score-num { font-size: 56px; font-weight: 800; line-height: 1; margin: 12px 0 6px; }
-    .score-status { font-size: 13px; font-weight: 700; letter-spacing: 1px; }
-    .section-title { font-size: 18px; font-weight: 700; color: #38bdf8; margin: 32px 0 16px; border-bottom: 2px solid #1f2937; padding-bottom: 8px; }
-    .issue-item { padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 12px; }
-    .critical { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
-    .warning { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; }
-    .passed { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
-    .code-box { background: #030712; border: 1px solid #1f2937; border-radius: 8px; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: #a5f3fc; overflow-x: auto; white-space: pre-wrap; margin: 16px 0; }
-    .table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-    .table th, .table td { padding: 10px 14px; border: 1px solid #374151; text-align: left; }
-    .table th { background: #1f2937; color: #94a3b8; }
-    .footer { background: #0f172a; padding: 24px; text-align: center; border-top: 1px solid #1f2937; color: #64748b; font-size: 13px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1>360° Enterprise SEO & GEO Audit Dossier</h1>
-        <p>Prepared for: <strong>${clientName}</strong> | Target: <strong>${auditData.url}</strong> | Date: ${new Date().toLocaleDateString('en-IN')}</p>
-      </div>
-      <span class="badge">CloseTesters Verified</span>
-    </div>
-
-    <div class="body-content">
-      <div class="grid-2">
-        <div class="score-card">
-          <div style="font-size: 14px; color: #94a3b8; font-weight: 600;">TECHNICAL SEO HEALTH</div>
-          <div class="score-num" style="color: ${scoreColor(seoScore)};">${seoScore}<span style="font-size: 24px; color: #64748b;">/100</span></div>
-          <div class="score-status" style="color: ${scoreColor(seoScore)};">${scoreLabel(seoScore)}</div>
-        </div>
-        <div class="score-card">
-          <div style="font-size: 14px; color: #94a3b8; font-weight: 600;">AI ANSWER ENGINE (GEO / AEO)</div>
-          <div class="score-num" style="color: ${scoreColor(aeoScore)};">${aeoScore}<span style="font-size: 24px; color: #64748b;">/100</span></div>
-          <div class="score-status" style="color: ${scoreColor(aeoScore)};">${scoreLabel(aeoScore)}</div>
-        </div>
-      </div>
-
-      <div class="section-title">📊 Executive Analysis & Core Vitals</div>
-      <table class="table">
-        <tr><th>Metric</th><th>Current Value</th><th>Benchmark / Recommended</th></tr>
-        <tr><td>Server Latency (TTFB)</td><td>${auditData.ttfbMs} ms</td><td>&lt; 600 ms (Passed: ${auditData.ttfbMs < 800 ? '✅' : '⚠️'})</td></tr>
-        <tr><td>Page Size</td><td>${auditData.pageSizeKb} KB</td><td>&lt; 2000 KB</td></tr>
-        <tr><td>SSL Protocol</td><td>${auditData.isHttps ? 'HTTPS Secure' : 'Insecure HTTP'}</td><td>HTTPS Required</td></tr>
-        <tr><td>Title Length</td><td>${auditData.meta.title.length} characters</td><td>45 - 60 characters</td></tr>
-        <tr><td>Description Length</td><td>${auditData.meta.description.length} characters</td><td>130 - 160 characters</td></tr>
-        <tr><td>H1 Count</td><td>${auditData.headings.h1.length} primary tag(s)</td><td>Exactly 1 tag</td></tr>
-        <tr><td>Image Alt Coverage</td><td>${auditData.images.total - auditData.images.missingAlt} / ${auditData.images.total} with Alt tags</td><td>100% Coverage</td></tr>
-        <tr><td>Active Schema.org Types</td><td>${auditData.schema.types.join(', ') || 'None Detected'}</td><td>Organization, WebSite, FAQPage, Service</td></tr>
-        <tr><td>Regional GEO Directives</td><td>${auditData.geo.region || 'None'} (${auditData.geo.placename || 'None'})</td><td>Mandatory for Localized Ranking</td></tr>
-      </table>
-
-      ${auditData.playwright ? `
-      <div class="section-title">📱 Playwright Real-Browser & Multi-Device QA (Pixel & iPhone 15 Emulation)</div>
-      <table class="table">
-        <tr><th>Browser Metric</th><th>Playwright Test Output</th><th>QA Status</th></tr>
-        <tr><td>First Contentful Paint (FCP)</td><td>${auditData.playwright.coreWebVitals?.fcpMs ? auditData.playwright.coreWebVitals.fcpMs + ' ms' : 'Fast'}</td><td>${auditData.playwright.coreWebVitals?.fcpMs < 2500 ? '✅ Passed (Under 2.5s)' : '⚠️ Warning (Slow)'}</td></tr>
-        <tr><td>Mobile Responsive Viewport</td><td>${auditData.playwright.mobile?.hasHorizontalOverflow ? 'Horizontal Overflow Detected' : 'Clean (No horizontal overflow)'}</td><td>${auditData.playwright.mobile?.hasHorizontalOverflow ? '❌ Broken on iPhone/Pixel' : '✅ 100% Mobile Responsive'}</td></tr>
-        <tr><td>Interactive Elements Found</td><td>${auditData.playwright.desktop?.buttonCount || 0} Clickable Buttons / Links</td><td>✅ Inspected</td></tr>
-        <tr><td>Runtime JavaScript Errors</td><td>${auditData.playwright.consoleErrors?.length || 0} Console Error(s) Trapped</td><td>${auditData.playwright.consoleErrors?.length === 0 ? '✅ 0 Errors (Clean)' : '⚠️ Check Console Logs'}</td></tr>
-      </table>
-      ` : ''}
-
-      <div class="section-title">🚨 Critical Issues & Fix Recommendations</div>
-      ${auditData.audit.criticalIssues.map(i => `<div class="issue-item critical">❌ <strong>CRITICAL:</strong> ${i.msg}</div>`).join('') || '<div class="issue-item passed">✅ Zero critical technical flaws detected!</div>'}
-      ${auditData.audit.warnings.map(w => `<div class="issue-item warning">⚠️ <strong>WARNING:</strong> ${w.msg}</div>`).join('')}
-
-      <div class="section-title">🤖 AI-Generated Optimization Package (Ready to Deploy)</div>
-      <p style="font-size: 14px; color: #94a3b8;">Our Autonomous Gemini 3.8/3.6 Flash Engine has synthesized an optimal Title, Meta Description, and Structured Knowledge Graph to rank on both Google SERP and Perplexity/ChatGPT AI Answers:</p>
-      
-      <div style="background: #1f2937; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-        <div style="font-size: 12px; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Optimized Title</div>
-        <div style="font-size: 16px; font-weight: 600; color: #fff; margin: 4px 0 12px;">${aiOptimization.optimizedTitle}</div>
-        
-        <div style="font-size: 12px; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Optimized Meta Description</div>
-        <div style="font-size: 14px; color: #cbd5e1; margin: 4px 0 12px;">${aiOptimization.optimizedDescription}</div>
-
-        <div style="font-size: 12px; color: #38bdf8; font-weight: 700; text-transform: uppercase;">High-Intent Keywords</div>
-        <div style="font-size: 13px; color: #93c5fd; margin-top: 4px;">${aiOptimization.primaryKeywords.join(' • ')}</div>
-      </div>
-
-      <div class="section-title">⚡ Ready-to-Paste Schema.org Triple-A Knowledge Graph</div>
-      <p style="font-size: 13px; color: #94a3b8;">Paste this structured JSON-LD into your website's &lt;head&gt; tag to enable Google Rich Snippets and Perplexity direct citations:</p>
-      <div class="code-box">${escapeHtml(schemaScriptTag)}</div>
-
-      <div class="section-title">🧠 Perplexity & ChatGPT AI Citation Strategy</div>
-      <p style="background: rgba(56, 189, 248, 0.1); border-left: 4px solid #38bdf8; padding: 14px; font-size: 14px; color: #bae6fd;">
-        ${aiOptimization.chatGptCitationStrategy}
-      </p>
-
-      <div class="section-title">📋 Recommended Action Plan</div>
-      <ol style="font-size: 14px; line-height: 1.8; color: #cbd5e1;">
-        ${aiOptimization.recommendedActionPoints.map(p => `<li>${p}</li>`).join('')}
-      </ol>
-    </div>
-
-    <div class="footer">
-      Generated automatically by CloseTesters Autonomous QA & Enterprise SEO Engine &bull; Support: support@closetesters.com &bull; closetesters.com
-    </div>
-  </div>
-</body>
-</html>`;
 }
 
 function escapeHtml(string) {
-  return string
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(string || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function generateExecutiveHtmlReport(auditData, aiOptimization, clientName = 'Valued Client') {
+  const seoScore = auditData.scores.technicalSeoScore;
+  const aeoScore = auditData.scores.generativeAeoScore;
+  const schemaScriptTag = `<script type="application/ld+json">\n${JSON.stringify(aiOptimization.schemaJsonLd, null, 2)}\n</script>`;
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>GeoCraft 360° SEO & AI Discovery Dossier — ${escapeHtml(auditData.url)}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #090d16; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.5; }
+  .box { max-width: 860px; margin: 0 auto; background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+  th, td { border: 1px solid #334155; padding: 7px 10px; text-align: left; }
+  th { background: #1e293b; color: #38bdf8; }
+  pre { background: #020617; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 11px; color: #a5f3fc; }
+</style></head><body><div class="box">
+<h1 style="margin-top:0;">GeoCraft 360° Technical SEO & AEO Report</h1>
+<p>Client: <strong>${escapeHtml(clientName)}</strong> &bull; Target: <strong>${escapeHtml(auditData.url)}</strong></p>
+<p><strong>Technical SEO:</strong> ${seoScore}/100 &bull; <strong>Generative AI Discovery (AEO):</strong> ${aeoScore}/100</p>
+<table><thead><tr><th>Signal</th><th>Observed Value</th></tr></thead><tbody>
+  <tr><td>robots.txt / AI Bots Allowed</td><td>${auditData.aiDiscovery?.robotsTxtPresent ? 'YES' : 'MISSING'} (AI Blocked: ${auditData.aiDiscovery?.blocksAiCrawlers ? 'YES' : 'NO'})</td></tr>
+  <tr><td>/sitemap.xml</td><td>${auditData.aiDiscovery?.sitemapPresent ? `YES (${auditData.aiDiscovery.sitemapLocSampleCount}+ URLs sampled)` : 'MISSING'}</td></tr>
+  <tr><td>/llms.txt</td><td>${auditData.aiDiscovery?.llmsTxtPresent ? 'PRESENT' : 'MISSING'}</td></tr>
+  <tr><td>Schema.org Types</td><td>${escapeHtml(auditData.schema.types.join(', ') || 'None detected')}</td></tr>
+</tbody></table>
+<h3>Recommended Schema.org JSON-LD</h3>
+<pre>${escapeHtml(schemaScriptTag)}</pre>
+<h3>Generated /llms.txt Blueprint</h3>
+<pre>${escapeHtml(aiOptimization.generatedLlmsTxt || '')}</pre>
+</div></body></html>`;
 }
 
 module.exports = {
@@ -703,5 +382,6 @@ module.exports = {
   generateAiOptimization,
   hermesGeoSynthesizer: generateAiOptimization,
   generateExecutiveHtmlReport,
-  callGeminiAI
+  callGeminiAI,
+  getSharedRotator
 };
