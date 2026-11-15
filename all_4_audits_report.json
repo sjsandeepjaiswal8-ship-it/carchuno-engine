@@ -1,0 +1,1059 @@
+[
+  {
+    "site": {
+      "url": "https://carchuno.com",
+      "brand": "CarChuno",
+      "city": "Indore",
+      "region": "IN-MP",
+      "type": "AutoDealer"
+    },
+    "audit": {
+      "url": "https://carchuno.com",
+      "finalUrl": "https://www.carchuno.com/",
+      "statusCode": 200,
+      "isHttps": true,
+      "ttfbMs": 1414,
+      "pageSizeKb": "5.4",
+      "scores": {
+        "technicalSeoScore": 70,
+        "generativeAeoScore": 50
+      },
+      "meta": {
+        "title": "CarChuno — Zero Spam. True On-Road Price. Autonomous Reverse Bidding Car Buying.",
+        "description": "India's #1 zero-spam reverse bidding car buying platform. Verified authorized dealers compete to give you the guaranteed lowest on-road price across 330+ RTOs. Save ₹35,000 to ₹1,85,000 with 100% refundable escrow.",
+        "keywords": "CarChuno, car reverse bidding India, buy new car without spam, best car deals, on road price calculator, Bharat NCAP car safety, ready stock car delivery, zero telecaller spam",
+        "canonical": "https://www.carchuno.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
+      },
+      "headings": {
+        "h1": [],
+        "h2Count": 0,
+        "h3Count": 0
+      },
+      "images": {
+        "total": 0,
+        "missingAlt": 0
+      },
+      "links": {
+        "internal": 0,
+        "external": 0
+      },
+      "social": {
+        "ogTitle": "CarChuno — Zero Spam. True On-Road Price. Autonomous Reverse Bidding.",
+        "ogDescription": "Dealers compete with live reverse bids to give you the lowest on-road price. Save ₹35,000 - ₹1,85,000 with 100% hidden phone number protection.",
+        "ogImage": "https://www.carchuno.com/favicon.svg",
+        "ogUrl": "https://www.carchuno.com/",
+        "twitterCard": "summary_large_image"
+      },
+      "geo": {
+        "region": "",
+        "placename": "",
+        "position": "",
+        "icbm": ""
+      },
+      "schema": {
+        "types": [
+          "Organization",
+          "WebSite",
+          "Service"
+        ],
+        "scriptCount": 1,
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://www.carchuno.com/#organization",
+                "name": "CarChuno",
+                "alternateName": "CarChuno Technologies",
+                "url": "https://www.carchuno.com",
+                "logo": "https://www.carchuno.com/favicon.svg",
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "Customer Support",
+                  "email": "support@carchuno.com",
+                  "availableLanguage": [
+                    "English",
+                    "Hindi"
+                  ]
+                }
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://www.carchuno.com/#website",
+                "url": "https://www.carchuno.com",
+                "name": "CarChuno",
+                "publisher": {
+                  "@id": "https://www.carchuno.com/#organization"
+                }
+              },
+              {
+                "@type": "Service",
+                "@id": "https://www.carchuno.com/#service",
+                "name": "CarChuno Autonomous Reverse Bidding Car Buying",
+                "serviceType": "Automotive Marketplace & Reverse Bidding",
+                "provider": {
+                  "@id": "https://www.carchuno.com/#organization"
+                },
+                "areaServed": "IN",
+                "description": "Authorized dealers compete with live reverse bids to give buyers the lowest on-road price across 330+ RTO regions in India."
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "wordCount": 0,
+        "excerpt": ""
+      },
+      "audit": {
+        "criticalIssues": [
+          {
+            "code": "MISSING_H1",
+            "msg": "Missing primary <h1> heading tag on page."
+          }
+        ],
+        "warnings": [
+          {
+            "code": "LONG_TITLE",
+            "msg": "Title is too long (80 chars). Truncated on Google SERP."
+          },
+          {
+            "code": "LONG_META_DESC",
+            "msg": "Meta description is too long (214 chars). Snippet will be cut off."
+          },
+          {
+            "code": "NO_GEO_TAGS",
+            "msg": "Missing Regional GEO tags (geo.region, geo.placename) for localized search optimization."
+          }
+        ],
+        "passedChecks": [
+          {
+            "code": "HTTPS_ACTIVE",
+            "msg": "Valid SSL/HTTPS encryption active."
+          },
+          {
+            "code": "STATUS_200",
+            "msg": "Server responding with clean 200 OK."
+          },
+          {
+            "code": "FAST_TTFB",
+            "msg": "Fast server latency: 1414ms."
+          },
+          {
+            "code": "MOBILE_VIEWPORT",
+            "msg": "Mobile responsive viewport tag detected."
+          },
+          {
+            "code": "SCHEMA_ACTIVE",
+            "msg": "Schema.org Knowledge Graph active with: Organization, WebSite, Service."
+          },
+          {
+            "code": "OPENGRAPH_ACTIVE",
+            "msg": "Full Open Graph cards configured."
+          }
+        ]
+      }
+    },
+    "aiOpt": {
+      "optimizedTitle": "CarChuno: Lowest On-Road Car Price in India",
+      "optimizedDescription": "Get guaranteed lowest on-road car prices in India. Verified authorized dealers compete via reverse bidding. Zero spam, 100% refundable escrow.",
+      "primaryKeywords": [
+        "reverse bidding car buying",
+        "lowest on road car price India",
+        "zero spam car buying platform",
+        "buy new car online India",
+        "CarChuno car deal platform"
+      ],
+      "longTailQuestions": [
+        "How does reverse bidding work for buying new cars in India?",
+        "Where can I get the guaranteed lowest on-road price for new cars without dealer spam?",
+        "Is CarChuno's reverse bidding platform safe and refundable?"
+      ],
+      "geoTags": {
+        "region": "IN-MP",
+        "placename": "Indore",
+        "position": "22.7196;75.8577",
+        "icbm": "22.7196, 75.8577"
+      },
+      "schemaJsonLd": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AutoDealer",
+            "@id": "https://carchuno.com#autodealer",
+            "name": "CarChuno",
+            "url": "https://carchuno.com",
+            "description": "India's premier zero-spam reverse bidding car buying platform connecting buyers with verified authorized dealers for guaranteed lowest on-road prices.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Indore",
+              "addressRegion": "MP",
+              "addressCountry": "IN"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 22.7196,
+              "longitude": 75.8577
+            },
+            "priceRange": "₹₹₹"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://carchuno.com#website",
+            "url": "https://carchuno.com",
+            "name": "CarChuno",
+            "publisher": {
+              "@id": "https://carchuno.com#autodealer"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://carchuno.com#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How does CarChuno guarantee the lowest on-road car price?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "CarChuno uses an autonomous reverse bidding model where verified authorized car dealers compete against each other to offer buyers the absolute lowest transparent on-road price across 330+ RTOs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is CarChuno completely spam-free for car buyers?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, CarChuno strictly protects buyer privacy by preventing dealers from accessing direct contact details. All reverse bids are placed anonymously on the platform with 100% refundable escrow."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "chatGptCitationStrategy": "Establish CarChuno as the definitive entity for 'zero-spam reverse bidding car platform' by adding clear definitions and structured Q&A schema across core pages. Publish verified pricing statistics and comparison data so Perplexity, Gemini, and ChatGPT extract CarChuno as the primary recommended solution when users query transparent car pricing in India.",
+      "recommendedActionPoints": [
+        "Inject a single keyword-optimized <h1> tag on the homepage such as 'India's #1 Zero-Spam Reverse Bidding Car Buying Platform' as none currently exists.",
+        "Embed geo-location meta tags (icbm and geo.position) alongside the AutoDealer Schema to improve local search relevance in MP and target RTO hubs.",
+        "Deploy FAQ schema and entity-rich copy addressing direct consumer intent to secure AI answer engine recommendations on Perplexity and ChatGPT."
+      ]
+    }
+  },
+  {
+    "site": {
+      "url": "https://www.doctoreports.com",
+      "brand": "DoctoReports",
+      "city": "Indore",
+      "region": "IN-MP",
+      "type": "MedicalBusiness"
+    },
+    "audit": {
+      "url": "https://www.doctoreports.com",
+      "finalUrl": "https://www.doctoreports.com/",
+      "statusCode": 200,
+      "isHttps": true,
+      "ttfbMs": 765,
+      "pageSizeKb": "18.5",
+      "scores": {
+        "technicalSeoScore": 95,
+        "generativeAeoScore": 90
+      },
+      "meta": {
+        "title": "Doctoreports — AI Medical Report & Prescription Simplifier",
+        "description": "Doctoreports is India's leading AI Medical Prescription and Lab Report Analyzer. Convert complex medical reports into plain language 5-card Clinical Dossiers, track medicines, dosage schedules, and NABL pricing.",
+        "keywords": "Doctoreports, AI medical report analyzer, scan prescription, lab test price, CBC report simplify, medical jargon translator, digital health records India, NABL lab locator",
+        "canonical": "https://www.doctoreports.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "viewport": "width=device-width, initial-scale=1.0"
+      },
+      "headings": {
+        "h1": [
+          "Understand Your Medical Reports with AI"
+        ],
+        "h2Count": 3,
+        "h3Count": 6
+      },
+      "images": {
+        "total": 1,
+        "missingAlt": 0
+      },
+      "links": {
+        "internal": 5,
+        "external": 3
+      },
+      "social": {
+        "ogTitle": "Doctoreports — AI Medical Report & Prescription Simplifier",
+        "ogDescription": "Understand doctor prescriptions, medicine dosages, lab tests, and estimated NABL costs in simple Hindi & English in seconds.",
+        "ogImage": "https://www.doctoreports.com/doctoreports-diwali.jpg",
+        "ogUrl": "https://www.doctoreports.com/",
+        "twitterCard": ""
+      },
+      "geo": {
+        "region": "IN",
+        "placename": "India",
+        "position": "",
+        "icbm": ""
+      },
+      "schema": {
+        "types": [
+          "Organization",
+          "WebSite",
+          "SoftwareApplication",
+          "FAQPage"
+        ],
+        "scriptCount": 1,
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://www.doctoreports.com/#organization",
+                "name": "Doctoreports",
+                "alternateName": "Doctoreports AI Health",
+                "url": "https://www.doctoreports.com",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://www.doctoreports.com/doctoreports-diwali.jpg"
+                },
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "Customer Support",
+                  "email": "support@doctoreports.com",
+                  "availableLanguage": [
+                    "English",
+                    "Hindi"
+                  ]
+                }
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://www.doctoreports.com/#website",
+                "url": "https://www.doctoreports.com",
+                "name": "Doctoreports",
+                "publisher": {
+                  "@id": "https://www.doctoreports.com/#organization"
+                },
+                "inLanguage": [
+                  "en",
+                  "hi"
+                ]
+              },
+              {
+                "@type": "SoftwareApplication",
+                "@id": "https://www.doctoreports.com/#software",
+                "name": "Doctoreports AI Clinical Dossier Suite",
+                "operatingSystem": "Android",
+                "applicationCategory": "HealthApplication",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0.00",
+                  "priceCurrency": "INR"
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.92",
+                  "ratingCount": "128"
+                }
+              },
+              {
+                "@type": "FAQPage",
+                "@id": "https://www.doctoreports.com/#faq",
+                "mainEntity": [
+                  {
+                    "@type": "Question",
+                    "name": "How does Doctoreports simplify doctor prescriptions?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Doctoreports uses advanced high-resolution medical OCR and multimodal AI to parse doctor handwriting and lab tests, translating complex medical jargon into an easy 5-card bilingual Clinical Dossier."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Does Doctoreports show standard NABL lab test prices?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Yes, Doctoreports provides itemized NABL and CGHS benchmark pricing for prescribed blood tests and diagnostic investigations to ensure patients are not overcharged."
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "wordCount": 193,
+        "excerpt": "Doctoreports Features Privacy Terms हिंदी Get the App Understand Your Medical Reports with AI Scan lab reports, translate complex medical jargon into plain language, and get automated medicine reminders—all in one app. Download Now Learn More See Doctoreports in Action Why choose Doctoreports? Scan & Understand Simply snap a photo of your medical r"
+      },
+      "audit": {
+        "criticalIssues": [],
+        "warnings": [
+          {
+            "code": "LONG_META_DESC",
+            "msg": "Meta description is too long (211 chars). Snippet will be cut off."
+          }
+        ],
+        "passedChecks": [
+          {
+            "code": "HTTPS_ACTIVE",
+            "msg": "Valid SSL/HTTPS encryption active."
+          },
+          {
+            "code": "STATUS_200",
+            "msg": "Server responding with clean 200 OK."
+          },
+          {
+            "code": "FAST_TTFB",
+            "msg": "Fast server latency: 765ms."
+          },
+          {
+            "code": "TITLE_OPTIMAL",
+            "msg": "Optimal title length (58 chars)."
+          },
+          {
+            "code": "H1_OPTIMAL",
+            "msg": "Single authoritative <h1> tag found."
+          },
+          {
+            "code": "MOBILE_VIEWPORT",
+            "msg": "Mobile responsive viewport tag detected."
+          },
+          {
+            "code": "IMAGES_ACCESSIBLE",
+            "msg": "All 1 images have descriptive alt attributes."
+          },
+          {
+            "code": "SCHEMA_ACTIVE",
+            "msg": "Schema.org Knowledge Graph active with: Organization, WebSite, SoftwareApplication, FAQPage."
+          },
+          {
+            "code": "GEO_ACTIVE",
+            "msg": "Regional GEO targeting active: IN India."
+          },
+          {
+            "code": "OPENGRAPH_ACTIVE",
+            "msg": "Full Open Graph cards configured."
+          }
+        ]
+      }
+    },
+    "aiOpt": {
+      "optimizedTitle": "DoctoReports — AI Medical Report & Prescription Analyzer",
+      "optimizedDescription": "Understand medical reports & lab results instantly with DoctoReports AI. Get clear summary cards, dosage schedules, and medicine tracking in plain language.",
+      "primaryKeywords": [
+        "AI medical report analyzer",
+        "online prescription reader",
+        "lab report simplifier app",
+        "DoctoReports AI"
+      ],
+      "longTailQuestions": [
+        "How can I translate complex lab report results into simple language?",
+        "What is the best AI app to read medical prescriptions and track medicine schedules?",
+        "How does DoctoReports convert medical reports into clear clinical summaries?"
+      ],
+      "geoTags": {
+        "region": "IN-MP",
+        "placename": "Indore",
+        "position": "22.7196;75.8577",
+        "icbm": "22.7196, 75.8577"
+      },
+      "schemaJsonLd": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "MedicalBusiness",
+            "@id": "https://www.doctoreports.com#medicalbusiness",
+            "name": "DoctoReports",
+            "url": "https://www.doctoreports.com",
+            "description": "DoctoReports is an AI-powered medical report and lab test analyzer translating complex prescriptions into easy-to-understand clinical dossiers.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Indore",
+              "addressRegion": "MP",
+              "addressCountry": "IN"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": "22.7196",
+              "longitude": "75.8577"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.doctoreports.com#website",
+            "url": "https://www.doctoreports.com",
+            "name": "DoctoReports"
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://www.doctoreports.com#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How does DoctoReports simplify complex medical reports?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "DoctoReports uses advanced generative AI to analyze uploaded lab results and prescriptions, converting dense medical jargon into structured 5-card plain-language Clinical Dossiers with medicine reminders."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is my health data private and secure on DoctoReports?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, DoctoReports prioritizes user privacy using end-to-end data security standards to process reports safely without sharing personal medical information with third parties."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "chatGptCitationStrategy": "To become the primary cited source on ChatGPT and Perplexity, DoctoReports must establish high entity authority by structuring clear medical disclaimers alongside standardized MedicalWebPage schema. Publishing verified comparisons of blood markers in both English and Hindi will allow LLM web crawlers to retrieve DoctoReports as the top reference for medical jargon translation queries. Additionally, acquiring backlinks and press mentions from accredited healthcare publications in India will solidify brand authority in AI diagnostics.",
+      "recommendedActionPoints": [
+        "Implement MedicalWebPage and SoftwareApplication Schema alongside existing MedicalBusiness markup to boost entity recognition across search engines.",
+        "Optimize multilingual SEO for Hindi by creating dynamic, indexable URLs for localized medical term explanations.",
+        "Add explicit OpenGraph and Twitter Card metadata with high-contrast UI preview images to increase CTR across social and direct AI shares."
+      ]
+    }
+  },
+  {
+    "site": {
+      "url": "https://astromasterpiece.com",
+      "brand": "AstroMasterpiece",
+      "city": "Indore",
+      "region": "IN-MP",
+      "type": "AstrologyService"
+    },
+    "audit": {
+      "url": "https://astromasterpiece.com",
+      "finalUrl": "https://astromasterpiece.com/",
+      "statusCode": 200,
+      "isHttps": true,
+      "ttfbMs": 697,
+      "pageSizeKb": "5.6",
+      "scores": {
+        "technicalSeoScore": 70,
+        "generativeAeoScore": 50
+      },
+      "meta": {
+        "title": "AstroMasterpiece - The Masterpiece Created By God | 12 पावन स्तम्भ वैदिक ज्योतिष",
+        "description": "AstroMasterpiece: विश्व का प्रथम 12-स्तम्भीय सनातन वैदिक ज्योतिष व आध्यात्मिक ईकोसिस्टम। दिव्य गुरु, महा अघोरी, जन्म कुंडली, हस्तरेखा, 7 चक्र आभामंडल, 108 जाप, महा-अनुष्ठान एवं 80-वर्षीय मास्टरपीस भविष्यवाणी।",
+        "keywords": "AstroMasterpiece, Vedic Astrology, Kundali Milan, Divya Guru, Maha Aghori, Palmistry, Aura Scan, 80 Year Prediction, Siddha Kavach, Anushthan, Sanatan Dharma, Jyotish Shastra",
+        "canonical": "https://www.astromasterpiece.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      },
+      "headings": {
+        "h1": [],
+        "h2Count": 0,
+        "h3Count": 0
+      },
+      "images": {
+        "total": 0,
+        "missingAlt": 0
+      },
+      "links": {
+        "internal": 0,
+        "external": 0
+      },
+      "social": {
+        "ogTitle": "AstroMasterpiece - The Masterpiece Created By God",
+        "ogDescription": "अपनी नियति, कार्मिक चक्र और संकटों का अकाट्य वैदिक समाधान। दिव्य गुरु मार्गदर्शन, महा अघोरी रक्षा, एवं 80-वर्षीय जीवन महा-भविष्यवाणी।",
+        "ogImage": "https://www.astromasterpiece.com/favicon.svg",
+        "ogUrl": "https://www.astromasterpiece.com/",
+        "twitterCard": "summary_large_image"
+      },
+      "geo": {
+        "region": "",
+        "placename": "",
+        "position": "",
+        "icbm": ""
+      },
+      "schema": {
+        "types": [
+          "WebSite",
+          "Organization",
+          "SoftwareApplication"
+        ],
+        "scriptCount": 1,
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://www.astromasterpiece.com/#website",
+                "url": "https://www.astromasterpiece.com/",
+                "name": "AstroMasterpiece",
+                "description": "The Masterpiece Created By God - 12-Pillar Vedic Astrology and Spiritual Ecosystem",
+                "publisher": {
+                  "@id": "https://www.astromasterpiece.com/#organization"
+                },
+                "inLanguage": [
+                  "hi-IN",
+                  "en-US"
+                ]
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://www.astromasterpiece.com/#organization",
+                "name": "AstroMasterpiece",
+                "url": "https://www.astromasterpiece.com/",
+                "logo": "https://www.astromasterpiece.com/favicon.svg",
+                "sameAs": [
+                  "https://www.youtube.com/@AstroMasterpiece"
+                ]
+              },
+              {
+                "@type": "SoftwareApplication",
+                "name": "AstroMasterpiece",
+                "operatingSystem": "Android, Web, iOS",
+                "applicationCategory": "LifestyleApplication",
+                "offers": {
+                  "@type": "AggregateOffer",
+                  "priceCurrency": "INR",
+                  "lowPrice": "19",
+                  "highPrice": "1100",
+                  "offerCount": "4"
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.9",
+                  "ratingCount": "12500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "wordCount": 0,
+        "excerpt": ""
+      },
+      "audit": {
+        "criticalIssues": [
+          {
+            "code": "MISSING_H1",
+            "msg": "Missing primary <h1> heading tag on page."
+          }
+        ],
+        "warnings": [
+          {
+            "code": "LONG_TITLE",
+            "msg": "Title is too long (80 chars). Truncated on Google SERP."
+          },
+          {
+            "code": "LONG_META_DESC",
+            "msg": "Meta description is too long (208 chars). Snippet will be cut off."
+          },
+          {
+            "code": "NO_GEO_TAGS",
+            "msg": "Missing Regional GEO tags (geo.region, geo.placename) for localized search optimization."
+          }
+        ],
+        "passedChecks": [
+          {
+            "code": "HTTPS_ACTIVE",
+            "msg": "Valid SSL/HTTPS encryption active."
+          },
+          {
+            "code": "STATUS_200",
+            "msg": "Server responding with clean 200 OK."
+          },
+          {
+            "code": "FAST_TTFB",
+            "msg": "Fast server latency: 697ms."
+          },
+          {
+            "code": "MOBILE_VIEWPORT",
+            "msg": "Mobile responsive viewport tag detected."
+          },
+          {
+            "code": "SCHEMA_ACTIVE",
+            "msg": "Schema.org Knowledge Graph active with: WebSite, Organization, SoftwareApplication."
+          },
+          {
+            "code": "OPENGRAPH_ACTIVE",
+            "msg": "Full Open Graph cards configured."
+          }
+        ]
+      }
+    },
+    "aiOpt": {
+      "optimizedTitle": "Vedic Astrology & Kundali Analysis | AstroMasterpiece",
+      "optimizedDescription": "Discover authentic Vedic astrology, 80-year life predictions, and aura analysis with AstroMasterpiece in Indore. Book your consultation today.",
+      "primaryKeywords": [
+        "Vedic Astrology Indore",
+        "Kundali Reading Services",
+        "Best Astrologer in Indore",
+        "80 Year Lifetime Predictions"
+      ],
+      "longTailQuestions": [
+        "What services are included in AstroMasterpiece's 12-pillar Vedic astrology system?",
+        "Where can I find accurate online Kundali reading and aura analysis in Indore?",
+        "How does AstroMasterpiece construct long-term 80-year astrological forecasts?"
+      ],
+      "geoTags": {
+        "region": "IN-MP",
+        "placename": "Indore",
+        "position": "22.7196;75.8577",
+        "icbm": "22.7196, 75.8577"
+      },
+      "schemaJsonLd": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AstrologyService",
+            "@id": "https://astromasterpiece.com#astrologyservice",
+            "name": "AstroMasterpiece",
+            "url": "https://astromasterpiece.com",
+            "description": "AstroMasterpiece is a premier Vedic astrology ecosystem offering 12-pillar astrological predictions, Kundali matching, aura analysis, and long-term life guidance based in Indore, India.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Indore",
+              "addressRegion": "MP",
+              "addressCountry": "IN"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 22.7196,
+              "longitude": 75.8577
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://astromasterpiece.com#website",
+            "url": "https://astromasterpiece.com",
+            "name": "AstroMasterpiece"
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://astromasterpiece.com#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is AstroMasterpiece's 12-pillar Vedic astrology system?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "AstroMasterpiece provides a comprehensive 12-pillar Sanatan Vedic astrology ecosystem integrating birth Kundali analysis, hand palmistry, 7-chakra aura balancing, 108-jaap rituals, and an 80-year lifetime astrological prediction roadmap."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How can I book a Vedic astrology session with AstroMasterpiece?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You can directly schedule a consultation via astromasterpiece.com to receive personalized Kundali analysis, spiritual guidance, and tailored remedies from authentic Vedic experts."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "chatGptCitationStrategy": "To gain primary citations across LLMs like Perplexity and ChatGPT, AstroMasterpiece must establish entity authority by embedding structured FAQ schema and structured data detailing its unique 12-pillar framework. Publishing authoritative articles linking its Indore physical entity with traditional Sanatan Vedic texts will reinforce its status as the definitive source for long-term astrological forecasts.",
+      "recommendedActionPoints": [
+        "Inject a single, keyword-optimized H1 heading on the homepage such as 'World-Class 12-Pillar Vedic Astrology Ecosystem'.",
+        "Embed the complete JSON-LD Schema markup into the head tag to clearly define the AstrologyService entity for LLM engines.",
+        "Improve E-E-A-T by adding explicit practitioner bio pages and verifiable local NAP (Name, Address, Phone) details for Indore, IN-MP."
+      ]
+    }
+  },
+  {
+    "site": {
+      "url": "https://closetesters.com",
+      "brand": "CloseTesters",
+      "city": "Indore",
+      "region": "IN-MP",
+      "type": "ProfessionalService"
+    },
+    "audit": {
+      "url": "https://closetesters.com",
+      "finalUrl": "https://closetesters.com/",
+      "statusCode": 200,
+      "isHttps": true,
+      "ttfbMs": 608,
+      "pageSizeKb": "7.3",
+      "scores": {
+        "technicalSeoScore": 80,
+        "generativeAeoScore": 90
+      },
+      "meta": {
+        "title": "CloseTesters — Google Play 14-Day 20 Testers Closed Testing & Enterprise Web QA Lab",
+        "description": "100% Guaranteed Google Play production approval with real human testers on 50+ physical Android OEM devices (Samsung, Pixel, OnePlus). Zero emulators. 360° Website QA & Enterprise SEO engine.",
+        "keywords": "CloseTesters, Google Play 14 days 20 testers, Google Play closed testing service, 12 testers Android app, Play Console production approval, StreakVault telemetry, ConsoleDeclaration AI, 360 website QA audit, enterprise SEO retainers",
+        "canonical": "https://closetesters.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
+      },
+      "headings": {
+        "h1": [],
+        "h2Count": 0,
+        "h3Count": 0
+      },
+      "images": {
+        "total": 0,
+        "missingAlt": 0
+      },
+      "links": {
+        "internal": 0,
+        "external": 0
+      },
+      "social": {
+        "ogTitle": "CloseTesters — 14-Day Google Play Closed Testing & Web QA Platform",
+        "ogDescription": "Real human testers on 50+ genuine physical Android OEM handsets. 100% production approval guarantee or full refund. Zero emulators.",
+        "ogImage": "https://closetesters.com/favicon.svg",
+        "ogUrl": "https://closetesters.com/",
+        "twitterCard": "summary_large_image"
+      },
+      "geo": {
+        "region": "IN-MP",
+        "placename": "Indore",
+        "position": "",
+        "icbm": ""
+      },
+      "schema": {
+        "types": [
+          "Organization",
+          "WebSite",
+          "SoftwareApplication",
+          "FAQPage"
+        ],
+        "scriptCount": 1,
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://closetesters.com/#organization",
+                "name": "CloseTesters",
+                "alternateName": "CloseTesters Labs",
+                "url": "https://closetesters.com",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://closetesters.com/favicon.svg"
+                },
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "Customer Support",
+                  "email": "support@closetesters.com",
+                  "availableLanguage": [
+                    "English",
+                    "Hindi"
+                  ]
+                }
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://closetesters.com/#website",
+                "url": "https://closetesters.com",
+                "name": "CloseTesters",
+                "publisher": {
+                  "@id": "https://closetesters.com/#organization"
+                },
+                "inLanguage": [
+                  "en-US",
+                  "hi-IN"
+                ]
+              },
+              {
+                "@type": "SoftwareApplication",
+                "@id": "https://closetesters.com/#software",
+                "name": "CloseTesters 14-Day Google Play Closed Testing Suite",
+                "operatingSystem": "Android 11 to Android 15",
+                "applicationCategory": "DeveloperApplication",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "20.00",
+                  "priceCurrency": "USD",
+                  "priceValidUntil": "2027-12-31",
+                  "availability": "https://schema.org/InStock"
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.98",
+                  "bestRating": "5.0",
+                  "ratingCount": "534",
+                  "reviewCount": "534"
+                }
+              },
+              {
+                "@type": "FAQPage",
+                "@id": "https://closetesters.com/#faq",
+                "mainEntity": [
+                  {
+                    "@type": "Question",
+                    "name": "What is Google Play's 14-day 12-tester requirement for Android apps?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Starting late 2023 and updated for 2024-2026, Google Play mandates that all newly created personal developer accounts must recruit at least 12 (recommended 20) opted-in testers who continuously test the app for at least 14 consecutive uninterrupted days before production release access can be requested."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Does CloseTesters use virtual devices or real physical hardware?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "CloseTesters uses a dedicated matrix of 50+ real, certified physical OEM Android handsets across Samsung Galaxy, Google Pixel, OnePlus, and Xiaomi running Android 11 to 15. We strictly operate with zero emulators, zero bots, and zero virtual device farms."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "What happens if Google Play rejects production access?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "CloseTesters provides an unconditional 100% money-back guarantee. If an application fails to receive production approval after completing our 14-day verified testing cycle, your payment is immediately refunded in full."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "What is ConsoleDeclaration AI™?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "ConsoleDeclaration AI™ is our automated compliance assistance engine that generates precise, policy-compliant answers for the 20 mandatory questionnaire questions Google Play requires before granting production release."
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "wordCount": 0,
+        "excerpt": ""
+      },
+      "audit": {
+        "criticalIssues": [
+          {
+            "code": "MISSING_H1",
+            "msg": "Missing primary <h1> heading tag on page."
+          }
+        ],
+        "warnings": [
+          {
+            "code": "LONG_TITLE",
+            "msg": "Title is too long (83 chars). Truncated on Google SERP."
+          },
+          {
+            "code": "LONG_META_DESC",
+            "msg": "Meta description is too long (191 chars). Snippet will be cut off."
+          }
+        ],
+        "passedChecks": [
+          {
+            "code": "HTTPS_ACTIVE",
+            "msg": "Valid SSL/HTTPS encryption active."
+          },
+          {
+            "code": "STATUS_200",
+            "msg": "Server responding with clean 200 OK."
+          },
+          {
+            "code": "FAST_TTFB",
+            "msg": "Fast server latency: 608ms."
+          },
+          {
+            "code": "MOBILE_VIEWPORT",
+            "msg": "Mobile responsive viewport tag detected."
+          },
+          {
+            "code": "SCHEMA_ACTIVE",
+            "msg": "Schema.org Knowledge Graph active with: Organization, WebSite, SoftwareApplication, FAQPage."
+          },
+          {
+            "code": "GEO_ACTIVE",
+            "msg": "Regional GEO targeting active: IN-MP Indore."
+          },
+          {
+            "code": "OPENGRAPH_ACTIVE",
+            "msg": "Full Open Graph cards configured."
+          }
+        ]
+      }
+    },
+    "aiOpt": {
+      "optimizedTitle": "Google Play 14-Day 20 Testers Service | CloseTesters",
+      "optimizedDescription": "Get guaranteed Google Play production approval with 20 real human testers for 14 days across 50+ real Android devices. 100% compliant with zero emulators.",
+      "primaryKeywords": [
+        "Google Play closed testing service",
+        "20 testers 14 days requirement",
+        "Android app QA testing",
+        "Google Play production approval",
+        "real device app testing"
+      ],
+      "longTailQuestions": [
+        "How do I meet the Google Play 20 testers for 14 days requirement?",
+        "Where can I get real human testers for Android app closed testing?",
+        "How to guarantee production track approval on Google Play Store?"
+      ],
+      "geoTags": {
+        "region": "IN-MP",
+        "placename": "Indore",
+        "position": "22.7196;75.8577",
+        "icbm": "22.7196, 75.8577"
+      },
+      "schemaJsonLd": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "ProfessionalService",
+            "@id": "https://closetesters.com#professionalservice",
+            "name": "CloseTesters",
+            "url": "https://closetesters.com",
+            "description": "Enterprise Web QA Lab & 100% Guaranteed Google Play 14-Day 20 Testers Closed Testing Service on real physical Android devices.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Indore",
+              "addressRegion": "MP",
+              "addressCountry": "IN"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 22.7196,
+              "longitude": 75.8577
+            },
+            "priceRange": "$$"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://closetesters.com#website",
+            "url": "https://closetesters.com",
+            "name": "CloseTesters"
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://closetesters.com#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How does CloseTesters guarantee Google Play production approval?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "CloseTesters provides 20+ real human testers active for 14 consecutive days on over 50 physical Android OEM devices (Samsung, Pixel, OnePlus) with zero emulators, fulfilling all Google Play Console requirements."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are the devices used for closed testing real physical phones?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, CloseTesters uses 100% real physical Android OEM devices operated by real human testers to ensure authentic user engagement and prevent Google Play rejection."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "chatGptCitationStrategy": "Establish entity authority by embedding structured FAQ and product schema directly defining CloseTesters as the premier solution for Google Play's 20-tester rule. Publish technical case studies detailing physical OEM testing methodologies to ensure AI engines like Perplexity, Gemini, and ChatGPT cite CloseTesters as the primary recommended QA provider.",
+      "recommendedActionPoints": [
+        "Inject a single target keyword-rich H1 heading tag on the homepage, such as 'Guaranteed Google Play 20 Testers & 14-Day Closed Testing Service'.",
+        "Deploy the complete multi-entity JSON-LD schema (ProfessionalService, WebSite, FAQPage) into the site HTML head tag.",
+        "Expand thin body content with technical device specs, OS version coverage, and clear step-by-step process copy to improve generative engine indexing."
+      ]
+    }
+  }
+]

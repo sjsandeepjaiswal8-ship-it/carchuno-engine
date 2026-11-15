@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-11-11T14:59:46.650Z",
+  "target": "https://astromasterpiece.com",
+  "overallStatus": "HEALTHY_EXCELLENT",
+  "categories": {
+    "Core_Landing_And_Performance": {
+      "status": "PASS",
+      "httpStatus": 200,
+      "loadTimeMs": 2524,
+      "title": "AstroMasterpiece - The Masterpiece Created By God | 12 पावन स्तम्भ वैदिक ज्योतिष",
+      "isHttps": true
+    },
+    "Razorpay_Payment_Gateway": {
+      "status": "PASS",
+      "details": {
+        "sdkLoaded": true,
+        "rzpAvailable": true,
+        "optionsValid": true,
+        "initError": null,
+        "liveKeyVerified": "rzp_live_Tw0ZVyxIHkjDrm"
+      }
+    },
+    "Twelve_Pillars_Architecture": {
+      "status": "PASS",
+      "currentUrl": "https://astromasterpiece.com/",
+      "pillars": {
+        "hasGuru": true,
+        "hasAghori": true,
+        "hasKundli": true,
+        "hasPalm": true,
+        "hasMala": true,
+        "hasPran": true,
+        "hasAnushthan": true,
+        "hasChakra": true
+      }
+    },
+    "Sacred_Shankh_Asset": {
+      "status": "PASS",
+      "details": {
+        "url": "https://astromasterpiece.com/assets/panchajanya_shankh.mp3",
+        "exists": true,
+        "status": 200,
+        "contentType": "audio/mpeg"
+      }
+    },
+    "Pran_Pratishtha_Capabilities": {
+      "status": "PASS",
+      "details": {
+        "hasStoragePran": false,
+        "screenOrientationSupported": true,
+        "speechSynthesisSupported": true,
+        "audioContextSupported": true
+      }
+    },
+    "Storage_Persistence": {
+      "status": "PASS",
+      "details": {
+        "localStorageKeysCount": 8,
+        "keys": [
+          "astro_theme",
+          "astro_milanData",
+          "astro_sound",
+          "rzp_checkout_anon_id",
+          "astro_userProfile",
+          "astro_speech",
+          "rzp_device_id",
+          "astro_language"
+        ],
+        "theme": "dark",
+        "language": "hi"
+      }
+    },
+    "Runtime_Console_Telemetry": {
+      "status": "PASS",
+      "totalErrors": 0,
+      "errors": []
+    },
+    "Network_Failures": {
+      "status": "PASS",
+      "totalFailures": 0,
+      "failures": []
+    },
+    "OmniSales_Alignment": {
+      "status": "NEEDS_UI_UPDATE",
+      "reason": "OmniSales Agent frontend had static text marking Astro on hold because Razorpay was pending earlier. Razorpay Live (rzp_live_Tw0ZVyxIHkjDrm) is now 100% configured on website and ready for marketing activation."
+    }
+  }
+}

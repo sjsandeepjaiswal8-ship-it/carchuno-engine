@@ -1,0 +1,39 @@
+{
+  "total_capacity_gb": 20000,
+  "auto_rotation_threshold_percent": 90,
+  "daily_upload_limit_gb_per_drive": 750,
+  "accounts": [
+    {
+      "id": 1,
+      "email": "sjsandeepjaiswal8@gmail.com",
+      "capacity_gb": 5000,
+      "role": "PRIMARY_MODELS_VAULT",
+      "description": "ComfyUI Checkpoints, LoRA, SDXL RealVis, Wan 2.1 & AnimateDiff Motion Modules",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 2,
+      "email": "sjsandeepja@gmail.com",
+      "capacity_gb": 5000,
+      "role": "FINISHED_REELS_VAULT",
+      "description": "Cosmic Drishti 1 & AstroMasterpiece Final 1080p/4K Rendered Reels Archive",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 3,
+      "email": "payalmalviya118@gmail.com",
+      "capacity_gb": 5000,
+      "role": "RAW_ASSETS_VAULT",
+      "description": "8K Space Backgrounds, Cinematic Car Footage, Ambient Audio & Navgrah Graphics (Backend storage only)",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 4,
+      "email": "shardajaiswal13@gmail.com",
+      "capacity_gb": 5000,
+      "role": "OVERFLOW_AND_FAILOVER_VAULT",
+      "description": "Daily 750GB upload quota overflow buffer and long-term analytics archive",
+      "status": "ACTIVE"
+    }
+  ]
+}

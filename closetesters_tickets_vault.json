@@ -1,0 +1,15 @@
+[
+  {
+    "ticketId": "CTL-REQ-818663",
+    "name": "Sandeep Jaiswal",
+    "email": "support@closetesters.com",
+    "appName": "CloseTesters Pro App",
+    "targetUrl": "",
+    "needType": "Sovereign Quad-Stack Bundle ($299 / ₹23,999)",
+    "message": "Live test of autonomous auto-reply email system",
+    "source": "Website Contact Modal",
+    "clientDelivered": true,
+    "internalDelivered": true,
+    "createdAt": "2026-11-09T20:39:40.977Z"
+  }
+]

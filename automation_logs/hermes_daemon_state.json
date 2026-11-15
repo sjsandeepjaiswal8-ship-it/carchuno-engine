@@ -1,0 +1,10 @@
+{
+  "startTime": "2026-11-14T08:56:34.081Z",
+  "lastCycleAt": "2026-11-14T08:56:35.252Z",
+  "cycleCount": 1,
+  "renderStatus": "LIVE_ONLINE",
+  "oracleCatcherStatus": "ACTIVE (Attempts: 550)",
+  "campaignStatus": "READY (Leads: 1500, Sender: partners@closetesters.com)",
+  "activeAlerts": [],
+  "lastAutonomousAction": null
+}

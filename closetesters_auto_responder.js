@@ -8,22 +8,11 @@
  * - SLA: <15 Min Autonomous Telemetry | <2 Hr Real OEM Device Allocation
  */
 
-const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const { sendEmailWithFailover } = require('./audit_vault');
 
 const VAULT_FILE = path.join(__dirname, 'closetesters_tickets_vault.json');
-
-// Initialize Transporter with GoDaddy/Brevo Relay
-const transporter = nodemailer.createTransport({
-  host: 'smtpout.secureserver.net',
-  port: 465,
-  secure: true,
-  auth: {
-    user: 'partners@carchuno.com',
-    pass: 'Closetesters@11'
-  }
-});
 
 function loadVault() {
   try {
@@ -156,7 +145,7 @@ async function processInboundInquiry(data) {
             <div class="sla-icon" style="background: #f59e0b;">1</div>
             <div>
               <div class="sla-title">&lt; 15 Minutes: Autonomous Pre-Flight Scan</div>
-              <div class="sla-desc">Our Hermes Autonomous Agent performs initial APK manifest, DAST security header, and UI heuristic analysis.</div>
+              <div class="sla-desc">Our OmniCraft Autonomous Sovereign Engine performs initial APK manifest, DAST security header, and UI heuristic analysis.</div>
             </div>
           </div>
           <div class="sla-step">
@@ -180,25 +169,25 @@ async function processInboundInquiry(data) {
         <div class="suite-grid">
           <div class="suite-card">
             <div class="suite-name">Suite A: OmniCraft 360°™</div>
-            <div class="suite-desc">UX Audit, 120Hz Spring Physics & Speed Lab ($99 / ₹7,999)</div>
+            <div class="suite-desc">UX Audit, 120Hz Spring Physics & Speed Lab ($99 USD)</div>
           </div>
           <div class="suite-card">
             <div class="suite-name">Suite B: ArchCraft 360°™</div>
-            <div class="suite-desc">System Architecture & Interactive Flow Dossier ($149 / ₹11,999)</div>
+            <div class="suite-desc">System Architecture & Interactive Flow Dossier ($149 USD)</div>
           </div>
           <div class="suite-card">
             <div class="suite-name">Suite C: CyberShield 360°™</div>
-            <div class="suite-desc">Live DAST Security & Gemini 3.8 Flash Privacy Audit ($149 / ₹11,999)</div>
+            <div class="suite-desc">Live DAST Security & OmniMind 360° Neural Privacy Shield ($149 USD)</div>
           </div>
           <div class="suite-card">
             <div class="suite-name">Suite D: GeoCraft 360°™</div>
-            <div class="suite-desc">Generative Engine Optimization & AI Citations ($99 / ₹7,999)</div>
+            <div class="suite-desc">Generative Engine Optimization & AI Citations ($99 USD)</div>
           </div>
         </div>
 
         <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; text-align: center;">
           <span style="font-size: 12px; color: #fbbf24; font-weight: 700;">👑 Sovereign 4-Suite Quad-Stack Bundle Available</span>
-          <p style="font-size: 11px; color: #cbd5e1; margin: 4px 0 0 0;">Get complete 14-Day Testing + All 4 Engineering Suites for <strong>$299 / ₹23,999</strong> (Save 50% vs $596 individual pricing).</p>
+          <p style="font-size: 11px; color: #cbd5e1; margin: 4px 0 0 0;">Get complete 14-Day Testing + All 4 Engineering Suites for <strong>$299 USD</strong> (Save 50% vs $596 USD individual pricing).</p>
         </div>
 
         <!-- Actionable Developer Direct-Reply Note -->
@@ -230,16 +219,15 @@ async function processInboundInquiry(data) {
   </html>
   `;
 
-  // 1. Dispatch to Client with Reply-To set to partners@closetesters.com
+  // 1. Dispatch to Client with Reply-To set to support@closetesters.com (Brevo -> GoDaddy failover)
   const clientMailOptions = {
-    from: '"CloseTesters Strategic Partnerships & QA Desk" <partners@carchuno.com>',
     to: email,
-    replyTo: 'partners@closetesters.com',
+    replyTo: 'support@closetesters.com',
     subject: `[${ticketId}] Request Acknowledged: Autonomous Telemetry & Production Clearance Desk`,
     html: emailHtml
   };
 
-  // 2. Dispatch internal alert copy to support@closetesters.com
+  // 2. Dispatch internal alert copy to support@closetesters.com & partners@closetesters.com
   const internalAlertHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
       <h3 style="color: #0f172a; margin-top: 0;">🚨 New CloseTesters Inbound Request Logged</h3>
@@ -257,29 +245,30 @@ async function processInboundInquiry(data) {
   `;
 
   const internalMailOptions = {
-    from: '"CloseTesters Sentry Bot" <partners@carchuno.com>',
-    to: 'partners@closetesters.com',
+    to: 'support@closetesters.com',
     subject: `[INBOUND ALERT] [${ticketId}] New Client Request from ${name} (${appName || email})`,
     html: internalAlertHtml
   };
 
   let clientDelivered = false;
   let internalDelivered = false;
+  let clientProvider = null;
 
-  try {
-    const clientRes = await transporter.sendMail(clientMailOptions);
-    clientDelivered = true;
-    console.log(`✅ [Auto-Responder] Client confirmation delivered to ${email} (MessageId: ${clientRes.messageId})`);
-  } catch (err) {
-    console.error(`❌ [Auto-Responder] Failed delivering to client ${email}:`, err.message);
+  const clientRes = await sendEmailWithFailover(clientMailOptions);
+  clientDelivered = clientRes.delivered;
+  clientProvider = clientRes.provider;
+  if (clientDelivered) {
+    console.log(`✅ [Auto-Responder] Client confirmation delivered to ${email} via ${clientRes.provider} (MessageId: ${clientRes.messageId})`);
+  } else {
+    console.error(`❌ [Auto-Responder] Failed delivering to client ${email}:`, clientRes.error);
   }
 
-  try {
-    const internalRes = await transporter.sendMail(internalMailOptions);
-    internalDelivered = true;
-    console.log(`✅ [Auto-Responder] Internal desk alert delivered to support@closetesters.com`);
-  } catch (err) {
-    console.error(`⚠️ [Auto-Responder] Failed sending internal alert:`, err.message);
+  const internalRes = await sendEmailWithFailover(internalMailOptions);
+  internalDelivered = internalRes.delivered;
+  if (internalDelivered) {
+    console.log(`✅ [Auto-Responder] Internal desk alert delivered via ${internalRes.provider}`);
+  } else {
+    console.error(`⚠️ [Auto-Responder] Failed sending internal alert:`, internalRes.error);
   }
 
   // Record in Vault
@@ -305,6 +294,7 @@ async function processInboundInquiry(data) {
     success: true,
     ticketId,
     clientDelivered,
+    clientProvider,
     internalDelivered,
     timestamp
   };
