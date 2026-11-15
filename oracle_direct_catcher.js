@@ -151,6 +151,15 @@ async function runDirectCatcher() {
       log(`Connect via: ssh -i "${SSH_KEY_PATH}" ubuntu@${publicIp}`);
       log(`Details saved to: ${SUCCESS_FILE}`);
       log('================================================================');
+
+      // Auto-deploy Anti-Reclamation Guardian Shield
+      try {
+        const { deployGuardian } = require('./oracle_sovereign_bootstrapper');
+        log('🛡️ Auto-triggering Anti-Reclamation Guardian deployment...');
+        deployGuardian(serverInfo);
+      } catch (ge) {
+        log(`Guardian trigger note: ${ge.message}`);
+      }
       return;
 
     } catch (err) {
