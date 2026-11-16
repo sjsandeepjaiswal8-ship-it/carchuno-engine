@@ -131,92 +131,84 @@ async function attemptProvision() {
     return true;
   }
 
-  // 2. Multi-Tier Direct Compute API Launch Requests (24GB -> 18GB -> 12GB -> 6GB)
-  for (const tier of SHAPE_TIERS) {
-    addOciLog(`[Attempt #${ociState.attempts}] Requesting ${tier.label} in Hyderabad AD-1 pool...`);
-    try {
-      const launchRes = await computeClient.launchInstance({
-        launchInstanceDetails: {
-          compartmentId: TENANCY_ID,
-          availabilityDomain: AD,
-          displayName: 'oracle-ampere-server',
-          shape: 'VM.Standard.A1.Flex',
-          shapeConfig: {
-            ocpus: tier.ocpus,
-            memoryInGBs: tier.memoryInGBs
-          },
-          sourceDetails: {
-            sourceType: 'image',
-            imageId: IMAGE_ID,
-            bootVolumeSizeInGBs: 100
-          },
-          createVnicDetails: {
-            subnetId: SUBNET_ID,
-            assignPublicIp: true,
-            displayName: 'vnic-main'
-          },
-          metadata: {
-            ssh_authorized_keys: SSH_PUBLIC_KEY
-          }
-        }
-      });
-
-      const newInst = launchRes.instance;
-      addOciLog(`🎉🎉🎉 SUCCESS! AMPERE SERVER (${tier.label}) ALLOCATED! 🎉🎉🎉`);
-      addOciLog(`Instance OCID: ${newInst.id}`);
-
-      // Wait 25 seconds for public IP assignment
-      await sleep(25000);
-      const publicIp = await getPublicIp(newInst.id);
-
-      const serverInfo = {
-        status: 'PROVISIONED',
-        instanceId: newInst.id,
-        publicIp: publicIp,
-        sshUser: 'ubuntu',
-        sshCommand: `ssh ubuntu@${publicIp}`,
-        specs: {
-          shape: 'VM.Standard.A1.Flex',
+  // 2. Rotating Multi-Tier Direct Compute API Launch (24GB -> 18GB -> 12GB -> 6GB across attempts)
+  const tier = SHAPE_TIERS[(ociState.attempts - 1) % SHAPE_TIERS.length];
+  addOciLog(`[Attempt #${ociState.attempts}] Requesting ${tier.label} in Hyderabad AD-1 pool...`);
+  try {
+    const launchRes = await computeClient.launchInstance({
+      launchInstanceDetails: {
+        compartmentId: TENANCY_ID,
+        availabilityDomain: AD,
+        displayName: 'oracle-ampere-server',
+        shape: 'VM.Standard.A1.Flex',
+        shapeConfig: {
           ocpus: tier.ocpus,
-          ramGB: tier.memoryInGBs,
-          storageGB: 100,
-          os: 'Ubuntu 24.04 Minimal aarch64',
-          cost: '$0.00 / month (Always Free)'
+          memoryInGBs: tier.memoryInGBs
         },
-        provisionedAt: new Date().toISOString()
-      };
-
-      ociState.serverProvisioned = true;
-      ociState.serverDetails = serverInfo;
-      ociState.lastResult = `ALLOCATED (${tier.label})! Public IP: ${publicIp}`;
-
-      try {
-        fs.writeFileSync(path.join(__dirname, 'oracle_server_info.json'), JSON.stringify(serverInfo, null, 2), 'utf8');
-      } catch (e) {}
-
-      addOciLog(`Public IP: ${publicIp}`);
-      addOciLog(`Connect via: ssh ubuntu@${publicIp}`);
-      return true;
-
-    } catch (err) {
-      const msg = err.message || '';
-      if (msg.includes('Out of host capacity')) {
-        ociState.lastResult = `Host capacity full for ${tier.label} in AD-1. Trying next tier...`;
-        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Out of host capacity in AD-1.`);
-      } else if (msg.includes('Too many requests')) {
-        ociState.lastResult = `API rate-limit hit on ${tier.label}. Cooling down...`;
-        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Too many requests (stopping sweep for cooldown).`);
-        break;
-      } else {
-        ociState.lastResult = `API response (${tier.label}): ${msg}`;
-        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label} Notice: ${msg}`);
+        sourceDetails: {
+          sourceType: 'image',
+          imageId: IMAGE_ID,
+          bootVolumeSizeInGBs: 100
+        },
+        createVnicDetails: {
+          subnetId: SUBNET_ID,
+          assignPublicIp: true,
+          displayName: 'vnic-main'
+        },
+        metadata: {
+          ssh_authorized_keys: SSH_PUBLIC_KEY
+        }
       }
-    }
+    });
 
-    // Small pause between tiers to avoid burst throttling
-    await sleep(4000);
+    const newInst = launchRes.instance;
+    addOciLog(`🎉🎉🎉 SUCCESS! AMPERE SERVER (${tier.label}) ALLOCATED! 🎉🎉🎉`);
+    addOciLog(`Instance OCID: ${newInst.id}`);
+
+    // Wait 25 seconds for public IP assignment
+    await sleep(25000);
+    const publicIp = await getPublicIp(newInst.id);
+
+    const serverInfo = {
+      status: 'PROVISIONED',
+      instanceId: newInst.id,
+      publicIp: publicIp,
+      sshUser: 'ubuntu',
+      sshCommand: `ssh ubuntu@${publicIp}`,
+      specs: {
+        shape: 'VM.Standard.A1.Flex',
+        ocpus: tier.ocpus,
+        ramGB: tier.memoryInGBs,
+        storageGB: 100,
+        os: 'Ubuntu 24.04 Minimal aarch64',
+        cost: '$0.00 / month (Always Free)'
+      },
+      provisionedAt: new Date().toISOString()
+    };
+
+    ociState.serverProvisioned = true;
+    ociState.serverDetails = serverInfo;
+    ociState.lastResult = `ALLOCATED (${tier.label})! Public IP: ${publicIp}`;
+
+    try {
+      fs.writeFileSync(path.join(__dirname, 'oracle_server_info.json'), JSON.stringify(serverInfo, null, 2), 'utf8');
+    } catch (e) {}
+
+    addOciLog(`Public IP: ${publicIp}`);
+    addOciLog(`Connect via: ssh ubuntu@${publicIp}`);
+    return true;
+
+  } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('Out of host capacity')) {
+      ociState.lastResult = `Host capacity full for ${tier.label} in AD-1. Rotating to next tier...`;
+      addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Out of host capacity in AD-1.`);
+    } else {
+      ociState.lastResult = `API response (${tier.label}): ${msg}`;
+      addOciLog(`[Attempt #${ociState.attempts}] ${tier.label} Notice: ${msg}`);
+    }
+    return false;
   }
-  return false;
 }
 
 /**

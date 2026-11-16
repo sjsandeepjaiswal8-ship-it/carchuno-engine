@@ -96,92 +96,87 @@ async function runDirectCatcher() {
         return;
       }
 
-      // 2. Multi-tier launch requests (24GB -> 18GB -> 12GB -> 6GB)
-      for (const tier of SHAPE_TIERS) {
-        log(`[Attempt #${attempt}] Sending direct launch request (${tier.label}) to Hyderabad AD-1 pool...`);
-        try {
-          const launchRes = await computeClient.launchInstance({
-            launchInstanceDetails: {
-              compartmentId: TENANCY_ID,
-              availabilityDomain: AD,
-              displayName: 'oracle-ampere-server',
-              shape: 'VM.Standard.A1.Flex',
-              shapeConfig: {
-                ocpus: tier.ocpus,
-                memoryInGBs: tier.memoryInGBs
-              },
-              sourceDetails: {
-                sourceType: 'image',
-                imageId: IMAGE_ID,
-                bootVolumeSizeInGBs: 100
-              },
-              createVnicDetails: {
-                subnetId: SUBNET_ID,
-                assignPublicIp: true,
-                displayName: 'vnic-main'
-              },
-              metadata: {
-                ssh_authorized_keys: SSH_PUBLIC_KEY
-              }
-            }
-          });
-
-          const newInst = launchRes.instance;
-          log(`🎉🎉🎉 SUCCESS! AMPERE SERVER (${tier.label}) LAUNCHED! 🎉🎉🎉`);
-          log(`Instance OCID: ${newInst.id}`);
-          log(`Initial State: ${newInst.lifecycleState}`);
-
-          // Wait 30 seconds for VNIC and Public IP
-          log('Waiting 30 seconds for public IP assignment...');
-          await sleep(30000);
-
-          const publicIp = await getPublicIp(newInst.id);
-          const serverInfo = {
-            status: 'PROVISIONED',
-            instanceId: newInst.id,
-            publicIp: publicIp,
-            sshUser: 'ubuntu',
-            sshKeyPath: SSH_KEY_PATH,
-            sshCommand: `ssh -i "${SSH_KEY_PATH}" ubuntu@${publicIp}`,
-            specs: {
-              shape: 'VM.Standard.A1.Flex',
+      // 2. Rotating multi-tier launch request (24GB -> 18GB -> 12GB -> 6GB across attempts)
+      const tier = SHAPE_TIERS[(attempt - 1) % SHAPE_TIERS.length];
+      log(`[Attempt #${attempt}] Sending direct launch request (${tier.label}) to Hyderabad AD-1 pool...`);
+      try {
+        const launchRes = await computeClient.launchInstance({
+          launchInstanceDetails: {
+            compartmentId: TENANCY_ID,
+            availabilityDomain: AD,
+            displayName: 'oracle-ampere-server',
+            shape: 'VM.Standard.A1.Flex',
+            shapeConfig: {
               ocpus: tier.ocpus,
-              ramGB: tier.memoryInGBs,
-              storageGB: 100,
-              os: 'Ubuntu 24.04 Minimal aarch64',
-              cost: '$0.00 / month (Always Free)'
+              memoryInGBs: tier.memoryInGBs
             },
-            provisionedAt: new Date().toISOString()
-          };
-
-          fs.writeFileSync(SUCCESS_FILE, JSON.stringify(serverInfo, null, 2), 'utf8');
-          log('================================================================');
-          log(`Public IP: ${publicIp}`);
-          log(`Connect via: ssh -i "${SSH_KEY_PATH}" ubuntu@${publicIp}`);
-          log(`Details saved to: ${SUCCESS_FILE}`);
-          log('================================================================');
-
-          // Auto-deploy Anti-Reclamation Guardian Shield
-          try {
-            const { deployGuardian } = require('./oracle_sovereign_bootstrapper');
-            log('🛡️ Auto-triggering Anti-Reclamation Guardian deployment...');
-            deployGuardian(serverInfo);
-          } catch (ge) {
-            log(`Guardian trigger note: ${ge.message}`);
+            sourceDetails: {
+              sourceType: 'image',
+              imageId: IMAGE_ID,
+              bootVolumeSizeInGBs: 100
+            },
+            createVnicDetails: {
+              subnetId: SUBNET_ID,
+              assignPublicIp: true,
+              displayName: 'vnic-main'
+            },
+            metadata: {
+              ssh_authorized_keys: SSH_PUBLIC_KEY
+            }
           }
-          return;
-        } catch (tierErr) {
-          const msg = tierErr.message || '';
-          if (msg.includes('Out of host capacity')) {
-            log(`[Attempt #${attempt}] ${tier.label}: Host capacity full in AD-1.`);
-          } else if (msg.includes('Too many requests')) {
-            log(`[Attempt #${attempt}] ${tier.label}: Too many requests (stopping sweep for cooldown).`);
-            break;
-          } else {
-            log(`[Attempt #${attempt}] ${tier.label} Notice: ${msg}`);
-          }
+        });
+
+        const newInst = launchRes.instance;
+        log(`🎉🎉🎉 SUCCESS! AMPERE SERVER (${tier.label}) LAUNCHED! 🎉🎉🎉`);
+        log(`Instance OCID: ${newInst.id}`);
+        log(`Initial State: ${newInst.lifecycleState}`);
+
+        // Wait 30 seconds for VNIC and Public IP
+        log('Waiting 30 seconds for public IP assignment...');
+        await sleep(30000);
+
+        const publicIp = await getPublicIp(newInst.id);
+        const serverInfo = {
+          status: 'PROVISIONED',
+          instanceId: newInst.id,
+          publicIp: publicIp,
+          sshUser: 'ubuntu',
+          sshKeyPath: SSH_KEY_PATH,
+          sshCommand: `ssh -i "${SSH_KEY_PATH}" ubuntu@${publicIp}`,
+          specs: {
+            shape: 'VM.Standard.A1.Flex',
+            ocpus: tier.ocpus,
+            ramGB: tier.memoryInGBs,
+            storageGB: 100,
+            os: 'Ubuntu 24.04 Minimal aarch64',
+            cost: '$0.00 / month (Always Free)'
+          },
+          provisionedAt: new Date().toISOString()
+        };
+
+        fs.writeFileSync(SUCCESS_FILE, JSON.stringify(serverInfo, null, 2), 'utf8');
+        log('================================================================');
+        log(`Public IP: ${publicIp}`);
+        log(`Connect via: ssh -i "${SSH_KEY_PATH}" ubuntu@${publicIp}`);
+        log(`Details saved to: ${SUCCESS_FILE}`);
+        log('================================================================');
+
+        // Auto-deploy Anti-Reclamation Guardian Shield
+        try {
+          const { deployGuardian } = require('./oracle_sovereign_bootstrapper');
+          log('🛡️ Auto-triggering Anti-Reclamation Guardian deployment...');
+          deployGuardian(serverInfo);
+        } catch (ge) {
+          log(`Guardian trigger note: ${ge.message}`);
         }
-        await sleep(4000);
+        return;
+      } catch (tierErr) {
+        const msg = tierErr.message || '';
+        if (msg.includes('Out of host capacity')) {
+          log(`[Attempt #${attempt}] ${tier.label}: Host capacity full in AD-1.`);
+        } else {
+          log(`[Attempt #${attempt}] ${tier.label} Notice: ${msg}`);
+        }
       }
 
     } catch (err) {
