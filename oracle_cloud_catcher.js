@@ -77,15 +77,18 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function checkExistingInstance() {
+async function getExistingAmpereInstances() {
   try {
     const listRes = await computeClient.listInstances({ compartmentId: TENANCY_ID });
     const instances = listRes.items || [];
-    const active = instances.find(i => i.lifecycleState === 'RUNNING' || i.lifecycleState === 'PROVISIONING');
-    return active || null;
+    return instances.filter(
+      i =>
+        (i.lifecycleState === 'RUNNING' || i.lifecycleState === 'PROVISIONING') &&
+        i.shape === 'VM.Standard.A1.Flex'
+    );
   } catch (err) {
     addOciLog(`Instance check notice: ${err.message}`);
-    return null;
+    return [];
   }
 }
 
@@ -107,39 +110,63 @@ async function getPublicIp(instanceId) {
 }
 
 /**
- * Single Provision Attempt
+ * Single Provision Attempt (Quota-Aware Multi-Instance Strategy)
+ * - Stops when total Ampere RAM >= 18 GB (covers 24 GB or 18 GB target)
+ * - If 12 GB or 6 GB is allocated, continues hunting for remaining free quota (up to 4 OCPU / 24 GB)
  */
 async function attemptProvision() {
   ociState.attempts++;
   ociState.lastAttemptTime = new Date().toISOString();
 
-  // 1. Check if already provisioned
-  const existing = await checkExistingInstance();
-  if (existing) {
-    const ip = await getPublicIp(existing.id);
+  // 1. Check existing active Ampere instances and calculate remaining Always-Free quota
+  const existingList = await getExistingAmpereInstances();
+  const usedOcpus = existingList.reduce((sum, i) => sum + (i.shapeConfig?.ocpus || 0), 0);
+  const usedRamGB = existingList.reduce((sum, i) => sum + (i.shapeConfig?.memoryInGBs || 0), 0);
+
+  if (usedRamGB >= 18 || usedOcpus >= 4) {
+    const details = await Promise.all(
+      existingList.map(async inst => ({
+        status: inst.lifecycleState,
+        instanceId: inst.id,
+        name: inst.displayName,
+        publicIp: await getPublicIp(inst.id),
+        ocpus: inst.shapeConfig?.ocpus,
+        ramGB: inst.shapeConfig?.memoryInGBs
+      }))
+    );
     ociState.serverProvisioned = true;
-    ociState.serverDetails = {
-      status: existing.lifecycleState,
-      instanceId: existing.id,
-      name: existing.displayName,
-      publicIp: ip,
-      specs: '2 OCPUs | 12 GB RAM | 100 GB Storage (Always Free)',
-      sshCommand: `ssh ubuntu@${ip}`
-    };
-    ociState.lastResult = `SERVER ALREADY ONLINE (${existing.displayName}) at ${ip}!`;
-    addOciLog(`🎉 SERVER ACTIVE! ID: ${existing.id} | IP: ${ip}`);
+    ociState.serverDetails = details.length === 1 ? details[0] : { totalOcpus: usedOcpus, totalRamGB: usedRamGB, instances: details };
+    ociState.lastResult = `TARGET REACHED! Total Allocated: ${usedOcpus} OCPU / ${usedRamGB} GB RAM across ${details.length} instance(s).`;
+    addOciLog(`🎉 TARGET QUOTA REACHED (${usedOcpus} OCPU / ${usedRamGB} GB RAM)! Stopping catcher.`);
     return true;
   }
 
-  // 2. Rotating Multi-Tier Direct Compute API Launch (24GB -> 18GB -> 12GB -> 6GB across attempts)
-  const tier = SHAPE_TIERS[(ociState.attempts - 1) % SHAPE_TIERS.length];
-  addOciLog(`[Attempt #${ociState.attempts}] Requesting ${tier.label} in Hyderabad AD-1 pool...`);
+  const remainingOcpus = Math.max(0, 4 - usedOcpus);
+  const remainingRamGB = Math.max(0, 24 - usedRamGB);
+  const eligibleTiers = SHAPE_TIERS.filter(
+    t => t.ocpus <= remainingOcpus && t.memoryInGBs <= remainingRamGB
+  );
+
+  if (eligibleTiers.length === 0) {
+    ociState.lastResult = `Quota full (${usedOcpus} OCPU / ${usedRamGB} GB RAM).`;
+    return true;
+  }
+
+  // 2. Rotating Multi-Tier Direct Compute API Launch across eligible tiers
+  const tier = eligibleTiers[(ociState.attempts - 1) % eligibleTiers.length];
+  const bootSizeGB = existingList.length === 0 ? 100 : 50; // Stay within 200 GB Always-Free boot volume limit
+  const instanceName = `oracle-ampere-${tier.memoryInGBs}gb-${existingList.length + 1}`;
+
+  addOciLog(
+    `[Attempt #${ociState.attempts}] Active: ${usedRamGB}GB/${usedOcpus}OCPU | Requesting ${tier.label} (Boot: ${bootSizeGB}GB) in Hyderabad AD-1...`
+  );
+
   try {
     const launchRes = await computeClient.launchInstance({
       launchInstanceDetails: {
         compartmentId: TENANCY_ID,
         availabilityDomain: AD,
-        displayName: 'oracle-ampere-server',
+        displayName: instanceName,
         shape: 'VM.Standard.A1.Flex',
         shapeConfig: {
           ocpus: tier.ocpus,
@@ -148,7 +175,7 @@ async function attemptProvision() {
         sourceDetails: {
           sourceType: 'image',
           imageId: IMAGE_ID,
-          bootVolumeSizeInGBs: 100
+          bootVolumeSizeInGBs: bootSizeGB
         },
         createVnicDetails: {
           subnetId: SUBNET_ID,
@@ -169,9 +196,13 @@ async function attemptProvision() {
     await sleep(25000);
     const publicIp = await getPublicIp(newInst.id);
 
+    const newTotalRam = usedRamGB + tier.memoryInGBs;
+    const newTotalOcpus = usedOcpus + tier.ocpus;
+
     const serverInfo = {
       status: 'PROVISIONED',
       instanceId: newInst.id,
+      name: instanceName,
       publicIp: publicIp,
       sshUser: 'ubuntu',
       sshCommand: `ssh ubuntu@${publicIp}`,
@@ -179,29 +210,36 @@ async function attemptProvision() {
         shape: 'VM.Standard.A1.Flex',
         ocpus: tier.ocpus,
         ramGB: tier.memoryInGBs,
-        storageGB: 100,
+        storageGB: bootSizeGB,
         os: 'Ubuntu 24.04 Minimal aarch64',
         cost: '$0.00 / month (Always Free)'
       },
+      totalQuotaUsed: { ocpus: newTotalOcpus, ramGB: newTotalRam },
       provisionedAt: new Date().toISOString()
     };
 
-    ociState.serverProvisioned = true;
     ociState.serverDetails = serverInfo;
-    ociState.lastResult = `ALLOCATED (${tier.label})! Public IP: ${publicIp}`;
-
     try {
       fs.writeFileSync(path.join(__dirname, 'oracle_server_info.json'), JSON.stringify(serverInfo, null, 2), 'utf8');
     } catch (e) {}
 
     addOciLog(`Public IP: ${publicIp}`);
     addOciLog(`Connect via: ssh ubuntu@${publicIp}`);
-    return true;
+
+    if (newTotalRam >= 18 || newTotalOcpus >= 4) {
+      ociState.serverProvisioned = true;
+      ociState.lastResult = `TARGET REACHED (${newTotalOcpus} OCPU / ${newTotalRam} GB RAM)! Public IP: ${publicIp}`;
+      return true;
+    } else {
+      ociState.lastResult = `PARTIAL ALLOCATION (${tier.label} -> IP ${publicIp}). Continuing hunt for remaining ${24 - newTotalRam} GB!`;
+      addOciLog(`🔄 ${newTotalRam} GB allocated so far (< 18 GB). Continuing to hunt remaining free quota!`);
+      return false;
+    }
 
   } catch (err) {
     const msg = err.message || '';
     if (msg.includes('Out of host capacity')) {
-      ociState.lastResult = `Host capacity full for ${tier.label} in AD-1. Rotating to next tier...`;
+      ociState.lastResult = `Host capacity full for ${tier.label} (Active: ${usedRamGB}GB). Rotating to next tier...`;
       addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Out of host capacity in AD-1.`);
     } else {
       ociState.lastResult = `API response (${tier.label}): ${msg}`;

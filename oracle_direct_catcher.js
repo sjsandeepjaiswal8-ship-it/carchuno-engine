@@ -29,14 +29,17 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function checkExistingInstance() {
+async function getExistingAmpereInstances() {
   try {
     const listRes = await computeClient.listInstances({ compartmentId: TENANCY_ID });
     const instances = listRes.items || [];
-    const active = instances.find(i => i.lifecycleState === 'RUNNING' || i.lifecycleState === 'PROVISIONING');
-    return active;
+    return instances.filter(
+      i =>
+        (i.lifecycleState === 'RUNNING' || i.lifecycleState === 'PROVISIONING') &&
+        i.shape === 'VM.Standard.A1.Flex'
+    );
   } catch (err) {
-    return null;
+    return [];
   }
 }
 
@@ -77,34 +80,49 @@ async function runDirectCatcher() {
 
   while (true) {
     try {
-      // 1. Check if instance already exists
-      const existing = await checkExistingInstance();
-      if (existing) {
-        log(`\n🎉 INSTANCE ALREADY ACTIVE! (${existing.displayName} - ${existing.id.slice(-15)})`);
-        let ip = await getPublicIp(existing.id);
-        const info = {
-          status: 'LIVE',
-          instanceId: existing.id,
-          name: existing.displayName,
-          publicIp: ip,
-          specs: 'Always Free Ampere A1',
-          sshCommand: `ssh -i "${SSH_KEY_PATH}" ubuntu@${ip}`,
-          time: new Date().toISOString()
-        };
-        fs.writeFileSync(SUCCESS_FILE, JSON.stringify(info, null, 2), 'utf8');
-        log(`SSH Access Command: ssh -i "${SSH_KEY_PATH}" ubuntu@${ip}`);
+      // 1. Check existing active Ampere instances and calculate remaining Always-Free quota
+      const existingList = await getExistingAmpereInstances();
+      const usedOcpus = existingList.reduce((sum, i) => sum + (i.shapeConfig?.ocpus || 0), 0);
+      const usedRamGB = existingList.reduce((sum, i) => sum + (i.shapeConfig?.memoryInGBs || 0), 0);
+
+      if (usedRamGB >= 18 || usedOcpus >= 4) {
+        log(`\n🎉 TARGET QUOTA REACHED! (${usedOcpus} OCPU / ${usedRamGB} GB RAM across ${existingList.length} instance(s))`);
+        const details = [];
+        for (const inst of existingList) {
+          const ip = await getPublicIp(inst.id);
+          details.push({
+            status: inst.lifecycleState,
+            instanceId: inst.id,
+            name: inst.displayName,
+            publicIp: ip,
+            ocpus: inst.shapeConfig?.ocpus,
+            ramGB: inst.shapeConfig?.memoryInGBs,
+            sshCommand: `ssh -i "${SSH_KEY_PATH}" ubuntu@${ip}`
+          });
+          log(`SSH Access (${inst.displayName}): ssh -i "${SSH_KEY_PATH}" ubuntu@${ip}`);
+        }
+        fs.writeFileSync(SUCCESS_FILE, JSON.stringify({ status: 'LIVE', totalOcpus: usedOcpus, totalRamGB: usedRamGB, instances: details, time: new Date().toISOString() }, null, 2), 'utf8');
         return;
       }
 
-      // 2. Rotating multi-tier launch request (24GB -> 18GB -> 12GB -> 6GB across attempts)
-      const tier = SHAPE_TIERS[(attempt - 1) % SHAPE_TIERS.length];
-      log(`[Attempt #${attempt}] Sending direct launch request (${tier.label}) to Hyderabad AD-1 pool...`);
+      const remainingOcpus = Math.max(0, 4 - usedOcpus);
+      const remainingRamGB = Math.max(0, 24 - usedRamGB);
+      const eligibleTiers = SHAPE_TIERS.filter(
+        t => t.ocpus <= remainingOcpus && t.memoryInGBs <= remainingRamGB
+      );
+      if (eligibleTiers.length === 0) return;
+
+      // 2. Rotating multi-tier launch request across eligible tiers
+      const tier = eligibleTiers[(attempt - 1) % eligibleTiers.length];
+      const bootSizeGB = existingList.length === 0 ? 100 : 50;
+      const instanceName = `oracle-ampere-${tier.memoryInGBs}gb-${existingList.length + 1}`;
+      log(`[Attempt #${attempt}] Active: ${usedRamGB}GB/${usedOcpus}OCPU | Sending direct launch request (${tier.label}, Boot: ${bootSizeGB}GB) to Hyderabad AD-1 pool...`);
       try {
         const launchRes = await computeClient.launchInstance({
           launchInstanceDetails: {
             compartmentId: TENANCY_ID,
             availabilityDomain: AD,
-            displayName: 'oracle-ampere-server',
+            displayName: instanceName,
             shape: 'VM.Standard.A1.Flex',
             shapeConfig: {
               ocpus: tier.ocpus,
@@ -113,7 +131,7 @@ async function runDirectCatcher() {
             sourceDetails: {
               sourceType: 'image',
               imageId: IMAGE_ID,
-              bootVolumeSizeInGBs: 100
+              bootVolumeSizeInGBs: bootSizeGB
             },
             createVnicDetails: {
               subnetId: SUBNET_ID,
@@ -136,9 +154,12 @@ async function runDirectCatcher() {
         await sleep(30000);
 
         const publicIp = await getPublicIp(newInst.id);
+        const newTotalRam = usedRamGB + tier.memoryInGBs;
+        const newTotalOcpus = usedOcpus + tier.ocpus;
         const serverInfo = {
           status: 'PROVISIONED',
           instanceId: newInst.id,
+          name: instanceName,
           publicIp: publicIp,
           sshUser: 'ubuntu',
           sshKeyPath: SSH_KEY_PATH,
@@ -147,10 +168,11 @@ async function runDirectCatcher() {
             shape: 'VM.Standard.A1.Flex',
             ocpus: tier.ocpus,
             ramGB: tier.memoryInGBs,
-            storageGB: 100,
+            storageGB: bootSizeGB,
             os: 'Ubuntu 24.04 Minimal aarch64',
             cost: '$0.00 / month (Always Free)'
           },
+          totalQuotaUsed: { ocpus: newTotalOcpus, ramGB: newTotalRam },
           provisionedAt: new Date().toISOString()
         };
 
@@ -169,7 +191,12 @@ async function runDirectCatcher() {
         } catch (ge) {
           log(`Guardian trigger note: ${ge.message}`);
         }
-        return;
+
+        if (newTotalRam >= 18 || newTotalOcpus >= 4) {
+          log(`🎉 Target quota reached (${newTotalOcpus} OCPU / ${newTotalRam} GB RAM)!`);
+          return;
+        }
+        log(`🔄 ${newTotalRam} GB allocated so far (< 18 GB). Continuing hunt for remaining ${24 - newTotalRam} GB!`);
       } catch (tierErr) {
         const msg = tierErr.message || '';
         if (msg.includes('Out of host capacity')) {
