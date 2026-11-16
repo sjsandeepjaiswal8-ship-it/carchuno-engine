@@ -43,16 +43,24 @@ const provider = new common.SimpleAuthenticationDetailsProvider(
 const computeClient = new core.ComputeClient({ authenticationDetailsProvider: provider });
 const vnetClient = new core.VirtualNetworkClient({ authenticationDetailsProvider: provider });
 
+// Multi-Tier Always-Free Ampere A1 Configurations (Biggest First: 24GB -> 18GB -> 12GB -> 6GB)
+const SHAPE_TIERS = [
+  { ocpus: 4, memoryInGBs: 24, label: '4 OCPU / 24 GB RAM' },
+  { ocpus: 3, memoryInGBs: 18, label: '3 OCPU / 18 GB RAM' },
+  { ocpus: 2, memoryInGBs: 12, label: '2 OCPU / 12 GB RAM' },
+  { ocpus: 1, memoryInGBs: 6, label: '1 OCPU / 6 GB RAM' }
+];
+
 // In-Memory State & Metrics for API Monitoring
 const ociState = {
   running: false,
   mode: 'RENDER_CLOUD_24_7',
   region: 'ap-hyderabad-1 (Hyderabad)',
   ad: AD,
-  shape: 'VM.Standard.A1.Flex (2 OCPU, 12 GB RAM, 100GB Storage)',
+  shape: 'VM.Standard.A1.Flex (Multi-Tier: 24GB / 18GB / 12GB / 6GB)',
   attempts: 0,
   lastAttemptTime: null,
-  lastResult: 'Initialized. Starting 24/7 cloud loop...',
+  lastResult: 'Initialized. Starting 24/7 multi-tier cloud loop...',
   serverProvisioned: false,
   serverDetails: null,
   recentLogs: []
@@ -123,82 +131,92 @@ async function attemptProvision() {
     return true;
   }
 
-  // 2. Direct Compute API Launch Request
-  addOciLog(`[Attempt #${ociState.attempts}] Sending direct launch request to Hyderabad AD-1 pool...`);
-  try {
-    const launchRes = await computeClient.launchInstance({
-      launchInstanceDetails: {
-        compartmentId: TENANCY_ID,
-        availabilityDomain: AD,
-        displayName: 'oracle-ampere-server',
-        shape: 'VM.Standard.A1.Flex',
-        shapeConfig: {
-          ocpus: 2,
-          memoryInGBs: 12
-        },
-        sourceDetails: {
-          sourceType: 'image',
-          imageId: IMAGE_ID,
-          bootVolumeSizeInGBs: 100
-        },
-        createVnicDetails: {
-          subnetId: SUBNET_ID,
-          assignPublicIp: true,
-          displayName: 'vnic-main'
-        },
-        metadata: {
-          ssh_authorized_keys: SSH_PUBLIC_KEY
-        }
-      }
-    });
-
-    const newInst = launchRes.instance;
-    addOciLog('🎉🎉🎉 SUCCESS! AMPERE SERVER INSTANCE ALLOCATED! 🎉🎉🎉');
-    addOciLog(`Instance OCID: ${newInst.id}`);
-
-    // Wait 25 seconds for public IP assignment
-    await sleep(25000);
-    const publicIp = await getPublicIp(newInst.id);
-
-    const serverInfo = {
-      status: 'PROVISIONED',
-      instanceId: newInst.id,
-      publicIp: publicIp,
-      sshUser: 'ubuntu',
-      sshCommand: `ssh ubuntu@${publicIp}`,
-      specs: {
-        shape: 'VM.Standard.A1.Flex',
-        ocpus: 2,
-        ramGB: 12,
-        storageGB: 100,
-        os: 'Ubuntu 24.04 Minimal aarch64',
-        cost: '$0.00 / month (Always Free)'
-      },
-      provisionedAt: new Date().toISOString()
-    };
-
-    ociState.serverProvisioned = true;
-    ociState.serverDetails = serverInfo;
-    ociState.lastResult = `ALLOCATED! Public IP: ${publicIp}`;
-
+  // 2. Multi-Tier Direct Compute API Launch Requests (24GB -> 18GB -> 12GB -> 6GB)
+  for (const tier of SHAPE_TIERS) {
+    addOciLog(`[Attempt #${ociState.attempts}] Requesting ${tier.label} in Hyderabad AD-1 pool...`);
     try {
-      fs.writeFileSync(path.join(__dirname, 'oracle_server_info.json'), JSON.stringify(serverInfo, null, 2), 'utf8');
-    } catch (e) {}
+      const launchRes = await computeClient.launchInstance({
+        launchInstanceDetails: {
+          compartmentId: TENANCY_ID,
+          availabilityDomain: AD,
+          displayName: 'oracle-ampere-server',
+          shape: 'VM.Standard.A1.Flex',
+          shapeConfig: {
+            ocpus: tier.ocpus,
+            memoryInGBs: tier.memoryInGBs
+          },
+          sourceDetails: {
+            sourceType: 'image',
+            imageId: IMAGE_ID,
+            bootVolumeSizeInGBs: 100
+          },
+          createVnicDetails: {
+            subnetId: SUBNET_ID,
+            assignPublicIp: true,
+            displayName: 'vnic-main'
+          },
+          metadata: {
+            ssh_authorized_keys: SSH_PUBLIC_KEY
+          }
+        }
+      });
 
-    addOciLog(`Public IP: ${publicIp}`);
-    addOciLog(`Connect via: ssh ubuntu@${publicIp}`);
-    return true;
+      const newInst = launchRes.instance;
+      addOciLog(`🎉🎉🎉 SUCCESS! AMPERE SERVER (${tier.label}) ALLOCATED! 🎉🎉🎉`);
+      addOciLog(`Instance OCID: ${newInst.id}`);
 
-  } catch (err) {
-    if (err.message && err.message.includes('Out of host capacity')) {
-      ociState.lastResult = 'Host capacity full in AD-1. Retrying automatically...';
-      addOciLog(`[Attempt #${ociState.attempts}] Out of host capacity in AD-1 pool.`);
-    } else {
-      ociState.lastResult = `API response: ${err.message}`;
-      addOciLog(`[Attempt #${ociState.attempts}] Notice: ${err.message}`);
+      // Wait 25 seconds for public IP assignment
+      await sleep(25000);
+      const publicIp = await getPublicIp(newInst.id);
+
+      const serverInfo = {
+        status: 'PROVISIONED',
+        instanceId: newInst.id,
+        publicIp: publicIp,
+        sshUser: 'ubuntu',
+        sshCommand: `ssh ubuntu@${publicIp}`,
+        specs: {
+          shape: 'VM.Standard.A1.Flex',
+          ocpus: tier.ocpus,
+          ramGB: tier.memoryInGBs,
+          storageGB: 100,
+          os: 'Ubuntu 24.04 Minimal aarch64',
+          cost: '$0.00 / month (Always Free)'
+        },
+        provisionedAt: new Date().toISOString()
+      };
+
+      ociState.serverProvisioned = true;
+      ociState.serverDetails = serverInfo;
+      ociState.lastResult = `ALLOCATED (${tier.label})! Public IP: ${publicIp}`;
+
+      try {
+        fs.writeFileSync(path.join(__dirname, 'oracle_server_info.json'), JSON.stringify(serverInfo, null, 2), 'utf8');
+      } catch (e) {}
+
+      addOciLog(`Public IP: ${publicIp}`);
+      addOciLog(`Connect via: ssh ubuntu@${publicIp}`);
+      return true;
+
+    } catch (err) {
+      const msg = err.message || '';
+      if (msg.includes('Out of host capacity')) {
+        ociState.lastResult = `Host capacity full for ${tier.label} in AD-1. Trying next tier...`;
+        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Out of host capacity in AD-1.`);
+      } else if (msg.includes('Too many requests')) {
+        ociState.lastResult = `API rate-limit hit on ${tier.label}. Cooling down...`;
+        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label}: Too many requests (stopping sweep for cooldown).`);
+        break;
+      } else {
+        ociState.lastResult = `API response (${tier.label}): ${msg}`;
+        addOciLog(`[Attempt #${ociState.attempts}] ${tier.label} Notice: ${msg}`);
+      }
     }
-    return false;
+
+    // Small pause between tiers to avoid burst throttling
+    await sleep(4000);
   }
+  return false;
 }
 
 /**
@@ -211,8 +229,8 @@ async function startOracleCloudCatcher() {
   ociState.running = true;
 
   addOciLog('================================================================');
-  addOciLog('🚀 ORACLE CLOUD 24/7 CAPACITY CATCHER ACTIVE ON RENDER CLOUD!');
-  addOciLog('Specs: 2 OCPUs | 12 GB RAM | 100 GB Boot Volume (Ubuntu 24.04 ARM64)');
+  addOciLog('🚀 ORACLE CLOUD 24/7 MULTI-TIER CAPACITY CATCHER ACTIVE ON RENDER!');
+  addOciLog('Tiers: 24GB (4 OCPU) -> 18GB (3 OCPU) -> 12GB (2 OCPU) -> 6GB (1 OCPU)');
   addOciLog('Region: ap-hyderabad-1 | Target AD: PGML:AP-HYDERABAD-1-AD-1');
   addOciLog('================================================================');
 
