@@ -43,24 +43,25 @@ const provider = new common.SimpleAuthenticationDetailsProvider(
 const computeClient = new core.ComputeClient({ authenticationDetailsProvider: provider });
 const vnetClient = new core.VirtualNetworkClient({ authenticationDetailsProvider: provider });
 
-// Multi-Tier Always-Free Ampere A1 Configurations (Biggest First: 24GB -> 18GB -> 12GB -> 6GB)
+// Multi-Tier Always-Free Ampere A1 Configurations (Biggest First: 24GB -> 18GB -> 12GB -> 8GB -> 6GB)
 const SHAPE_TIERS = [
   { ocpus: 4, memoryInGBs: 24, label: '4 OCPU / 24 GB RAM' },
   { ocpus: 3, memoryInGBs: 18, label: '3 OCPU / 18 GB RAM' },
   { ocpus: 2, memoryInGBs: 12, label: '2 OCPU / 12 GB RAM' },
+  { ocpus: 2, memoryInGBs: 8, label: '2 OCPU / 8 GB RAM' },
   { ocpus: 1, memoryInGBs: 6, label: '1 OCPU / 6 GB RAM' }
 ];
 
 // In-Memory State & Metrics for API Monitoring
 const ociState = {
   running: false,
-  mode: 'RENDER_CLOUD_24_7',
+  mode: 'RENDER_CLOUD_24_7_CAPACITY_RADAR',
   region: 'ap-hyderabad-1 (Hyderabad)',
   ad: AD,
-  shape: 'VM.Standard.A1.Flex (Multi-Tier: 24GB / 18GB / 12GB / 6GB)',
+  shape: 'VM.Standard.A1.Flex (24GB / 18GB / 12GB / 8GB / 6GB Radar)',
   attempts: 0,
   lastAttemptTime: null,
-  lastResult: 'Initialized. Starting 24/7 multi-tier cloud loop...',
+  lastResult: 'Initialized. Scanning Hyderabad AD-1 capacity radar every 25s...',
   serverProvisioned: false,
   serverDetails: null,
   recentLogs: []
@@ -152,13 +153,44 @@ async function attemptProvision() {
     return true;
   }
 
-  // 2. Rotating Multi-Tier Direct Compute API Launch across eligible tiers
-  const tier = eligibleTiers[(ociState.attempts - 1) % eligibleTiers.length];
+  // 2. Fast Multi-Tier Capacity Radar across ALL eligible tiers simultaneously (no launch rate-limit burn!)
+  let targetTier = null;
+  try {
+    const capRes = await computeClient.createComputeCapacityReport({
+      createComputeCapacityReportDetails: {
+        compartmentId: TENANCY_ID,
+        availabilityDomain: AD,
+        shapeAvailabilities: eligibleTiers.map(t => ({
+          instanceShape: 'VM.Standard.A1.Flex',
+          instanceShapeConfig: { ocpus: t.ocpus, memoryInGBs: t.memoryInGBs }
+        }))
+      }
+    });
+    const availList = capRes.computeCapacityReport?.shapeAvailabilities || [];
+    for (let i = 0; i < eligibleTiers.length; i++) {
+      if (availList[i]?.availabilityStatus === 'AVAILABLE') {
+        targetTier = eligibleTiers[i];
+        break;
+      }
+    }
+  } catch (capErr) {
+    addOciLog(`[Radar #${ociState.attempts}] Capacity report note: ${capErr.message}`);
+  }
+
+  // Every 4th cycle (~100s), also send a live direct launch probe on rotating tier even if radar says full
+  const isDirectProbeCycle = (ociState.attempts % 4 === 1);
+  if (!targetTier && !isDirectProbeCycle) {
+    ociState.lastResult = `Hyderabad AD-1 OUT_OF_HOST_CAPACITY for all (${eligibleTiers.map(t => t.memoryInGBs + 'GB').join('/')}). Fast scanning every 25s...`;
+    addOciLog(`[Radar #${ociState.attempts}] Hyderabad AD-1: All tiers (${eligibleTiers.map(t => t.memoryInGBs + 'GB').join('/')}) currently OUT_OF_HOST_CAPACITY.`);
+    return false;
+  }
+
+  const tier = targetTier || eligibleTiers[(Math.floor(ociState.attempts / 4)) % eligibleTiers.length];
   const bootSizeGB = existingList.length === 0 ? 100 : 50; // Stay within 200 GB Always-Free boot volume limit
   const instanceName = `oracle-ampere-${tier.memoryInGBs}gb-${existingList.length + 1}`;
 
   addOciLog(
-    `[Attempt #${ociState.attempts}] Active: ${usedRamGB}GB/${usedOcpus}OCPU | Requesting ${tier.label} (Boot: ${bootSizeGB}GB) in Hyderabad AD-1...`
+    `[Attempt #${ociState.attempts}] ${targetTier ? '🔥 CAPACITY DETECTED!' : 'Direct Probe'} | Requesting ${tier.label} (Boot: ${bootSizeGB}GB) in Hyderabad AD-1...`
   );
 
   try {
@@ -275,9 +307,8 @@ async function startOracleCloudCatcher() {
       addOciLog(`Catcher loop exception: ${err.message}`);
     }
 
-    // Cooldown with jitter (80 to 110 seconds)
-    const cooldownSec = 80 + Math.floor(Math.random() * 30);
-    addOciLog(`Cooling down for ${cooldownSec}s to preserve API quota...`);
+    // Fast Radar Cooldown: 25 seconds (direct launch probes happen only every 4th cycle = ~100s to avoid 429)
+    const cooldownSec = 25;
     await sleep(cooldownSec * 1000);
   }
 }
