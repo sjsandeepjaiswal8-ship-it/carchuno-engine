@@ -1,0 +1,51 @@
+{
+  "carchuno": {
+    "id": "carchuno",
+    "name": "CarChuno",
+    "domain": "https://www.carchuno.com",
+    "category": "Pan-India Reverse Bidding Auto Platform",
+    "sender": "partners@carchuno.com",
+    "dispatched": 0,
+    "queued": 0,
+    "failed": 0,
+    "lastActivityAt": "2026-11-17T11:18:52.782Z",
+    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CarChuno"
+  },
+  "doctoreports": {
+    "id": "doctoreports",
+    "name": "DoctoReports",
+    "domain": "https://www.doctoreports.com",
+    "category": "AI Medical Report & NABL Clinical Simplifier",
+    "sender": "partners@closetesters.com",
+    "replyTo": "support@doctoreports.com",
+    "dispatched": 0,
+    "queued": 0,
+    "failed": 0,
+    "lastActivityAt": "2026-11-17T11:18:56.859Z",
+    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/DoctoReports"
+  },
+  "astromasterpiece": {
+    "id": "astromasterpiece",
+    "name": "AstroMasterpiece",
+    "domain": "https://www.astromasterpiece.com",
+    "category": "12-Pillar Vedic Kundali & Siddha Kavach Ecosystem",
+    "sender": "support@astromasterpiece.com",
+    "dispatched": 0,
+    "queued": 0,
+    "failed": 0,
+    "lastActivityAt": "2026-11-17T11:19:02.096Z",
+    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/AstroMasterpiece"
+  },
+  "closetesters": {
+    "id": "closetesters",
+    "name": "CloseTesters",
+    "domain": "https://closetesters.com",
+    "category": "Google Play 20-Tester QA & 4-Suite Audit Lab",
+    "sender": "partners@closetesters.com",
+    "dispatched": 0,
+    "queued": 0,
+    "failed": 0,
+    "lastActivityAt": "2026-11-17T11:19:09.071Z",
+    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CloseTesters"
+  }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Trident Hyundai",
+    "email": "care@tridenthyundai.com",
+    "domain": "tridenthyundai.com",
+    "city": "Bengaluru, Karnataka",
+    "category": "Hyundai Dealer",
+    "mxVerified": true,
+    "aiPitchHook": "Dominate Bengaluru’s digital showroom with CarChuno’s AI-driven lead conversion tools built specifically for Hyundai dealerships.",
+    "collectedAt": "2026-11-17T11:18:46.393Z",
+    "aiModel": "gemini-3-flash-preview",
+    "aiKeyUsed": "...PTR5SA"
+  },
+  {
+    "name": "Kun United Hyundai",
+    "email": "sales@kuncars.com",
+    "domain": "kuncars.com",
+    "city": "Hyderabad, Telangana",
+    "category": "Multi-OEM Dealer",
+    "mxVerified": true,
+    "aiPitchHook": "Scale your multi-OEM operations in Hyderabad by capturing high-intent buyers through CarChuno’s unified inventory acceleration platform.",
+    "collectedAt": "2026-11-17T11:18:46.393Z",
+    "aiModel": "gemini-3-flash-preview",
+    "aiKeyUsed": "...PTR5SA"
+  }
+]

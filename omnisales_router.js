@@ -1022,13 +1022,21 @@ STRICT POLICY RULES:
   });
 
   // --------------------------------------------------------------------------
-  // 7. Genuine SEO / GEO Crawler Endpoints (replaces fake hardcoded numbers)
+  // 7. Genuine SEO / GEO Crawler Endpoints (All 4 Brands Supported)
   // --------------------------------------------------------------------------
+  function resolveBrandDomain(brandRaw) {
+    const b = String(brandRaw || 'closetesters').toLowerCase();
+    if (b.includes('carchuno')) return 'https://www.carchuno.com';
+    if (b.includes('doctor')) return 'https://www.doctoreports.com';
+    if (b.includes('astro')) return 'https://www.astromasterpiece.com';
+    return 'https://closetesters.com';
+  }
+
   router.get('/api/seo/overview', async (req, res) => {
     try {
       const brand = String(req.query.brand || 'closetesters').toLowerCase();
       const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
-      const targetDomain = brand === 'carchuno' ? 'https://www.carchuno.com' : 'https://closetesters.com';
+      const targetDomain = resolveBrandDomain(brand);
 
       const cached = seoCrawlCache[brand];
       const isFresh = cached && Date.now() - cached.ts < 15 * 60 * 1000;
@@ -1067,7 +1075,7 @@ STRICT POLICY RULES:
 
   router.get('/api/seo/telemetry-report', async (req, res) => {
     try {
-      const domain = normalizeUrlInput(req.query.url || (req.query.brand === 'carchuno' ? 'https://www.carchuno.com' : 'https://closetesters.com'));
+      const domain = normalizeUrlInput(req.query.url || resolveBrandDomain(req.query.brand));
       const crawl = await dynamicSeo.crawlAndAudit(domain);
       res.json({
         success: true,
@@ -1090,7 +1098,7 @@ STRICT POLICY RULES:
 
   router.post('/api/seo/trigger-crawl', async (req, res) => {
     try {
-      const targetUrl = normalizeUrlInput(req.body?.url || (req.body?.brandId === 'carchuno' ? 'https://www.carchuno.com' : 'https://closetesters.com'));
+      const targetUrl = normalizeUrlInput(req.body?.url || resolveBrandDomain(req.body?.brandId));
       const auditData = await dynamicSeo.crawlAndAudit(targetUrl);
       const aiOptimization = await dynamicSeo.generateAiOptimization(auditData, { brandName: req.body?.brandName });
       const html = dynamicSeo.generateExecutiveHtmlReport(auditData, aiOptimization, req.body?.clientName || 'Enterprise Partner');

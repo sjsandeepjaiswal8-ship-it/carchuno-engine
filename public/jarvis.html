@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenJarvis × Hermes — Hybrid 4-Brand Sovereign Cockpit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap');
+    :root { --bg: #050810; --panel: rgba(15, 23, 42, 0.78); --border: rgba(56, 189, 248, 0.18); }
+    body { font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif; background: radial-gradient(circle at top right, #0f172a 0%, #050810 55%, #020409 100%); color: #e2e8f0; min-height: 100vh; }
+    .glass { background: var(--panel); backdrop-filter: blur(18px); border: 1px solid var(--border); }
+    .jarvis-ring { box-shadow: 0 0 36px rgba(56, 189, 248, 0.25), inset 0 0 18px rgba(16, 185, 129, 0.15); }
+    .pulse-dot { animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.2); } }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+  </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- ===================================================================== -->
+  <!-- 1. MASTER PIN LOCK OVERLAY (Server-Verified PINs: 2026 / 8899)        -->
+  <!-- ===================================================================== -->
+  <div id="jarvis-lock" class="fixed inset-0 z-50 bg-[#050810]/95 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="glass jarvis-ring max-w-sm w-full rounded-3xl p-7 text-center relative overflow-hidden">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white text-3xl shadow-xl shadow-cyan-500/30">
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[11px] font-bold text-cyan-300 mb-3">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> HYBRID LOCKED: GEMINI 4 HYDROGEN (XHIGH) × HERMES
+      </div>
+      <h1 class="text-xl font-extrabold text-white">OpenJarvis Sovereign Cockpit</h1>
+      <p class="text-xs text-slate-400 mt-1 mb-5">अनलॉक करने के लिए मास्टर पिन दर्ज करें</p>
+
+      <form onsubmit="submitPin(event)" class="space-y-3">
+        <input id="pin-input" type="password" inputmode="numeric" maxlength="16" placeholder="••••" autofocus
+          class="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-cyan-400 rounded-2xl py-3 px-4 text-center text-2xl tracking-[0.45em] font-mono text-white outline-none transition">
+        <div id="pin-err" class="hidden text-xs text-rose-400 font-semibold">❌ गलत पिन! कृपया पुनः प्रयास करें।</div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="tapKey('1')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">1</button>
+          <button type="button" onclick="tapKey('2')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">2</button>
+          <button type="button" onclick="tapKey('3')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">3</button>
+          <button type="button" onclick="tapKey('4')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">4</button>
+          <button type="button" onclick="tapKey('5')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">5</button>
+          <button type="button" onclick="tapKey('6')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">6</button>
+          <button type="button" onclick="tapKey('7')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">7</button>
+          <button type="button" onclick="tapKey('8')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">8</button>
+          <button type="button" onclick="tapKey('9')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">9</button>
+          <button type="button" onclick="clearPinInput()" class="py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400">Clear</button>
+          <button type="button" onclick="tapKey('0')" class="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-white">0</button>
+          <button type="submit" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black">GO →</button>
+        </div>
+      </form>
+      <p class="text-[11px] text-slate-500 mt-4">CarChuno • DoctoReports • AstroMasterpiece • CloseTesters</p>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 2. MAIN OPENJARVIS HYBRID COCKPIT                                     -->
+  <!-- ===================================================================== -->
+  <div id="jarvis-app" class="hidden flex-col min-h-screen">
+
+    <!-- Top Hybrid Header -->
+    <header class="sticky top-0 z-40 bg-[#050810]/90 backdrop-blur-xl border-b border-cyan-500/20 px-4 md:px-7 py-3.5">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-cyan-500/25">
+            🤖
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-base md:text-lg font-extrabold text-white tracking-tight">OpenJarvis × OmniSales Hybrid Engine</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> 24/7 RENDER CLOUD LIVE
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
+                🔒 Gemini 4 Hydrogen (XHigh) + Hermes Agent
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              17-Key Gemini Pool: <strong id="hdr-gemini-keys" class="text-cyan-300">--/17</strong> • Uptime: <strong id="hdr-uptime" class="text-emerald-300">--</strong> • Hybrid Queue: <strong id="hdr-outbox" class="text-amber-300">--</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="runFullHybridCycle()" id="btn-full-cycle" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-bolt"></i> All 4 Brands Full Cycle
+          </button>
+          <a href="/omnisales" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300">
+            Classic UI
+          </a>
+          <button onclick="lockCockpit()" title="Lock Cockpit" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-amber-400">
+            <i class="fa-solid fa-lock"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+      <!-- 4 CONNECTED BRANDS GRID -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="brands-grid">
+        <!-- Populated dynamically via /api/omni/hub -->
+      </section>
+
+      <!-- OPENJARVIS CONVERSATIONAL TERMINAL + TRACE CARDS -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 glass jarvis-ring rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 pulse-dot"></span>
+              <h2 class="text-sm font-extrabold text-white">OpenJarvis Autonomous Command Console</h2>
+            </div>
+            <span class="text-[11px] font-mono text-cyan-300">Hermes Tools + 17-Key Gemini Cascade</span>
+          </div>
+
+          <div id="jarvis-chat-log" class="flex-1 min-h-[260px] max-h-[360px] overflow-y-auto space-y-3 pr-1 mb-4 text-xs">
+            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/20 text-slate-200">
+              <div class="font-bold text-cyan-300 mb-1">🤖 OpenJarvis (Gemini 4 Hydrogen XHigh × Hermes Agent) तैयार है!</div>
+              <p class="text-slate-300 leading-relaxed">CarChuno, DoctoReports, AstroMasterpiece और CloseTesters चारों प्रोडक्ट्स जुड़ चुके हैं। नीचे हिंदी या इंग्लिश में कोई भी आदेश दें — जैसे लीड्स निकालना, मेल भेजना, डेली रिपोर्ट बनाना या 4-ब्रांड लाइव ऑडिट चलाना।</p>
+            </div>
+          </div>
+
+          <!-- Quick Prompts -->
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <button onclick="sendQuickCommand('सभी 4 प्रोडक्ट्स की आज की लीड्स निकालो और डेली रिपोर्ट बनाओ')" class="px-2.5 py-1 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/30 text-[11px] font-semibold text-cyan-200">📥 4-Brand Daily Leads + Report</button>
+            <button onclick="sendQuickCommand('सभी 4 ब्रांड्स (CarChuno, DoctoReports, AstroMasterpiece, CloseTesters) के लिए OmniSales आउटरीच मेल भेजो')" class="px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-500/30 text-[11px] font-semibold text-emerald-200">✉️ Dispatch All 4 Brands</button>
+            <button onclick="sendQuickCommand('सभी 4 वेबसाइट्स और सर्वर का लाइव हेल्थ ऑडिट चेक करो')" class="px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900/70 border border-purple-500/30 text-[11px] font-semibold text-purple-200">🛡️ 4-Brand Live Watchdog</button>
+            <button onclick="sendQuickCommand('Oracle 24GB/18GB/12GB/6GB सर्वर स्टेटस बताओ')" class="px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/70 border border-amber-500/30 text-[11px] font-semibold text-amber-200">🖥️ Oracle Catcher Status</button>
+          </div>
+
+          <form onsubmit="submitJarvisCommand(event)" class="flex items-center gap-2">
+            <button type="button" onclick="startVoiceInput()" id="btn-mic" title="बोलकर आदेश दें" class="px-3.5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+            <input id="jarvis-input" type="text" placeholder="Jarvis को आदेश दें (जैसे: DoctoReports की नई लीड्स निकालो और रिपोर्ट दो)..."
+              class="flex-1 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl py-2.5 px-3.5 text-sm text-white outline-none">
+            <button type="submit" id="btn-jarvis-send" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm">
+              Execute
+            </button>
+          </form>
+        </div>
+
+        <!-- RIGHT SIDEBAR: ORACLE CATCHER + HYBRID OUTBOX + COLLECTIONS -->
+        <div class="space-y-4">
+          <div class="glass rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-amber-300">🖥️ Oracle Multi-Tier Catcher</h3>
+              <span id="oracle-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">HUNTING</span>
+            </div>
+            <p class="text-[11px] text-slate-400">24GB → 18GB → 12GB → 6GB (Quota-Aware Stop ≥18GB)</p>
+            <div class="mt-2.5 grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-slate-950/80 rounded-xl p-2.5 border border-slate-800">
+                <div class="text-[10px] text-slate-400">Attempts</div>
+                <div id="oracle-attempts" class="text-base font-black text-white">--</div>
+              </div>
+              <div class="bg-slate-950/80 rounded-xl p-2.5 border border-slate-800">
+                <div class="text-[10px] text-slate-400">Provisioned</div>
+                <div id="oracle-prov" class="text-base font-black text-cyan-300">--</div>
+              </div>
+            </div>
+            <div id="oracle-last" class="mt-2 text-[11px] text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">Loading...</div>
+          </div>
+
+          <div class="glass rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-emerald-300">📁 Jarvis Lead Collection</h3>
+              <button onclick="runDailyCollection()" id="btn-run-col" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold">Collect Now</button>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-2">Desktop + Google Drive Date/Time Mirror (`Jarvis Lead Collection`)</p>
+            <div id="collections-list" class="space-y-1.5 text-xs max-h-44 overflow-y-auto"></div>
+          </div>
+
+          <div class="glass rounded-2xl p-4">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-cyan-300 mb-2">🌐 4-Brand Watchdog & Relay</h3>
+            <div id="outbox-summary" class="text-[11px] text-slate-300 space-y-1">Loading...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAILY ACTIVITY REPORT & LIVE FEED -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-extrabold text-white">📊 Daily Activity Report (सभी प्रोडक्ट्स की रिपोर्ट)</h2>
+            <button onclick="loadDailyReport()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-cyan-300">Refresh AI Report</button>
+          </div>
+          <div id="daily-report-box" class="text-xs text-slate-200 bg-slate-950/80 border border-slate-800 rounded-xl p-4 max-h-80 overflow-y-auto whitespace-pre-wrap leading-relaxed">लोड हो रहा है...</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-extrabold text-white">⚡ Live Cross-Brand Activity Stream</h2>
+            <select id="feed-filter" onchange="refreshHub()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200">
+              <option value="all">All Brands</option>
+              <option value="carchuno">CarChuno</option>
+              <option value="doctoreports">DoctoReports</option>
+              <option value="astromasterpiece">AstroMasterpiece</option>
+              <option value="closetesters">CloseTesters</option>
+              <option value="hermes">Hermes Agent</option>
+            </select>
+          </div>
+          <div id="activity-feed" class="space-y-2 max-h-80 overflow-y-auto text-xs pr-1"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+<script>
+const BRAND_META = {
+  carchuno: { icon: '🚗', color: 'border-rose-500/40', badge: 'bg-rose-500/15 text-rose-300', dispatchApi: '/dispatch-now' },
+  doctoreports: { icon: '🏥', color: 'border-teal-500/40', badge: 'bg-teal-500/15 text-teal-300', dispatchApi: '/api/doctoreports/dispatch' },
+  astromasterpiece: { icon: '🔱', color: 'border-amber-500/40', badge: 'bg-amber-500/15 text-amber-300', dispatchApi: '/api/astro/dispatch' },
+  closetesters: { icon: '📱', color: 'border-sky-500/40', badge: 'bg-sky-500/15 text-sky-300', dispatchApi: '/api/closetesters/dispatch-now' }
+};
+
+function tapKey(k) { document.getElementById('pin-input').value += k; }
+function clearPinInput() { document.getElementById('pin-input').value = ''; document.getElementById('pin-err').classList.add('hidden'); }
+
+async function submitPin(e) {
+  e.preventDefault();
+  const pin = document.getElementById('pin-input').value.trim();
+  const res = await fetch('/api/jarvis/verify-pin', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin })
+  });
+  if (res.ok) {
+    localStorage.setItem('jarvis_unlocked_v1', 'true');
+    unlockView();
+  } else {
+    document.getElementById('pin-err').classList.remove('hidden');
+  }
+}
+
+function unlockView() {
+  document.getElementById('jarvis-lock').classList.add('hidden');
+  const app = document.getElementById('jarvis-app');
+  app.classList.remove('hidden');
+  app.classList.add('flex');
+  refreshHub();
+  loadDailyReport();
+}
+
+function lockCockpit() {
+  localStorage.removeItem('jarvis_unlocked_v1');
+  location.reload();
+}
+
+async function refreshHub() {
+  try {
+    const filter = document.getElementById('feed-filter')?.value || 'all';
+    const res = await fetch('/api/omni/hub?brand=' + encodeURIComponent(filter));
+    const data = await res.json();
+    if (!data.success) return;
+
+    document.getElementById('hdr-gemini-keys').textContent = `${data.geminiPool.activeKeys}/${data.geminiPool.totalKeys} Active`;
+    document.getElementById('hdr-uptime').textContent = `${Math.floor((data.uptimeSeconds || 0) / 60)} min`;
+    document.getElementById('hdr-outbox').textContent = `${data.outbox.pending} Pending / ${data.outbox.dispatched} Sent`;
+
+    // Render 4 brand cards
+    const grid = document.getElementById('brands-grid');
+    grid.innerHTML = Object.entries(data.brands).map(([id, b]) => {
+      const m = BRAND_META[id] || BRAND_META.carchuno;
+      const inv = data.inventory[id] || {};
+      const poolCount = inv.totalLoaded || inv.dealers || '--';
+      return `
+        <div class="glass rounded-2xl p-4 border ${m.color} flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="text-sm font-extrabold text-white flex items-center gap-2">${m.icon} ${b.name}</div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${m.badge}">LIVE</span>
+            </div>
+            <div class="text-[10px] text-slate-400 truncate mb-3">${b.domain}</div>
+            <div class="grid grid-cols-3 gap-1.5 text-center text-[11px] mb-3">
+              <div class="bg-slate-950/70 rounded-lg p-1.5 border border-slate-800">
+                <div class="text-[9px] text-slate-400">Leads Pool</div>
+                <div class="font-black text-white">${poolCount}</div>
+              </div>
+              <div class="bg-slate-950/70 rounded-lg p-1.5 border border-slate-800">
+                <div class="text-[9px] text-slate-400">Sent</div>
+                <div class="font-black text-emerald-400">${b.dispatched || 0}</div>
+              </div>
+              <div class="bg-slate-950/70 rounded-lg p-1.5 border border-slate-800">
+                <div class="text-[9px] text-slate-400">Queued</div>
+                <div class="font-black text-amber-300">${b.queued || 0}</div>
+              </div>
+            </div>
+            <div class="text-[11px] text-slate-300 bg-slate-950/60 rounded-lg p-2 border border-slate-800/70 line-clamp-2 mb-3">${b.lastAction || 'Standby'}</div>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="triggerBrandDispatch('${id}')" class="flex-1 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-200 text-[11px] font-bold">✉️ Dispatch</button>
+            <button onclick="sendQuickCommand('${b.name} की नई लीड्स निकालो')" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold">🌾 Leads</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Oracle card
+    if (data.oracle) {
+      document.getElementById('oracle-attempts').textContent = data.oracle.attempts ?? 0;
+      document.getElementById('oracle-prov').textContent = data.oracle.serverProvisioned ? 'LIVE ✅' : 'NO YET';
+      document.getElementById('oracle-last').textContent = data.oracle.lastResult || '';
+      document.getElementById('oracle-badge').textContent = data.oracle.serverProvisioned ? 'CLAIMED' : 'HUNTING 24/7';
+    }
+
+    // Collections
+    const colBox = document.getElementById('collections-list');
+    if (data.collections && data.collections.length > 0) {
+      colBox.innerHTML = data.collections.map(c => {
+        const prods = Object.entries(c.products || {}).map(([p, info]) => `${p}: <b>${info.dailyLeadsCount}</b>`).join(' • ');
+        return `<div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+          <div class="font-bold text-emerald-300">${c.date} ${c.hasDailyReport ? '📄' : ''}</div>
+          <div class="text-[10px] text-slate-300 mt-0.5">${prods || 'Initialized'}</div>
+        </div>`;
+      }).join('');
+    } else {
+      colBox.innerHTML = '<div class="text-slate-400">Click "Collect Now" to generate today\'s date folder.</div>';
+    }
+
+    // Outbox summary
+    document.getElementById('outbox-summary').innerHTML = `
+      <div>Pending Hybrid Relay: <strong class="text-amber-300">${data.outbox.pending}</strong></div>
+      <div>Confirmed Sent: <strong class="text-emerald-400">${data.outbox.dispatched}</strong></div>
+      <div class="text-[10px] text-slate-400 pt-1">Render Free Tier ports 465/587 blocked — Local Hermes GoDaddy Relay drains pending jobs + mirrors Lead Collection to Desktop & Drive.</div>
+    `;
+
+    // Activity feed
+    const feedBox = document.getElementById('activity-feed');
+    feedBox.innerHTML = (data.recentActivity || []).map(a => `
+      <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-start justify-between gap-2">
+        <div>
+          <span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 text-[10px] font-bold uppercase mr-1.5">${a.brand}</span>
+          <span class="text-slate-200">${a.summary}</span>
+        </div>
+        <span class="text-[10px] text-slate-500 whitespace-nowrap">${new Date(a.timestamp).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+      </div>
+    `).join('') || '<div class="text-slate-400">No activity recorded yet.</div>';
+  } catch (err) {
+    console.warn('Hub refresh note:', err.message);
+  }
+}
+
+async function triggerBrandDispatch(brandId) {
+  const api = BRAND_META[brandId]?.dispatchApi;
+  if (!api) return;
+  appendJarvisMsg(`🚀 Dispatch triggered for <b>${brandId}</b>...`, 'user');
+  const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  const json = await res.json();
+  appendJarvisMsg(`<b>${brandId} Result:</b> ${JSON.stringify(json).slice(0, 220)}`, 'bot');
+  refreshHub();
+}
+
+async function runFullHybridCycle() {
+  const btn = document.getElementById('btn-full-cycle');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running 4 Brands...';
+  try {
+    const res = await fetch('/api/omni/run-full-cycle', { method: 'POST' });
+    const data = await res.json();
+    appendJarvisMsg(`✅ <b>Full 4-Brand Hybrid Cycle Complete!</b> Daily Leads & Outreach executed across CarChuno, DoctoReports, AstroMasterpiece & CloseTesters.`, 'bot');
+    refreshHub();
+    loadDailyReport();
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-bolt"></i> All 4 Brands Full Cycle';
+  }
+}
+
+async function runDailyCollection() {
+  const btn = document.getElementById('btn-run-col');
+  btn.disabled = true; btn.textContent = 'Running...';
+  try {
+    await fetch('/api/jarvis/lead-collections/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 4 }) });
+    refreshHub();
+    loadDailyReport();
+  } finally {
+    btn.disabled = false; btn.textContent = 'Collect Now';
+  }
+}
+
+async function loadDailyReport() {
+  try {
+    const res = await fetch('/api/jarvis/daily-report');
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('daily-report-box').textContent = data.markdown;
+    }
+  } catch (e) {}
+}
+
+function appendJarvisMsg(html, role = 'bot', trace = []) {
+  const log = document.getElementById('jarvis-chat-log');
+  const traceHtml = (trace || []).map(t => `<span class="inline-block px-2 py-0.5 mr-1 mb-1 rounded bg-slate-800 text-cyan-300 text-[10px]">✓ ${t.step}: ${t.detail}</span>`).join('');
+  const div = document.createElement('div');
+  div.className = role === 'user'
+    ? 'p-3 rounded-xl bg-blue-950/60 border border-blue-500/30 text-blue-100 ml-8'
+    : 'p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/25 text-slate-200 mr-4';
+  div.innerHTML = `${traceHtml ? `<div class="mb-2">${traceHtml}</div>` : ''}<div class="leading-relaxed whitespace-pre-wrap">${html}</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function sendQuickCommand(text) {
+  document.getElementById('jarvis-input').value = text;
+  submitJarvisCommand(new Event('submit'));
+}
+
+async function submitJarvisCommand(e) {
+  e.preventDefault();
+  const input = document.getElementById('jarvis-input');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  input.value = '';
+  appendJarvisMsg(`<b>आप:</b> ${cmd}`, 'user');
+
+  const btn = document.getElementById('btn-jarvis-send');
+  btn.disabled = true; btn.textContent = 'Thinking...';
+  try {
+    const res = await fetch('/api/jarvis/command', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command: cmd })
+    });
+    const data = await res.json();
+    appendJarvisMsg(
+      `<div class="text-[10px] text-emerald-300 font-mono mb-1">${data.brainLock?.primaryModel || ''} • Key ${data.aiMeta?.keyMasked || ''}</div>${data.reply || 'Done.'}`,
+      'bot',
+      data.trace
+    );
+    refreshHub();
+  } catch (err) {
+    appendJarvisMsg(`⚠️ Error: ${err.message}`, 'bot');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Execute';
+  }
+}
+
+function startVoiceInput() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert('SpeechRecognition browser में उपलब्ध नहीं है।');
+  const rec = new SR();
+  rec.lang = 'hi-IN';
+  rec.onresult = (ev) => {
+    const txt = ev.results[0][0].transcript;
+    document.getElementById('jarvis-input').value = txt;
+    submitJarvisCommand(new Event('submit'));
+  };
+  rec.start();
+}
+
+if (localStorage.getItem('jarvis_unlocked_v1') === 'true') {
+  unlockView();
+}
+setInterval(() => {
+  if (!document.getElementById('jarvis-app').classList.contains('hidden')) refreshHub();
+}, 8000);
+</script>
+</body>
+</html>

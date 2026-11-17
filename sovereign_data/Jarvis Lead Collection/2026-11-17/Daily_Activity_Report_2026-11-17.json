@@ -1,0 +1,198 @@
+{
+  "reportTitle": "Jarvis Daily Lead & Activity Report (2026-11-17 16-49 IST)",
+  "generatedAt": "2026-11-17T11:19:09.079Z",
+  "date": "2026-11-17",
+  "timeTag": "16-49",
+  "brainLock": "Gemini 4 Hydrogen (XHigh) + Hermes Autonomous Agent",
+  "geminiPool": {
+    "totalKeys": 17,
+    "activeKeys": 17,
+    "lastSuccess": {
+      "model": "gemini-3-flash-preview",
+      "keyMasked": "...WdswdA",
+      "at": "2026-11-17T11:19:08.925Z"
+    }
+  },
+  "dailyLeadsCollected": {
+    "CarChuno": 6,
+    "DoctoReports": 6,
+    "AstroMasterpiece": 6,
+    "CloseTesters": 6
+  },
+  "brandMetrics": {
+    "carchuno": {
+      "id": "carchuno",
+      "name": "CarChuno",
+      "domain": "https://www.carchuno.com",
+      "category": "Pan-India Reverse Bidding Auto Platform",
+      "sender": "partners@carchuno.com",
+      "dispatched": 0,
+      "queued": 0,
+      "failed": 0,
+      "lastActivityAt": "2026-11-17T11:18:52.782Z",
+      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CarChuno"
+    },
+    "doctoreports": {
+      "id": "doctoreports",
+      "name": "DoctoReports",
+      "domain": "https://www.doctoreports.com",
+      "category": "AI Medical Report & NABL Clinical Simplifier",
+      "sender": "partners@closetesters.com",
+      "replyTo": "support@doctoreports.com",
+      "dispatched": 0,
+      "queued": 0,
+      "failed": 0,
+      "lastActivityAt": "2026-11-17T11:18:56.859Z",
+      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/DoctoReports"
+    },
+    "astromasterpiece": {
+      "id": "astromasterpiece",
+      "name": "AstroMasterpiece",
+      "domain": "https://www.astromasterpiece.com",
+      "category": "12-Pillar Vedic Kundali & Siddha Kavach Ecosystem",
+      "sender": "support@astromasterpiece.com",
+      "dispatched": 0,
+      "queued": 0,
+      "failed": 0,
+      "lastActivityAt": "2026-11-17T11:19:02.096Z",
+      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/AstroMasterpiece"
+    },
+    "closetesters": {
+      "id": "closetesters",
+      "name": "CloseTesters",
+      "domain": "https://closetesters.com",
+      "category": "Google Play 20-Tester QA & 4-Suite Audit Lab",
+      "sender": "partners@closetesters.com",
+      "dispatched": 0,
+      "queued": 0,
+      "failed": 0,
+      "lastActivityAt": "2026-11-17T11:19:09.071Z",
+      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CloseTesters"
+    }
+  },
+  "outboxStats": {
+    "pending": 0,
+    "dispatched": 0,
+    "failed": 0,
+    "total": 0
+  },
+  "oracleStatus": null,
+  "executiveSummaryHi": "**विश्लेषण:**\nआज सभी चार ब्रांड्स में समान रूप से कुल 24 लीड्स एकत्रित हुई हैं, लेकिन डिस्पैच और आउटबॉक्स मेट्रिक्स का शून्य होना यह दर्शाता है कि लीड्स अभी प्रोसेसिंग पाइपलाइन में नहीं पहुंची हैं। Gemini API पूल (17/17) पूरी तरह सक्रिय और स्वस्थ है, जो यह स्पष्ट करता है कि बुनियादी ढांचा तैयार है परंतु डेटा फ्लो रुका हुआ है।\n\n**अगला एक्शन:**\nलीड-टू-प्रोसेसिंग शेड्यूलर (Scheduler) की तत्काल जांच करें और एकत्रित लीड्स को आउटबॉक्स में भेजने के लिए 'Batch Dispatch' मैन्युअल रूप से ट्रिगर करें।",
+  "recentActivitiesCount": 9,
+  "recentActivities": [
+    {
+      "id": "ACT-5DD152",
+      "brand": "closetesters",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CloseTesters",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-49",
+        "count": 2,
+        "dailyTotal": 6
+      },
+      "timestamp": "2026-11-17T11:19:09.071Z"
+    },
+    {
+      "id": "ACT-6EBDC4",
+      "brand": "astromasterpiece",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 2 new leads (Today total: 6) -> 2026-11-17/AstroMasterpiece",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-48",
+        "count": 2,
+        "dailyTotal": 6
+      },
+      "timestamp": "2026-11-17T11:19:02.096Z"
+    },
+    {
+      "id": "ACT-DF3A53",
+      "brand": "doctoreports",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 2 new leads (Today total: 6) -> 2026-11-17/DoctoReports",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-48",
+        "count": 2,
+        "dailyTotal": 6
+      },
+      "timestamp": "2026-11-17T11:18:56.859Z"
+    },
+    {
+      "id": "ACT-8D6207",
+      "brand": "carchuno",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CarChuno",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-48",
+        "count": 2,
+        "dailyTotal": 6
+      },
+      "timestamp": "2026-11-17T11:18:52.782Z"
+    },
+    {
+      "id": "ACT-0DEF6E",
+      "brand": "hermes",
+      "type": "DAILY_REPORT_GENERATED",
+      "summary": "Daily Activity Report (2026-11-17 16-48) saved to Vault/Desktop/Drive",
+      "details": {
+        "totalTodayLeads": 16
+      },
+      "timestamp": "2026-11-17T11:18:14.883Z"
+    },
+    {
+      "id": "ACT-DE0AC7",
+      "brand": "closetesters",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 4 new leads (Today total: 4) -> 2026-11-17/CloseTesters",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-48",
+        "count": 4,
+        "dailyTotal": 4
+      },
+      "timestamp": "2026-11-17T11:18:11.701Z"
+    },
+    {
+      "id": "ACT-30B6D3",
+      "brand": "astromasterpiece",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 4 new leads (Today total: 4) -> 2026-11-17/AstroMasterpiece",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-48",
+        "count": 4,
+        "dailyTotal": 4
+      },
+      "timestamp": "2026-11-17T11:18:07.216Z"
+    },
+    {
+      "id": "ACT-695220",
+      "brand": "doctoreports",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 4 new leads (Today total: 4) -> 2026-11-17/DoctoReports",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-47",
+        "count": 4,
+        "dailyTotal": 4
+      },
+      "timestamp": "2026-11-17T11:18:03.308Z"
+    },
+    {
+      "id": "ACT-D2FDB4",
+      "brand": "carchuno",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Collected 4 new leads (Today total: 4) -> 2026-11-17/CarChuno",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "16-47",
+        "count": 4,
+        "dailyTotal": 4
+      },
+      "timestamp": "2026-11-17T11:17:59.175Z"
+    }
+  ]
+}

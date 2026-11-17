@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Dr Lal PathLabs Ltd",
+    "email": "customercare@lalpathlabs.com",
+    "domain": "lalpathlabs.com",
+    "city": "Delhi NCR, India",
+    "category": "NABL Diagnostic Chain",
+    "mxVerified": true,
+    "aiPitchHook": "Targeted B2B partnership brief for Dr Lal PathLabs Ltd (Delhi NCR)",
+    "collectedAt": "2026-11-17T11:17:59.178Z"
+  },
+  {
+    "name": "Thyrocare Technologies",
+    "email": "support@thyrocare.com",
+    "domain": "thyrocare.com",
+    "city": "Navi Mumbai, Maharashtra",
+    "category": "Pathology Network",
+    "mxVerified": true,
+    "aiPitchHook": "Targeted B2B partnership brief for Thyrocare Technologies (Navi Mumbai)",
+    "collectedAt": "2026-11-17T11:17:59.178Z"
+  },
+  {
+    "name": "Metropolis Healthcare",
+    "email": "support@metropolisindia.com",
+    "domain": "metropolisindia.com",
+    "city": "Mumbai, Maharashtra",
+    "category": "Diagnostic Labs",
+    "mxVerified": true,
+    "aiPitchHook": "Targeted B2B partnership brief for Metropolis Healthcare (Mumbai)",
+    "collectedAt": "2026-11-17T11:17:59.178Z"
+  },
+  {
+    "name": "Apollo Diagnostics",
+    "email": "customercare@apollodiagnostics.in",
+    "domain": "apollodiagnostics.in",
+    "city": "Hyderabad, Telangana",
+    "category": "Diagnostic Chain",
+    "mxVerified": true,
+    "aiPitchHook": "Targeted B2B partnership brief for Apollo Diagnostics (Hyderabad)",
+    "collectedAt": "2026-11-17T11:17:59.178Z"
+  },
+  {
+    "name": "Dr Lal PathLabs Ltd",
+    "email": "partnerships@lalpathlabs.com",
+    "domain": "lalpathlabs.com",
+    "city": "Delhi NCR, India",
+    "category": "NABL Diagnostic Chain",
+    "mxVerified": true,
+    "aiPitchHook": "Scale your NABL-compliant reporting across Delhi NCR with automated workflows that slash turnaround times and errors.",
+    "collectedAt": "2026-11-17T11:18:52.794Z",
+    "aiModel": "gemini-3-flash-preview",
+    "aiKeyUsed": "...d4Dz5Q"
+  },
+  {
+    "name": "Thyrocare Technologies",
+    "email": "wellness@thyrocare.com",
+    "domain": "thyrocare.com",
+    "city": "Navi Mumbai, Maharashtra",
+    "category": "Pathology Network",
+    "mxVerified": true,
+    "aiPitchHook": "Optimize Thyrocare’s massive pathology volume with AI-driven reporting that ensures rapid, precise results for every patient.",
+    "collectedAt": "2026-11-17T11:18:52.794Z",
+    "aiModel": "gemini-3-flash-preview",
+    "aiKeyUsed": "...d4Dz5Q"
+  }
+]

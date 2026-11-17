@@ -17,10 +17,12 @@ class HermesMirrorWatchdog {
   constructor() {
     this.name = "Hermes Sovereign Watchdog";
     this.endpoints = [
-      { name: 'CloseTesters Web', url: 'https://closetesters.com', provider: 'Firebase Hosting' },
-      { name: 'AstroMasterpiece Web', url: 'https://astromasterpiece.com', provider: 'Firebase Hosting' },
-      { name: 'CarChuno Cloud Engine', url: 'https://carchuno-engine.onrender.com/health', provider: 'Render.com Cloud' },
-      { name: 'Oracle 24GB Catcher', url: 'https://carchuno-engine.onrender.com/api/oracle/status', provider: 'OCI + Render' }
+      { name: 'CarChuno Web', url: 'https://www.carchuno.com', brandId: 'carchuno', provider: 'Firebase Hosting' },
+      { name: 'DoctoReports Web', url: 'https://www.doctoreports.com', brandId: 'doctoreports', provider: 'Firebase Hosting' },
+      { name: 'AstroMasterpiece Web', url: 'https://www.astromasterpiece.com', brandId: 'astromasterpiece', provider: 'Firebase Hosting' },
+      { name: 'CloseTesters Web', url: 'https://closetesters.com', brandId: 'closetesters', provider: 'Firebase Hosting' },
+      { name: 'CarChuno Cloud Engine', url: 'https://carchuno-engine.onrender.com/health', brandId: 'hermes', provider: 'Render.com Cloud' },
+      { name: 'Oracle Capacity Catcher', url: 'https://carchuno-engine.onrender.com/api/oracle/status', brandId: 'oracle', provider: 'OCI + Render' }
     ];
   }
 

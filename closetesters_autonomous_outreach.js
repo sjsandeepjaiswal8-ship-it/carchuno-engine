@@ -241,14 +241,26 @@ class CloseTestersAutonomousOutreach {
       return { success: true, record };
     } catch (err) {
       this.stats.failedCount++;
-      this.stats.consecutiveFailures++;
-      addLog(`❌ [CloseTesters Dispatch Failed] ${lead.email}: ${err.message}`);
-
-      if (this.stats.consecutiveFailures >= 5) {
-        this.stats.circuitBreakerTripped = true;
-        addLog('🚨 [CloseTesters Circuit Breaker] 5 consecutive SMTP failures. Auto-paused.');
+      addLog(`📥 [CloseTesters Hybrid Queue] ${lead.email} queued (cloud SMTP: ${err.message})`);
+      try {
+        const unifiedHub = require('./unified_activity_hub');
+        const mailOptions = this.buildEmailPayload(lead);
+        const job = unifiedHub.enqueueHybridEmail('closetesters', {
+          from: mailOptions.from,
+          replyTo: mailOptions.replyTo,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          html: mailOptions.html
+        }, err.message);
+        return { success: false, queued: true, jobId: job.id, error: err.message };
+      } catch (_) {
+        this.stats.consecutiveFailures++;
+        if (this.stats.consecutiveFailures >= 5) {
+          this.stats.circuitBreakerTripped = true;
+          addLog('🚨 [CloseTesters Circuit Breaker] 5 consecutive failures. Auto-paused.');
+        }
+        return { success: false, error: err.message };
       }
-      return { success: false, error: err.message };
     }
   }
 

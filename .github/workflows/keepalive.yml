@@ -1,13 +1,23 @@
-﻿name: Keep-Alive 24-7
+﻿name: Keep-Alive & Autonomous 4-Brand Trigger 24-7
 
 on:
   schedule:
     - cron: '*/10 * * * *'
+    - cron: '15 */4 * * *'
   workflow_dispatch:
 
 jobs:
-  keepalive:
+  keepalive-and-pulse:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Engine
-        run: curl -s https://carchuno-engine.onrender.com/health
+      - name: Ping Render Engine Health & Hub
+        run: |
+          curl -sf https://carchuno-engine.onrender.com/health | head -c 300
+          echo ""
+          curl -sf https://carchuno-engine.onrender.com/api/omni/hub | head -c 400
+      - name: Trigger Daily Lead Collection & Watchdog Audit
+        if: github.event.schedule == '15 */4 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -sf -X POST https://carchuno-engine.onrender.com/api/jarvis/lead-collections/run -H "Content-Type: application/json" -d '{"limit":3}' | head -c 500
+          echo ""
+          curl -sf https://carchuno-engine.onrender.com/api/hermes/mirror-status | head -c 400
