@@ -49,6 +49,13 @@ const BRAND_TRANSPORTS = {
   })
 };
 
+const BRAND_SENDERS = {
+  carchuno: '"CarChuno National Dealer Network" <partners@carchuno.com>',
+  closetesters: '"CloseTesters Global Partnerships" <partners@closetesters.com>',
+  astromasterpiece: '"AstroMasterpiece Sanctum" <support@astromasterpiece.com>',
+  doctoreports: '"DoctoReports Health AI" <partners@closetesters.com>'
+};
+
 async function drainRenderOutbox(limit = 20) {
   let processed = 0;
   let sent = 0;
@@ -65,9 +72,10 @@ async function drainRenderOutbox(limit = 20) {
     for (const job of jobs) {
       processed++;
       const transporter = BRAND_TRANSPORTS[job.brandId] || BRAND_TRANSPORTS.closetesters;
+      const safeFrom = BRAND_SENDERS[job.brandId] || job.from;
       try {
         const info = await transporter.sendMail({
-          from: job.from,
+          from: safeFrom,
           replyTo: job.replyTo,
           to: job.to,
           subject: job.subject,

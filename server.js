@@ -243,9 +243,7 @@ async function dispatchDealerPitch() {
   const zoneBadge = dealer.zone ? `[${dealer.zone} Zone]` : '';
 
   const mailOptions = {
-    from: currentProvider === 'brevo'
-      ? '"CarChuno National Dealer Network" <partners@closetesters.com>'
-      : '"CarChuno National Dealer Network" <partners@carchuno.com>',
+    from: '"CarChuno National Dealer Network" <partners@carchuno.com>',
     replyTo: 'support@carchuno.com',
     to: dealer.email,
     subject: `Pan-India Partnership: Verified Car Buyers & Zero-Commission Leads in ${dealer.city}${stateStr}`,
