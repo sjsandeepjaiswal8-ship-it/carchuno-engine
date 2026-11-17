@@ -12,11 +12,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const nodemailer = require('nodemailer');
 
 const RENDER_BASE = process.env.RENDER_URL || 'https://carchuno-engine.onrender.com';
 const DESKTOP_ROOT = 'C:\\Users\\HP\\Desktop\\Jarvis Lead Collection';
 const DRIVE_ROOT = 'G:\\My Drive\\Jarvis Lead Collection';
+const AXION_DIR = 'C:\\Users\\HP\\.gemini\\antigravity\\scratch\\TheMasterpiece';
 
 const BRAND_TRANSPORTS = {
   carchuno: nodemailer.createTransport({
@@ -144,10 +146,101 @@ async function mirrorCloudCollectionsToLocalAndDrive() {
   return { ok: true, syncedFiles };
 }
 
+async function syncAxionTelemetryAndDirectives() {
+  let telemetryPushed = false;
+  let directivesProcessed = 0;
+  try {
+    if (!fs.existsSync(AXION_DIR)) return { ok: false, reason: 'AXION workspace not on this host' };
+
+    const exeExists = fs.existsSync(path.join(AXION_DIR, 'distribution', 'AXION-Release', 'AXION.exe')) || fs.existsSync('C:\\Users\\HP\\Desktop\\AXION.exe');
+    let ollamaOnline = false;
+    let ollamaModels = [];
+    try {
+      const oRes = await fetch('http://127.0.0.1:11434/api/tags', { signal: AbortSignal.timeout(2500) });
+      if (oRes.ok) {
+        const oJson = await oRes.json();
+        ollamaOnline = true;
+        ollamaModels = (oJson.models || []).map(m => m.name);
+      }
+    } catch (_) {}
+
+    let pendingUpdates = 0;
+    let currentVersion = '16.0.0';
+    try {
+      const feedPath = path.join(AXION_DIR, 'core', 'vault', 'release_feed.json');
+      if (fs.existsSync(feedPath)) {
+        const feed = JSON.parse(fs.readFileSync(feedPath, 'utf8'));
+        currentVersion = feed.currentAppVersion || currentVersion;
+        pendingUpdates = (feed.models || []).filter(m => m.hasUpdate).length + (feed.ecc?.hasUpdate ? 1 : 0);
+      }
+    } catch (_) {}
+
+    const syntaxIssues = [];
+    for (const rel of ['core\\updater\\sovereign_update_center.js', 'core\\models\\oss_model_adapter.js', 'core\\agentic_os\\autopilot_orchestrator.js']) {
+      const fp = path.join(AXION_DIR, rel);
+      if (fs.existsSync(fp)) {
+        try { execSync(`node -c "${fp}"`, { stdio: 'pipe' }); } catch (e) { syntaxIssues.push(`${rel}: ${e.message}`); }
+      }
+    }
+
+    await fetch(`${RENDER_BASE}/api/axion/telemetry`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: syntaxIssues.length === 0 ? 'HEALTHY_ONLINE' : 'NEEDS_REPAIR',
+        appName: 'AXION (TheMasterpiece OS)',
+        version: currentVersion,
+        exePresent: exeExists,
+        ollamaOnline,
+        ollamaModels,
+        pendingUpdates,
+        issuesDetected: syntaxIssues,
+        workspace: AXION_DIR
+      })
+    });
+    telemetryPushed = true;
+
+    const dirRes = await fetch(`${RENDER_BASE}/api/axion/directives`, { signal: AbortSignal.timeout(8000) });
+    if (dirRes.ok) {
+      const dirData = await dirRes.json();
+      for (const job of (dirData.pending || [])) {
+        directivesProcessed++;
+        let resultMsg = '';
+        let ok = true;
+        try {
+          if (job.actionType === 'REFRESH_UPDATE_FEED') {
+            const updater = require(path.join(AXION_DIR, 'core', 'updater', 'sovereign_update_center.js'));
+            if (typeof updater.checkForUpdates === 'function') {
+              const u = await updater.checkForUpdates();
+              resultMsg = `Checked updates: ${JSON.stringify(u).slice(0, 200)}`;
+            } else {
+              resultMsg = `Release feed verified (v${currentVersion}, pendingUpdates=${pendingUpdates})`;
+            }
+          } else {
+            resultMsg = `AXION Diagnostic Passed | EXE:${exeExists} | Ollama:${ollamaOnline} (${ollamaModels.join(', ')}) | SyntaxIssues:${syntaxIssues.length}`;
+          }
+        } catch (execErr) {
+          ok = false;
+          resultMsg = execErr.message;
+        }
+        await fetch(`${RENDER_BASE}/api/axion/confirm-directive`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: job.id, success: ok, result: resultMsg, error: ok ? null : resultMsg })
+        }).catch(() => {});
+      }
+    }
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  return { ok: true, telemetryPushed, directivesProcessed };
+}
+
 async function runOnce() {
   const relay = await drainRenderOutbox(20);
   const mirror = await mirrorCloudCollectionsToLocalAndDrive();
-  return { relay, mirror, at: new Date().toISOString() };
+  const axion = await syncAxionTelemetryAndDirectives();
+  return { relay, mirror, axion, at: new Date().toISOString() };
 }
 
 if (require.main === module) {

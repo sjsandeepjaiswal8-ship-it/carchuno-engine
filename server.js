@@ -72,6 +72,8 @@ try {
 const unifiedHub = require('./unified_activity_hub');
 const jarvisLeadCollector = require('./jarvis_lead_collector');
 const jarvisOrchestrator = require('./jarvis_hermes_orchestrator');
+const axionBridge = require('./axion_bridge');
+const jarvisAutomation = require('./jarvis_automation_bridge');
 const doctoreportsOutreach = require('./doctoreports_outreach');
 const astromasterpieceOutreach = require('./astromasterpiece_outreach');
 const JARVIS_MASTER_PINS = new Set(['2026', '8899', '09-10-2026', '2009-10-2026']);
@@ -1369,6 +1371,12 @@ app.get('/api/omni/hub', async (req, res) => {
         lastAttemptTime: oracleStatus.lastAttemptTime
       } : null,
       collections: collections.slice(0, 10),
+      axion: axionBridge.getTelemetry(),
+      axionDirectives: axionBridge.getAllDirectives(8),
+      automationStack: {
+        repos: jarvisAutomation.RECOMMENDED_REPOS,
+        recentTasks: jarvisAutomation.listWorkflows(8)
+      },
       recentActivity,
       engineLogs: state.recentLogs.slice(0, 20)
     });
@@ -1524,6 +1532,65 @@ app.post('/api/omnisales/confirm-dispatch', (req, res) => {
   const updated = unifiedHub.confirmOutboxDispatch(jobId, { success, messageId, provider, error });
   if (success) state.totalDispatched++;
   res.json({ success: true, job: updated, totalDispatched: state.totalDispatched });
+});
+
+// ==============================================================================
+// AXION TERMINAL TELEMETRY & REMOTE FIX/UPDATE BRIDGE + AUTOMATION STACK APIs
+// ==============================================================================
+app.get('/api/axion/status', (req, res) => {
+  res.json({
+    success: true,
+    telemetry: axionBridge.getTelemetry(),
+    pendingDirectives: axionBridge.getPendingDirectives(),
+    recentDirectives: axionBridge.getAllDirectives(15)
+  });
+});
+
+app.post('/api/axion/telemetry', (req, res) => {
+  const saved = axionBridge.recordTelemetry(req.body || {});
+  res.json({ success: true, telemetry: saved });
+});
+
+app.post('/api/axion/directive', async (req, res) => {
+  try {
+    const instruction = String(req.body?.instruction || req.body?.command || '').trim();
+    if (!instruction) return res.status(400).json({ success: false, error: 'instruction required' });
+    const job = await axionBridge.createDirective(instruction, geminiRotator);
+    res.json({ success: true, directive: job });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/axion/directives', (req, res) => {
+  res.json({ success: true, pending: axionBridge.getPendingDirectives(), recent: axionBridge.getAllDirectives(20) });
+});
+
+app.post('/api/axion/confirm-directive', (req, res) => {
+  const { id, success, result, error } = req.body || {};
+  if (!id) return res.status(400).json({ success: false, error: 'id required' });
+  const updated = axionBridge.confirmDirective(id, { success, result, error });
+  res.json({ success: true, directive: updated });
+});
+
+app.get('/api/automation/stack', (req, res) => {
+  res.json({
+    success: true,
+    policy: 'HUMAN_IN_THE_LOOP_NO_CAPTCHA_BYPASS',
+    repos: jarvisAutomation.RECOMMENDED_REPOS,
+    tasks: jarvisAutomation.listWorkflows(20)
+  });
+});
+
+app.post('/api/automation/plan', async (req, res) => {
+  try {
+    const { targetUrl = '', goal = '', channel = 'web' } = req.body || {};
+    if (!goal) return res.status(400).json({ success: false, error: 'goal required' });
+    const plan = await jarvisAutomation.planWorkflow({ targetUrl, goal, channel }, geminiRotator);
+    res.json({ success: true, plan });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

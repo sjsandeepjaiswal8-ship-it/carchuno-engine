@@ -183,6 +183,33 @@
         </div>
       </section>
 
+      <!-- AXION TERMINAL BRIDGE + GITHUB TOP AUTOMATION STACK -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass rounded-2xl p-5 border border-purple-500/30">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-extrabold text-white">🖥️ AXION Terminal ("Xcion") Live Bridge</h2>
+            <span id="axion-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300">SYNCING</span>
+          </div>
+          <div id="axion-box" class="text-xs text-slate-300 bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 mb-3">AXION टेलीमेट्री लोड हो रही है...</div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="sendAxionDirective('AXION Health Audit और Syntax Check चलाओ')" class="px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white text-xs font-bold">🔧 Run AXION Health Audit</button>
+            <button onclick="sendAxionDirective('AXION Sovereign Update Feed और OSS Models चेक करो')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold border border-slate-700">🔄 Check Updates & OSS Models</button>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 border border-sky-500/30">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-extrabold text-white">🤖 Top-Star Automation Hub (Zero-Bypass Safe Mode)</h2>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300">Human-in-the-Loop CAPTCHA Safe</span>
+          </div>
+          <div id="automation-repos" class="space-y-1.5 text-[11px] mb-3 max-h-36 overflow-y-auto"></div>
+          <form onsubmit="planAutomationTask(event)" class="flex gap-2">
+            <input id="auto-goal-input" type="text" placeholder="Task (जैसे: Instagram/LinkedIn/Play Store फॉर्म ड्राफ्ट तैयार करो)..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sky-400">
+            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs">Plan Flow</button>
+          </form>
+        </div>
+      </section>
+
       <!-- DAILY ACTIVITY REPORT & LIVE FEED -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="glass rounded-2xl p-5">
@@ -329,6 +356,26 @@ async function refreshHub() {
       <div class="text-[10px] text-slate-400 pt-1">Render Free Tier ports 465/587 blocked — Local Hermes GoDaddy Relay drains pending jobs + mirrors Lead Collection to Desktop & Drive.</div>
     `;
 
+    // AXION Terminal Bridge
+    if (data.axion) {
+      document.getElementById('axion-status-badge').textContent = data.axion.status || 'STANDBY';
+      const mods = (data.axion.ollamaModels || []).join(', ') || 'None running';
+      document.getElementById('axion-box').innerHTML = `
+        <div><b>Version:</b> ${data.axion.version || '16.0'} • <b>EXE:</b> ${data.axion.exePresent ? 'READY ✅' : 'Pending'} • <b>Ollama:</b> ${data.axion.ollamaOnline ? 'ONLINE 🟢' : 'Offline 🔴'}</div>
+        <div class="mt-1"><b>OSS Models:</b> <span class="text-cyan-300">${mods}</span></div>
+        <div class="mt-1"><b>Pending Updates:</b> ${data.axion.pendingUpdates || 0} • <b>Syntax Issues:</b> ${(data.axion.issuesDetected || []).length}</div>
+      `;
+    }
+
+    // Top Automation Repos
+    if (data.automationStack?.repos) {
+      document.getElementById('automation-repos').innerHTML = data.automationStack.repos.map(r => `
+        <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between gap-2">
+          <div><b class="text-sky-300">${r.name}</b> <span class="text-amber-300">(${r.stars})</span><div class="text-[10px] text-slate-400">${r.bestFor}</div></div>
+        </div>
+      `).join('');
+    }
+
     // Activity feed
     const feedBox = document.getElementById('activity-feed');
     feedBox.innerHTML = (data.recentActivity || []).map(a => `
@@ -447,6 +494,34 @@ function startVoiceInput() {
     submitJarvisCommand(new Event('submit'));
   };
   rec.start();
+}
+
+async function sendAxionDirective(instruction) {
+  appendJarvisMsg(`🔧 <b>AXION Directive Sent:</b> ${instruction}`, 'user');
+  const res = await fetch('/api/axion/directive', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ instruction })
+  });
+  const data = await res.json();
+  if (data.success) {
+    appendJarvisMsg(`<b>AXION Directive (${data.directive.id}):</b>\n${data.directive.aiPlan}`, 'bot');
+    refreshHub();
+  }
+}
+
+async function planAutomationTask(e) {
+  e.preventDefault();
+  const inp = document.getElementById('auto-goal-input');
+  const goal = inp.value.trim();
+  if (!goal) return;
+  inp.value = '';
+  const res = await fetch('/api/automation/plan', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal })
+  });
+  const data = await res.json();
+  if (data.success) {
+    const p = data.plan;
+    appendJarvisMsg(`🤖 <b>Automation Plan (${p.id}) — ${p.adapter}:</b>\n${p.summaryHi}\nSteps: ${p.steps.map(s => s.step + '. ' + s.action + ' [' + s.mode + ']').join(' | ')}`, 'bot');
+  }
 }
 
 if (localStorage.getItem('jarvis_unlocked_v1') === 'true') {

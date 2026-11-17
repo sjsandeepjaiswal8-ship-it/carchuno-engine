@@ -14,6 +14,8 @@
 const unifiedHub = require('./unified_activity_hub');
 const jarvisCollector = require('./jarvis_lead_collector');
 const hermesWatchdog = require('./hermes_mirror_watchdog');
+const axionBridge = require('./axion_bridge');
+const jarvisAutomation = require('./jarvis_automation_bridge');
 
 const SYSTEM_DIRECTIVE = `You are OpenJarvis Hybrid Sovereign Intelligence, permanently locked with Gemini 4 Hydrogen (XHigh) reasoning and Hermes Autonomous Agent.
 Connected Business Ecosystem:
@@ -113,6 +115,23 @@ class JarvisHermesOrchestrator {
         oracleStatus: getOracleStatus ? getOracleStatus() : null
       });
       trace.push({ step: 'Daily Activity Report', status: 'DONE', detail: 'Report generated & mirrored to Jarvis Lead Collection.' });
+    }
+
+    // 6. AXION ("Xcion") Terminal Telemetry & Fix/Update Bridge
+    if (/axion|xcion|एक्सियन|टर्मिनल|fix|update|अपडेट|फिक्स/i.test(lower)) {
+      trace.push({ step: 'AXION Terminal Bridge', status: 'RUNNING', detail: 'Reading AXION telemetry & evaluating update/fix directives...' });
+      results.axionTelemetry = axionBridge.getTelemetry();
+      if (/update|fix|repair|patch|heal|अपडेट|फिक्स|ठीक/i.test(lower)) {
+        results.axionDirective = await axionBridge.createDirective(cmd, geminiRotator);
+      }
+      trace.push({ step: 'AXION Terminal Bridge', status: 'DONE', detail: `AXION Status: ${results.axionTelemetry.status}` });
+    }
+
+    // 7. Web / Social / Form Automation Planner (Zero CAPTCHA bypass)
+    if (/instagram|facebook|linkedin|play store|ai studio|form|automate|सोशल|फॉर्म/i.test(lower)) {
+      trace.push({ step: 'Jarvis Automation Planner', status: 'RUNNING', detail: 'Designing policy-compliant workflow (Official API / Human-in-the-Loop Safe Pause)...' });
+      results.automationPlan = await jarvisAutomation.planWorkflow({ goal: cmd }, geminiRotator);
+      trace.push({ step: 'Jarvis Automation Planner', status: 'DONE', detail: `${results.automationPlan.adapter} (${results.automationPlan.id})` });
     }
 
     // 6. Synthesize Intelligent Response via 17-Key Gemini Rotator
