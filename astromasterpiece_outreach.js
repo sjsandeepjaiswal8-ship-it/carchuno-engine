@@ -41,9 +41,27 @@ class AstroMasterpieceOutreach {
     } catch (_) {}
 
     try {
-      if (fs.existsSync(LEADS_FILE)) {
-        this.leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+      const poolFile = path.join(__dirname, 'verified_active_leads_pool.json');
+      let verifiedFirst = [];
+      if (fs.existsSync(poolFile)) {
+        const pool = JSON.parse(fs.readFileSync(poolFile, 'utf8'));
+        if (Array.isArray(pool.AstroMasterpiece)) verifiedFirst = pool.AstroMasterpiece;
       }
+      const rawDb = fs.existsSync(LEADS_FILE) ? JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')) : [];
+      const seen = new Set(verifiedFirst.map((v) => String(v.email || '').toLowerCase().trim()));
+      const rejectedFile = path.join(__dirname, 'sovereign_data', 'rejected_inactive_emails.json');
+      const rejectedSet = new Set(
+        fs.existsSync(rejectedFile)
+          ? JSON.parse(fs.readFileSync(rejectedFile, 'utf8')).map((r) => String(r.email || r).toLowerCase().trim())
+          : []
+      );
+      this.leads = [
+        ...verifiedFirst,
+        ...rawDb.filter((r) => {
+          const em = String(r?.email || '').toLowerCase().trim();
+          return em && !seen.has(em) && !rejectedSet.has(em);
+        })
+      ];
     } catch (err) {
       console.warn('[AstroMasterpiece Outreach] Lead load notice:', err.message);
     }

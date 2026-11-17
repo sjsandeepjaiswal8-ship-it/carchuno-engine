@@ -61,15 +61,15 @@ class JarvisHermesOrchestrator {
       trace.push({ step: 'Jarvis Lead Collection', status: 'RUNNING', detail: 'Harvesting MX-verified daily leads across 4 products...' });
       const oracleSt = getOracleStatus ? getOracleStatus() : null;
       if (lower.includes('carchuno') || lower.includes('कार')) {
-        results.leadCollection = await jarvisCollector.collectForProduct('CarChuno', 5, geminiRotator);
+        results.leadCollection = await jarvisCollector.collectForProduct('CarChuno', 15, geminiRotator);
       } else if (lower.includes('doctor') || lower.includes('डॉक्टर')) {
-        results.leadCollection = await jarvisCollector.collectForProduct('DoctoReports', 5, geminiRotator, doctoreportsOutreach);
+        results.leadCollection = await jarvisCollector.collectForProduct('DoctoReports', 15, geminiRotator, doctoreportsOutreach);
       } else if (lower.includes('astro') || lower.includes('एस्ट्रो')) {
-        results.leadCollection = await jarvisCollector.collectForProduct('AstroMasterpiece', 5, geminiRotator);
+        results.leadCollection = await jarvisCollector.collectForProduct('AstroMasterpiece', 15, geminiRotator);
       } else if (lower.includes('close') || lower.includes('क्लोज')) {
-        results.leadCollection = await jarvisCollector.collectForProduct('CloseTesters', 5, geminiRotator, null, closeTestersOutreach);
+        results.leadCollection = await jarvisCollector.collectForProduct('CloseTesters', 15, geminiRotator, null, closeTestersOutreach);
       } else {
-        results.leadCollection = await jarvisCollector.runAllProductsDailyCollection(4, geminiRotator, { oracleStatus: oracleSt });
+        results.leadCollection = await jarvisCollector.runAllProductsDailyCollection(15, geminiRotator, { oracleStatus: oracleSt });
       }
       trace.push({ step: 'Jarvis Lead Collection', status: 'DONE', detail: 'Daily collection saved to Date/Time folder + Activity Report updated.' });
     }

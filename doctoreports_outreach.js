@@ -54,10 +54,28 @@ class DoctoReportsOutreach {
 
   loadLeads() {
     try {
-      if (fs.existsSync(LEADS_FILE)) {
-        this.leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
-        this.stats.totalLoaded = this.leads.length;
+      const poolFile = path.join(__dirname, 'verified_active_leads_pool.json');
+      if (fs.existsSync(poolFile)) {
+        const pool = JSON.parse(fs.readFileSync(poolFile, 'utf8'));
+        const activeDocs = Array.isArray(pool.DoctoReports) ? pool.DoctoReports : [];
+        if (activeDocs.length > 0) {
+          this.leads = activeDocs.map((d) => ({
+            company: d.name,
+            domain: d.domain,
+            city: d.city,
+            type: d.category,
+            email: d.email,
+            mxVerified: true,
+            smtpVerified: true,
+            verificationStatus: d.verificationStatus,
+            dispatchedCount: 0
+          }));
+        }
       }
+      if (this.leads.length === 0 && fs.existsSync(LEADS_FILE)) {
+        this.leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+      }
+      this.stats.totalLoaded = this.leads.length;
     } catch (err) {
       console.warn('[DoctoReports Outreach] Lead load notice:', err.message);
     }

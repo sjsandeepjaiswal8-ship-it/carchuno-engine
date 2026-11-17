@@ -1,5 +1,71 @@
 [
   {
+    "id": "ACT-C7CC23",
+    "brand": "hermes",
+    "type": "DAILY_REPORT_GENERATED",
+    "summary": "Zero-Bounce Daily Report (2026-11-17 20-21) synced across Desktop & Drive",
+    "details": {
+      "totalTodayVerified": 80
+    },
+    "timestamp": "2026-11-17T14:51:37.438Z"
+  },
+  {
+    "id": "ACT-C6FBA0",
+    "brand": "closetesters",
+    "type": "JARVIS_LEAD_COLLECTION",
+    "summary": "Zero-Bounce CloseTesters: +20 Active Tested (Total: 20) -> CloseTesters_Tested_Active_Leads_2026-11-17.csv",
+    "details": {
+      "date": "2026-11-17",
+      "timeTag": "20-21",
+      "newlyAdded": 20,
+      "dailyTotal": 20,
+      "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+    },
+    "timestamp": "2026-11-17T14:51:32.182Z"
+  },
+  {
+    "id": "ACT-AC872F",
+    "brand": "astromasterpiece",
+    "type": "JARVIS_LEAD_COLLECTION",
+    "summary": "Zero-Bounce AstroMasterpiece: +20 Active Tested (Total: 20) -> AstroMasterpiece_Tested_Active_Leads_2026-11-17.csv",
+    "details": {
+      "date": "2026-11-17",
+      "timeTag": "20-21",
+      "newlyAdded": 20,
+      "dailyTotal": 20,
+      "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+    },
+    "timestamp": "2026-11-17T14:51:31.982Z"
+  },
+  {
+    "id": "ACT-05F113",
+    "brand": "doctoreports",
+    "type": "JARVIS_LEAD_COLLECTION",
+    "summary": "Zero-Bounce DoctoReports: +20 Active Tested (Total: 20) -> DoctoReports_Tested_Active_Leads_2026-11-17.csv",
+    "details": {
+      "date": "2026-11-17",
+      "timeTag": "20-21",
+      "newlyAdded": 20,
+      "dailyTotal": 20,
+      "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+    },
+    "timestamp": "2026-11-17T14:51:31.711Z"
+  },
+  {
+    "id": "ACT-F92575",
+    "brand": "carchuno",
+    "type": "JARVIS_LEAD_COLLECTION",
+    "summary": "Zero-Bounce CarChuno: +20 Active Tested (Total: 20) -> CarChuno_Tested_Active_Leads_2026-11-17.csv",
+    "details": {
+      "date": "2026-11-17",
+      "timeTag": "20-21",
+      "newlyAdded": 20,
+      "dailyTotal": 20,
+      "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+    },
+    "timestamp": "2026-11-17T14:51:31.491Z"
+  },
+  {
     "id": "ACT-8BE4D1",
     "brand": "hermes",
     "type": "DAILY_REPORT_GENERATED",

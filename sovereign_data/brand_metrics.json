@@ -8,8 +8,8 @@
     "dispatched": 0,
     "queued": 0,
     "failed": 0,
-    "lastActivityAt": "2026-11-17T11:18:52.782Z",
-    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CarChuno"
+    "lastActivityAt": "2026-11-17T14:51:31.491Z",
+    "lastAction": "Zero-Bounce CarChuno: +20 Active Tested (Total: 20) -> CarChuno_Tested_Active_Leads_2026-11-17.csv"
   },
   "doctoreports": {
     "id": "doctoreports",
@@ -21,8 +21,8 @@
     "dispatched": 0,
     "queued": 0,
     "failed": 0,
-    "lastActivityAt": "2026-11-17T11:18:56.859Z",
-    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/DoctoReports"
+    "lastActivityAt": "2026-11-17T14:51:31.711Z",
+    "lastAction": "Zero-Bounce DoctoReports: +20 Active Tested (Total: 20) -> DoctoReports_Tested_Active_Leads_2026-11-17.csv"
   },
   "astromasterpiece": {
     "id": "astromasterpiece",
@@ -33,8 +33,8 @@
     "dispatched": 0,
     "queued": 0,
     "failed": 0,
-    "lastActivityAt": "2026-11-17T11:19:02.096Z",
-    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/AstroMasterpiece"
+    "lastActivityAt": "2026-11-17T14:51:31.982Z",
+    "lastAction": "Zero-Bounce AstroMasterpiece: +20 Active Tested (Total: 20) -> AstroMasterpiece_Tested_Active_Leads_2026-11-17.csv"
   },
   "closetesters": {
     "id": "closetesters",
@@ -45,7 +45,7 @@
     "dispatched": 0,
     "queued": 0,
     "failed": 0,
-    "lastActivityAt": "2026-11-17T11:19:09.071Z",
-    "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CloseTesters"
+    "lastActivityAt": "2026-11-17T14:51:32.182Z",
+    "lastAction": "Zero-Bounce CloseTesters: +20 Active Tested (Total: 20) -> CloseTesters_Tested_Active_Leads_2026-11-17.csv"
   }
 }

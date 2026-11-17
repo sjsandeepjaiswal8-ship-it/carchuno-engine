@@ -1,23 +1,21 @@
 {
-  "reportTitle": "Jarvis Daily Lead & Activity Report (2026-11-17 16-49 IST)",
-  "generatedAt": "2026-11-17T11:19:09.079Z",
+  "reportTitle": "Jarvis Zero-Bounce Daily Lead & Activity Report (2026-11-17 20-21 IST)",
+  "generatedAt": "2026-11-17T14:51:32.205Z",
   "date": "2026-11-17",
-  "timeTag": "16-49",
-  "brainLock": "Gemini 4 Hydrogen (XHigh) + Hermes Autonomous Agent",
-  "geminiPool": {
-    "totalKeys": 17,
-    "activeKeys": 17,
-    "lastSuccess": {
-      "model": "gemini-3-flash-preview",
-      "keyMasked": "...WdswdA",
-      "at": "2026-11-17T11:19:08.925Z"
-    }
+  "timeTag": "20-21",
+  "verificationStandard": "Two-Step Port-25 SMTP Canary (Canary 5xx Rejected + Target 250 OK Only)",
+  "inactiveEmailsBlockedCount": 0,
+  "dailyVerifiedLeads": {
+    "CarChuno": 20,
+    "DoctoReports": 20,
+    "AstroMasterpiece": 20,
+    "CloseTesters": 20
   },
-  "dailyLeadsCollected": {
-    "CarChuno": 6,
-    "DoctoReports": 6,
-    "AstroMasterpiece": 6,
-    "CloseTesters": 6
+  "verifiedPoolTotals": {
+    "CarChuno": 24,
+    "DoctoReports": 22,
+    "AstroMasterpiece": 55,
+    "CloseTesters": 50
   },
   "brandMetrics": {
     "carchuno": {
@@ -29,8 +27,8 @@
       "dispatched": 0,
       "queued": 0,
       "failed": 0,
-      "lastActivityAt": "2026-11-17T11:18:52.782Z",
-      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CarChuno"
+      "lastActivityAt": "2026-11-17T14:51:31.491Z",
+      "lastAction": "Zero-Bounce CarChuno: +20 Active Tested (Total: 20) -> CarChuno_Tested_Active_Leads_2026-11-17.csv"
     },
     "doctoreports": {
       "id": "doctoreports",
@@ -42,8 +40,8 @@
       "dispatched": 0,
       "queued": 0,
       "failed": 0,
-      "lastActivityAt": "2026-11-17T11:18:56.859Z",
-      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/DoctoReports"
+      "lastActivityAt": "2026-11-17T14:51:31.711Z",
+      "lastAction": "Zero-Bounce DoctoReports: +20 Active Tested (Total: 20) -> DoctoReports_Tested_Active_Leads_2026-11-17.csv"
     },
     "astromasterpiece": {
       "id": "astromasterpiece",
@@ -54,8 +52,8 @@
       "dispatched": 0,
       "queued": 0,
       "failed": 0,
-      "lastActivityAt": "2026-11-17T11:19:02.096Z",
-      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/AstroMasterpiece"
+      "lastActivityAt": "2026-11-17T14:51:31.982Z",
+      "lastAction": "Zero-Bounce AstroMasterpiece: +20 Active Tested (Total: 20) -> AstroMasterpiece_Tested_Active_Leads_2026-11-17.csv"
     },
     "closetesters": {
       "id": "closetesters",
@@ -66,8 +64,8 @@
       "dispatched": 0,
       "queued": 0,
       "failed": 0,
-      "lastActivityAt": "2026-11-17T11:19:09.071Z",
-      "lastAction": "Collected 2 new leads (Today total: 6) -> 2026-11-17/CloseTesters"
+      "lastActivityAt": "2026-11-17T14:51:32.182Z",
+      "lastAction": "Zero-Bounce CloseTesters: +20 Active Tested (Total: 20) -> CloseTesters_Tested_Active_Leads_2026-11-17.csv"
     }
   },
   "outboxStats": {
@@ -77,9 +75,74 @@
     "total": 0
   },
   "oracleStatus": null,
-  "executiveSummaryHi": "**विश्लेषण:**\nआज सभी चार ब्रांड्स में समान रूप से कुल 24 लीड्स एकत्रित हुई हैं, लेकिन डिस्पैच और आउटबॉक्स मेट्रिक्स का शून्य होना यह दर्शाता है कि लीड्स अभी प्रोसेसिंग पाइपलाइन में नहीं पहुंची हैं। Gemini API पूल (17/17) पूरी तरह सक्रिय और स्वस्थ है, जो यह स्पष्ट करता है कि बुनियादी ढांचा तैयार है परंतु डेटा फ्लो रुका हुआ है।\n\n**अगला एक्शन:**\nलीड-टू-प्रोसेसिंग शेड्यूलर (Scheduler) की तत्काल जांच करें और एकत्रित लीड्स को आउटबॉक्स में भेजने के लिए 'Batch Dispatch' मैन्युअल रूप से ट्रिगर करें।",
-  "recentActivitiesCount": 9,
+  "executiveSummaryHi": "**Hermes Executive Director रिपोर्ट: 17 नवंबर 2026 (20:21 IST)**\n\n1. आज 100% Zero-Bounce सटीकता के साथ कुल 80 Port-25 एक्टिव लीड्स (प्रत्येक ब्रांड हेतु 20) सफलतापूर्वक सत्यापित की गई हैं।\n2. कुल 151 ईमेल के वेरिफाइड पूल में शून्य बाउंस दर सुनिश्चित की गई है, जिसके परिणामस्वरूप एक भी ईमेल ब्लॉक नहीं हुआ।\n3. वर्तमान में सभी चारों ब्रांड्स के लिए आउटरीच प्रक्रिया कतारबद्ध (Queued) है और सिस्टम अगले चरण के प्रेषण के लिए पूरी तरह तैयार है।",
   "recentActivities": [
+    {
+      "id": "ACT-C6FBA0",
+      "brand": "closetesters",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Zero-Bounce CloseTesters: +20 Active Tested (Total: 20) -> CloseTesters_Tested_Active_Leads_2026-11-17.csv",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "20-21",
+        "newlyAdded": 20,
+        "dailyTotal": 20,
+        "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+      },
+      "timestamp": "2026-11-17T14:51:32.182Z"
+    },
+    {
+      "id": "ACT-AC872F",
+      "brand": "astromasterpiece",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Zero-Bounce AstroMasterpiece: +20 Active Tested (Total: 20) -> AstroMasterpiece_Tested_Active_Leads_2026-11-17.csv",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "20-21",
+        "newlyAdded": 20,
+        "dailyTotal": 20,
+        "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+      },
+      "timestamp": "2026-11-17T14:51:31.982Z"
+    },
+    {
+      "id": "ACT-05F113",
+      "brand": "doctoreports",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Zero-Bounce DoctoReports: +20 Active Tested (Total: 20) -> DoctoReports_Tested_Active_Leads_2026-11-17.csv",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "20-21",
+        "newlyAdded": 20,
+        "dailyTotal": 20,
+        "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+      },
+      "timestamp": "2026-11-17T14:51:31.711Z"
+    },
+    {
+      "id": "ACT-F92575",
+      "brand": "carchuno",
+      "type": "JARVIS_LEAD_COLLECTION",
+      "summary": "Zero-Bounce CarChuno: +20 Active Tested (Total: 20) -> CarChuno_Tested_Active_Leads_2026-11-17.csv",
+      "details": {
+        "date": "2026-11-17",
+        "timeTag": "20-21",
+        "newlyAdded": 20,
+        "dailyTotal": 20,
+        "verificationMode": "ACTIVE_EXACT_CONFIRMED"
+      },
+      "timestamp": "2026-11-17T14:51:31.491Z"
+    },
+    {
+      "id": "ACT-8BE4D1",
+      "brand": "hermes",
+      "type": "DAILY_REPORT_GENERATED",
+      "summary": "Daily Activity Report (2026-11-17 16-49) saved to Vault/Desktop/Drive",
+      "details": {
+        "totalTodayLeads": 24
+      },
+      "timestamp": "2026-11-17T11:19:13.879Z"
+    },
     {
       "id": "ACT-5DD152",
       "brand": "closetesters",

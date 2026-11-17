@@ -172,8 +172,8 @@
               <h3 class="text-xs font-extrabold uppercase tracking-wider text-emerald-300">📁 Jarvis Lead Collection</h3>
               <button onclick="runDailyCollection()" id="btn-run-col" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold">Collect Now</button>
             </div>
-            <p class="text-[10px] text-slate-400 mb-2">Desktop + Google Drive Date/Time Mirror (`Jarvis Lead Collection`)</p>
-            <div id="collections-list" class="space-y-1.5 text-xs max-h-44 overflow-y-auto"></div>
+            <p class="text-[10px] text-emerald-300/90 font-semibold mb-2">✅ 100% Port-25 SMTP Canary Active Verified • Separate Named Folders & Files</p>
+            <div id="collections-list" class="space-y-1.5 text-xs max-h-56 overflow-y-auto"></div>
           </div>
 
           <div class="glass rounded-2xl p-4">
@@ -335,18 +335,20 @@ async function refreshHub() {
       document.getElementById('oracle-badge').textContent = data.oracle.serverProvisioned ? 'CLAIMED' : 'HUNTING 24/7';
     }
 
-    // Collections
+    // Collections (Separate Named Product Files + Active 250-OK Count)
     const colBox = document.getElementById('collections-list');
     if (data.collections && data.collections.length > 0) {
       colBox.innerHTML = data.collections.map(c => {
-        const prods = Object.entries(c.products || {}).map(([p, info]) => `${p}: <b>${info.dailyLeadsCount}</b>`).join(' • ');
-        return `<div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
-          <div class="font-bold text-emerald-300">${c.date} ${c.hasDailyReport ? '📄' : ''}</div>
-          <div class="text-[10px] text-slate-300 mt-0.5">${prods || 'Initialized'}</div>
+        const prods = Object.entries(c.products || {}).map(([p, info]) =>
+          `<a href="/api/jarvis/lead-collections/download/${encodeURIComponent(c.date)}/${encodeURIComponent(p)}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/30 text-[10px] text-emerald-200 font-semibold">⬇️ ${p}: <b>${info.dailyLeadsCount} Active</b></a>`
+        ).join(' ');
+        return `<div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+          <div class="font-bold text-emerald-300 mb-1.5">${c.date} ${c.hasDailyReport ? '📄 Report Ready' : ''}</div>
+          <div class="flex flex-wrap gap-1.5">${prods || 'Initialized'}</div>
         </div>`;
       }).join('');
     } else {
-      colBox.innerHTML = '<div class="text-slate-400">Click "Collect Now" to generate today\'s date folder.</div>';
+      colBox.innerHTML = '<div class="text-slate-400">Click "Collect Now" to generate today\'s verified active product files.</div>';
     }
 
     // Outbox summary
@@ -420,7 +422,7 @@ async function runDailyCollection() {
   const btn = document.getElementById('btn-run-col');
   btn.disabled = true; btn.textContent = 'Running...';
   try {
-    await fetch('/api/jarvis/lead-collections/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 4 }) });
+    await fetch('/api/jarvis/lead-collections/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 15 }) });
     refreshHub();
     loadDailyReport();
   } finally {

@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const nodemailer = require('nodemailer');
+const leadVerifier = require('./lead_smtp_verifier');
 
 const RENDER_BASE = process.env.RENDER_URL || 'https://carchuno-engine.onrender.com';
 const DESKTOP_ROOT = 'C:\\Users\\HP\\Desktop\\Jarvis Lead Collection';
@@ -117,6 +118,54 @@ async function drainRenderOutbox(limit = 20) {
   return { ok: true, processed, sent, failed };
 }
 
+async function processLeadVerificationQueue() {
+  let verifiedCount = 0;
+  let rejectedCount = 0;
+  try {
+    const qRes = await fetch(`${RENDER_BASE}/api/jarvis/leads/verification-queue?limit=30`, {
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!qRes.ok) return { ok: false, error: `HTTP ${qRes.status}` };
+    const qData = await qRes.json();
+    const pending = qData.pending || [];
+    if (pending.length === 0) return { ok: true, checked: 0, verifiedCount: 0, rejectedCount: 0 };
+
+    const verified = [];
+    const rejected = [];
+    for (const item of pending) {
+      const probe = await leadVerifier.verifyEmailLive(item.email);
+      if (probe.ok && probe.status === 'ACTIVE_EXACT_CONFIRMED') {
+        verified.push({ ...item, ...probe });
+        verifiedCount++;
+      } else {
+        rejected.push({ ...item, ...probe });
+        rejectedCount++;
+      }
+    }
+
+    await fetch(`${RENDER_BASE}/api/jarvis/leads/submit-verified`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verified, rejected })
+    }).catch(() => {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  return { ok: true, verifiedCount, rejectedCount };
+}
+
+function cleanLegacyClutter(rootDir, relativePath) {
+  try {
+    const prodDir = path.dirname(path.join(rootDir, relativePath));
+    if (!fs.existsSync(prodDir)) return;
+    for (const fname of fs.readdirSync(prodDir)) {
+      if (fname.startsWith('leads_') || fname.startsWith('daily_master_')) {
+        try { fs.unlinkSync(path.join(prodDir, fname)); } catch (_) {}
+      }
+    }
+  } catch (_) {}
+}
+
 async function mirrorCloudCollectionsToLocalAndDrive() {
   let syncedFiles = 0;
   try {
@@ -128,9 +177,14 @@ async function mirrorCloudCollectionsToLocalAndDrive() {
     const files = payload.files || [];
 
     for (const f of files) {
+      const baseName = path.basename(f.relativePath || '');
+      // Skip legacy untested batch/daily_master files; mirror only named Tested Active files + Daily Reports
+      if (baseName.startsWith('leads_') || baseName.startsWith('daily_master_')) continue;
+
       for (const root of [DESKTOP_ROOT, DRIVE_ROOT]) {
         try {
           if (root === DRIVE_ROOT && !fs.existsSync('G:\\My Drive')) continue;
+          cleanLegacyClutter(root, f.relativePath);
           const dest = path.join(root, f.relativePath);
           fs.mkdirSync(path.dirname(dest), { recursive: true });
           fs.writeFileSync(dest, f.content, 'utf8');
@@ -238,9 +292,10 @@ async function syncAxionTelemetryAndDirectives() {
 
 async function runOnce() {
   const relay = await drainRenderOutbox(20);
+  const smtpQueue = await processLeadVerificationQueue();
   const mirror = await mirrorCloudCollectionsToLocalAndDrive();
   const axion = await syncAxionTelemetryAndDirectives();
-  return { relay, mirror, axion, at: new Date().toISOString() };
+  return { relay, smtpQueue, mirror, axion, at: new Date().toISOString() };
 }
 
 if (require.main === module) {

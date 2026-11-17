@@ -70,6 +70,7 @@ try {
 }
 
 const unifiedHub = require('./unified_activity_hub');
+const leadVerifier = require('./lead_smtp_verifier');
 const jarvisLeadCollector = require('./jarvis_lead_collector');
 const jarvisOrchestrator = require('./jarvis_hermes_orchestrator');
 const axionBridge = require('./axion_bridge');
@@ -233,16 +234,43 @@ loadDealers();
 
 let dealerIndex = 0;
 
-// Dispatch Single Pan-India Dealer Pitch
+// Dispatch Single Verified Active Pan-India Dealer Pitch
 async function dispatchDealerPitch() {
   if (!DEALERS || DEALERS.length === 0) loadDealers();
-  if (DEALERS.length === 0) return;
+  const rejected = jarvisLeadCollector.getRejectedSet();
+  const verifiedCarPool = (jarvisLeadCollector.getVerifiedPool().CarChuno || []).map((v) => ({
+    name: v.name,
+    email: v.email,
+    brand: v.category || 'Automotive',
+    city: (v.city || 'India').split(',')[0].trim(),
+    state: (v.city || '').split(',')[1]?.trim() || '',
+    zone: 'Verified-250OK',
+    smtpVerified: true
+  }));
 
-  if (dealerIndex >= DEALERS.length) dealerIndex = 0;
-  const dealer = DEALERS[dealerIndex++];
+  const combined = [...verifiedCarPool, ...DEALERS];
+  if (combined.length === 0) return;
+
+  let dealer = null;
+  for (let tries = 0; tries < combined.length; tries++) {
+    if (dealerIndex >= combined.length) dealerIndex = 0;
+    const cand = combined[dealerIndex++];
+    const hygiene = leadVerifier.checkEmailHygiene(cand?.email);
+    if (!hygiene.valid || rejected.has(hygiene.email)) continue;
+    if (cand.smtpVerified) {
+      dealer = cand;
+      break;
+    }
+    const mx = await leadVerifier.resolveMxSorted(hygiene.domain, 2500);
+    if (mx.length > 0) {
+      dealer = cand;
+      break;
+    }
+  }
+  if (!dealer) return { delivered: false, reason: 'No active MX-verified dealer available' };
 
   const stateStr = dealer.state ? `, ${dealer.state}` : '';
-  const zoneBadge = dealer.zone ? `[${dealer.zone} Zone]` : '';
+  const zoneBadge = dealer.zone ? `[${dealer.zone}]` : '';
 
   const mailOptions = {
     from: '"CarChuno National Dealer Network" <partners@carchuno.com>',
@@ -367,10 +395,10 @@ async function runUnifiedDispatchCycle() {
   // Every 1st cycle and every 6th cycle (~72 mins), run daily Jarvis Lead Collection & Activity Report across all 4 products
   if (unifiedCycleCount === 1 || unifiedCycleCount % 6 === 0) {
     try {
-      cycleReport.jarvisLeadCollection = await jarvisLeadCollector.runAllProductsDailyCollection(3, geminiRotator, {
+      cycleReport.jarvisLeadCollection = await jarvisLeadCollector.runAllProductsDailyCollection(15, geminiRotator, {
         oracleStatus: getOracleStatus ? getOracleStatus() : null
       });
-      addLog('📊 [Jarvis Lead Collector] Daily 4-Product Lead Collection & Activity Report updated!');
+      addLog('📊 [Jarvis Lead Collector] Zero-Bounce 4-Product Active Lead Collection & Report updated!');
     } catch (colErr) {
       addLog(`⚠️ [Jarvis Lead Collector] Cycle note: ${colErr.message}`);
     }
@@ -424,8 +452,8 @@ try {
   console.warn('[Server Startup] omnisales_router load skipped:', e.message);
 }
 
-// Serve Static Assets (OmniSales Agent™ Executive Mission Control)
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve Static Assets without hijacking '/' (so '/' always serves OpenJarvis Cockpit)
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 // OpenJarvis Hybrid Cockpit Route
 app.get('/jarvis', (req, res) => {
@@ -1411,7 +1439,7 @@ app.post('/api/jarvis/command', async (req, res) => {
 app.post('/api/omni/run-full-cycle', async (req, res) => {
   try {
     const dispatchRes = await runUnifiedDispatchCycle();
-    const collectionRes = await jarvisLeadCollector.runAllProductsDailyCollection(4, geminiRotator, {
+    const collectionRes = await jarvisLeadCollector.runAllProductsDailyCollection(15, geminiRotator, {
       oracleStatus: getOracleStatus ? getOracleStatus() : null
     });
     res.json({ success: true, dispatch: dispatchRes, leadCollection: collectionRes });
@@ -1461,11 +1489,34 @@ app.get('/api/jarvis/lead-collections', (req, res) => {
 
 app.post('/api/jarvis/lead-collections/run', async (req, res) => {
   try {
-    const limit = parseInt(req.body?.limit || 4, 10);
+    const limit = parseInt(req.body?.limit || 15, 10);
     const out = await jarvisLeadCollector.runAllProductsDailyCollection(limit, geminiRotator, {
       oracleStatus: getOracleStatus ? getOracleStatus() : null
     });
     res.json(out);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/jarvis/lead-collections/download/:date/:product', (req, res) => {
+  const { date, product } = req.params;
+  const info = jarvisLeadCollector.getProductCsvFile(date, product);
+  if (!info) {
+    return res.status(404).json({ success: false, error: 'Verified lead CSV not generated yet for this date/product.' });
+  }
+  res.download(info.filePath, info.fileName);
+});
+
+app.get('/api/jarvis/leads/verification-queue', (req, res) => {
+  const limit = parseInt(req.query.limit || 40, 10);
+  res.json({ success: true, pending: jarvisLeadCollector.getVerificationQueue(limit) });
+});
+
+app.post('/api/jarvis/leads/submit-verified', (req, res) => {
+  try {
+    const out = jarvisLeadCollector.submitVerifiedBatch(req.body || {});
+    res.json({ success: true, ...out });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
