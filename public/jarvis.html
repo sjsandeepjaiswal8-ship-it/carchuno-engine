@@ -73,12 +73,12 @@
           </div>
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-base md:text-lg font-extrabold text-white tracking-tight">OpenJarvis × OmniSales Hybrid Engine</h1>
+              <h1 class="text-base md:text-lg font-extrabold text-white tracking-tight">OpenJarvis Sovereign Cockpit × Hermes Agent</h1>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> 24/7 RENDER CLOUD LIVE
               </span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
-                🔒 Gemini 4 Hydrogen (XHigh) + Hermes Agent
+                #1 gemini-4-hydrogen (XHIGH) + 19 Models Connected
               </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-0.5">
@@ -199,14 +199,18 @@
 
         <div class="glass rounded-2xl p-5 border border-sky-500/30">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-extrabold text-white">🤖 Top-Star Automation Hub (Zero-Bypass Safe Mode)</h2>
+            <h2 class="text-sm font-extrabold text-white">🤖 Live Automation Stack (Playwright + Stealth + Agent-Browser/Desktop)</h2>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300">Human-in-the-Loop CAPTCHA Safe</span>
           </div>
-          <div id="automation-repos" class="space-y-1.5 text-[11px] mb-3 max-h-36 overflow-y-auto"></div>
-          <form onsubmit="planAutomationTask(event)" class="flex gap-2">
-            <input id="auto-goal-input" type="text" placeholder="Task (जैसे: Instagram/LinkedIn/Play Store फॉर्म ड्राफ्ट तैयार करो)..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sky-400">
-            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs">Plan Flow</button>
+          <div id="automation-repos" class="space-y-1.5 text-[11px] mb-3 max-h-32 overflow-y-auto"></div>
+          <form onsubmit="executeAutomationTask(event)" class="space-y-2 mb-2">
+            <div class="flex flex-wrap gap-2">
+              <input id="auto-url-input" type="url" placeholder="https://example.com (Optional Target URL)..." class="w-full sm:w-56 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sky-400">
+              <input id="auto-goal-input" type="text" placeholder="Task (जैसे: वेबसाइट फॉर्म इंस्पेक्ट करो / API कॉल चलाओ)..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sky-400">
+              <button type="submit" id="btn-auto-exec" class="px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs">Execute Live ⚡</button>
+            </div>
           </form>
+          <div id="gemini-cascade-box" class="text-[10px] text-slate-300 bg-slate-950/75 border border-slate-800 rounded-lg p-2.5">Loading 19 Gemini Models Cascade...</div>
         </div>
       </section>
 
@@ -369,13 +373,22 @@ async function refreshHub() {
       `;
     }
 
-    // Top Automation Repos
+    // Top Automation Repos & Connected 19-Model Gemini Cascade
     if (data.automationStack?.repos) {
       document.getElementById('automation-repos').innerHTML = data.automationStack.repos.map(r => `
         <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between gap-2">
-          <div><b class="text-sky-300">${r.name}</b> <span class="text-amber-300">(${r.stars})</span><div class="text-[10px] text-slate-400">${r.bestFor}</div></div>
+          <div><b class="text-sky-300">${r.name}</b> <span class="text-amber-300">(${r.stars})</span><div class="text-[10px] text-emerald-300">${r.runtime || ''} — <span class="text-slate-400">${r.bestFor}</span></div></div>
         </div>
       `).join('');
+    }
+    const gBox = document.getElementById('gemini-cascade-box');
+    if (gBox && data.geminiPool?.modelsCascade) {
+      const specs = (data.geminiPool.modelSpecs || []).map((m, i) => {
+        const badge = i === 0 ? '👑 #1 ' : `#${i + 1} `;
+        const cls = m.health?.status === 'ONLINE_ACTIVE' ? 'text-emerald-300' : (m.health?.status?.includes('COOLDOWN') ? 'text-amber-300' : 'text-cyan-300');
+        return `<span class="inline-block px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 ${cls} mr-1 mb-1">${badge}${m.id}${m.thinkingLevel ? ' (' + m.thinkingLevel + ')' : ''}</span>`;
+      }).join('');
+      gBox.innerHTML = `<div class="font-bold text-cyan-300 mb-1">Gemini Priority Cascade (${data.geminiPool.modelsCascade.length} Models • Last Active: ${data.geminiPool.lastSuccess?.model || 'Auto'})</div><div>${specs}</div>`;
     }
 
     // Activity feed
@@ -510,19 +523,29 @@ async function sendAxionDirective(instruction) {
   }
 }
 
-async function planAutomationTask(e) {
+async function executeAutomationTask(e) {
   e.preventDefault();
+  const urlInp = document.getElementById('auto-url-input');
   const inp = document.getElementById('auto-goal-input');
+  const btn = document.getElementById('btn-auto-exec');
+  const targetUrl = urlInp.value.trim();
   const goal = inp.value.trim();
-  if (!goal) return;
+  if (!goal && !targetUrl) return;
   inp.value = '';
-  const res = await fetch('/api/automation/plan', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal })
-  });
-  const data = await res.json();
-  if (data.success) {
-    const p = data.plan;
-    appendJarvisMsg(`🤖 <b>Automation Plan (${p.id}) — ${p.adapter}:</b>\n${p.summaryHi}\nSteps: ${p.steps.map(s => s.step + '. ' + s.action + ' [' + s.mode + ']').join(' | ')}`, 'bot');
+  btn.disabled = true; btn.textContent = 'Running...';
+  try {
+    const res = await fetch('/api/automation/execute', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetUrl, goal: goal || targetUrl })
+    });
+    const data = await res.json();
+    if (data.success && data.task) {
+      const p = data.task;
+      const execInfo = p.executionResult ? `\nResult: ${JSON.stringify(p.executionResult).slice(0, 260)}` : '';
+      appendJarvisMsg(`🤖 <b>Automation Executed (${p.id}) [${p.status}] — ${p.adapter}:</b>\n${p.summaryHi}${execInfo}`, 'bot');
+      refreshHub();
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Execute Live ⚡';
   }
 }
 

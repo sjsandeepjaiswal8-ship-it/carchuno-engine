@@ -455,31 +455,26 @@ try {
 // Serve Static Assets without hijacking '/' (so '/' always serves OpenJarvis Cockpit)
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
-// OpenJarvis Hybrid Cockpit Route
-app.get('/jarvis', (req, res) => {
+function sendNoCacheJarvis(res) {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
   const jarvisPath = path.join(__dirname, 'public', 'jarvis.html');
   if (fs.existsSync(jarvisPath)) {
     return res.sendFile(jarvisPath);
   }
-  res.redirect('/omnisales');
-});
+  return res.redirect('/omnisales');
+}
+
+// Dedicated OpenJarvis Hybrid Cockpit Routes (No-Cache Guaranteed)
+app.get(['/', '/jarvis', '/openjarvis', '/cockpit'], (req, res) => sendNoCacheJarvis(res));
 
 // Classic OmniSales Mission Control Direct Route
 app.get('/omnisales', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Main Dashboard: Serves OpenJarvis Hybrid Cockpit (default) with Classic fallback
-app.get('/', (req, res) => {
-  const jarvisPath = path.join(__dirname, 'public', 'jarvis.html');
-  if (fs.existsSync(jarvisPath)) {
-    return res.sendFile(jarvisPath);
-  }
-  const indexPath = path.join(__dirname, 'public', 'index.html');
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
-  res.redirect('/legacy-dashboard');
 });
 
 // Legacy Dashboard UI
@@ -1383,7 +1378,10 @@ app.get('/api/omni/hub', async (req, res) => {
       geminiPool: {
         totalKeys: geminiStatus.totalKeys,
         activeKeys: geminiStatus.activeKeys,
+        primaryPriorityModel: geminiStatus.primaryPriorityModel,
         modelsCascade: geminiStatus.modelsCascade,
+        modelSpecs: geminiStatus.modelSpecs,
+        specialistModels: geminiStatus.specialistModels,
         lastSuccess: geminiStatus.lastSuccess
       },
       brands: brandMetrics,
@@ -1624,6 +1622,20 @@ app.post('/api/axion/confirm-directive', (req, res) => {
   res.json({ success: true, directive: updated });
 });
 
+app.get('/api/gemini/models', (req, res) => {
+  res.json({ success: true, ...geminiRotator.getStatus() });
+});
+
+app.post('/api/gemini/test-cascade', async (req, res) => {
+  try {
+    const prompt = String(req.body?.prompt || 'Confirm system operational in 5 words.');
+    const out = await geminiRotator.generateContentWithMeta(prompt, { maxOutputTokens: 128 });
+    res.json({ success: true, ...out, priorityModel: geminiRotator.getStatus().primaryPriorityModel });
+  } catch (err) {
+    res.status(503).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/automation/stack', (req, res) => {
   res.json({
     success: true,
@@ -1642,6 +1654,28 @@ app.post('/api/automation/plan', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+app.post('/api/automation/execute', async (req, res) => {
+  try {
+    const { targetUrl = '', goal = '', channel = 'web', method = 'GET', payload = null, fields = {} } = req.body || {};
+    if (!goal && !targetUrl) return res.status(400).json({ success: false, error: 'goal or targetUrl required' });
+    const result = await jarvisAutomation.executeWorkflow({ targetUrl, goal: goal || targetUrl, channel, method, payload, fields }, geminiRotator);
+    res.json({ success: true, task: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/automation/pending', (req, res) => {
+  res.json({ success: true, pending: jarvisAutomation.getPendingLocalTasks(10) });
+});
+
+app.post('/api/automation/confirm', (req, res) => {
+  const { id, ...rest } = req.body || {};
+  if (!id) return res.status(400).json({ success: false, error: 'id required' });
+  const updated = jarvisAutomation.confirmLocalTask(id, rest);
+  res.json({ success: true, task: updated });
 });
 
 app.listen(PORT, () => {

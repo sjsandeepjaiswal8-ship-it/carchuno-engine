@@ -1,0 +1,112 @@
+[
+  {
+    "id": "AUTO-13970D",
+    "goal": "Inspect CarChuno homepage & forms",
+    "targetUrl": "https://www.carchuno.com",
+    "channel": "web",
+    "adapter": "Playwright + Stagehand Pattern (Live DOM + Browser)",
+    "summaryHi": "यह योजना CarChuno होमपेज और उसके फॉर्म्स का विश्लेषण करने के लिए Playwright और Stagehand का उपयोग करती है, जिसमें सुरक्षा बाधाओं के लिए मानवीय जांच शामिल है।",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Initialize Playwright browser and navigate to https://www.carchuno.com using Stagehand's observe mode.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 2,
+        "action": "Monitor for Cloudflare, CAPTCHA, or mandatory login overlays that prevent DOM access.",
+        "mode": "HUMAN_CHECKPOINT"
+      },
+      {
+        "step": 3,
+        "action": "Extract the homepage DOM structure and identify all <form> elements and their associated input fields.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 4,
+        "action": "Analyze form validation logic (required fields, data types) and inspect submission endpoints via network interception.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 5,
+        "action": "Compile a report of the site's interactive elements and metadata structure.",
+        "mode": "AUTO"
+      }
+    ],
+    "securityPolicy": "HUMAN_IN_THE_LOOP_NO_CAPTCHA_BYPASS",
+    "status": "EXECUTED_BROWSER_VERIFIED",
+    "createdAt": "2026-11-17T15:39:00.659Z",
+    "executionResult": {
+      "httpStatus": 200,
+      "finalUrl": "https://www.carchuno.com/",
+      "title": "CarChuno — Zero Spam. True On-Road Price. Autonomous Reverse Bidding Car Buying.",
+      "formsCount": 0,
+      "forms": [],
+      "linksCount": 0,
+      "buttonsCount": 0,
+      "challengeSignals": [],
+      "executedLocally": true,
+      "pausedForHuman": false,
+      "domSummary": {
+        "forms": 2,
+        "inputs": 12,
+        "buttons": 721
+      },
+      "filledFields": [],
+      "receiptPath": "C:\\Users\\HP\\Desktop\\carchuno-sales-engine\\automation_logs\\auto_1794929952438.png",
+      "executedAt": "2026-11-17T15:39:14.869Z"
+    }
+  },
+  {
+    "id": "AUTO-8B1088",
+    "goal": "Inspect CarChuno homepage & forms",
+    "targetUrl": "https://www.carchuno.com",
+    "channel": "web",
+    "adapter": "Playwright + Stagehand Pattern (Live DOM + Browser)",
+    "summaryHi": "यह योजना CarChuno होमपेज और उसके फॉर्म्स का निरीक्षण करने के लिए है, जिसमें सुरक्षा बाधाओं के मामले में मानवीय हस्तक्षेप का प्रावधान है।",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Initialize Playwright and navigate to https://www.carchuno.com using Stagehand pattern.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 2,
+        "action": "Check for the presence of CAPTCHAs, Cloudflare challenges, or mandatory login overlays.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 3,
+        "action": "If a CAPTCHA or login wall is detected, pause execution for manual resolution.",
+        "mode": "HUMAN_CHECKPOINT"
+      },
+      {
+        "step": 4,
+        "action": "Scan the Live DOM to identify all interactive forms, including search filters and contact fields.",
+        "mode": "AUTO"
+      },
+      {
+        "step": 5,
+        "action": "Extract and log metadata for each form field (input types, labels, and validation requirements).",
+        "mode": "AUTO"
+      }
+    ],
+    "securityPolicy": "HUMAN_IN_THE_LOOP_NO_CAPTCHA_BYPASS",
+    "status": "HUMAN_IN_THE_LOOP_PAUSED",
+    "createdAt": "2026-11-17T15:35:57.645Z",
+    "executionResult": {
+      "mode": "SECURITY_PAUSE",
+      "httpStatus": 200,
+      "finalUrl": "https://www.carchuno.com/",
+      "title": "CarChuno — Zero Spam. True On-Road Price. Autonomous Reverse Bidding Car Buying.",
+      "formsCount": 0,
+      "forms": [],
+      "linksCount": 0,
+      "buttonsCount": 0,
+      "challengeSignals": [
+        "PAYMENT_PAGE"
+      ],
+      "messageHi": "सुरक्षा कारण से ऑटोमेशन रोका गया (PAYMENT_PAGE) — कृपया लॉगिन/CAPTCHA स्वयं पूरा करें।"
+    }
+  }
+]

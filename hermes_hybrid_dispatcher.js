@@ -15,6 +15,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const nodemailer = require('nodemailer');
 const leadVerifier = require('./lead_smtp_verifier');
+const jarvisAutomation = require('./jarvis_automation_bridge');
 
 const RENDER_BASE = process.env.RENDER_URL || 'https://carchuno-engine.onrender.com';
 const DESKTOP_ROOT = 'C:\\Users\\HP\\Desktop\\Jarvis Lead Collection';
@@ -290,12 +291,54 @@ async function syncAxionTelemetryAndDirectives() {
   return { ok: true, telemetryPushed, directivesProcessed };
 }
 
+async function processPendingAutomations() {
+  let processed = 0;
+  let completed = 0;
+  try {
+    const res = await fetch(`${RENDER_BASE}/api/automation/pending`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const data = await res.json();
+    for (const job of (data.pending || [])) {
+      processed++;
+      const urlMatch = String(job.targetUrl || job.goal || '').match(/https?:\/\/[^\s"'<>]+/i);
+      const targetUrl = urlMatch ? urlMatch[0] : '';
+      let payload = { id: job.id, success: false };
+
+      try {
+        if (job.executionMode === 'agent-desktop') {
+          const out = execSync('agent-desktop snapshot --json', { timeout: 10000, encoding: 'utf8' });
+          payload = { id: job.id, success: true, mode: 'agent-desktop', desktopSnapshotPreview: out.slice(0, 400) };
+          completed++;
+        } else if (targetUrl) {
+          const browserRes = await jarvisAutomation.runPlaywrightEdgeLocal(targetUrl, job.fields || {});
+          payload = { id: job.id, success: !browserRes.pausedForHuman, ...browserRes };
+          completed++;
+        } else {
+          payload = { id: job.id, success: false, error: 'No executable URL or desktop directive specified' };
+        }
+      } catch (err) {
+        payload = { id: job.id, success: false, error: err.message };
+      }
+
+      await fetch(`${RENDER_BASE}/api/automation/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    }
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  return { ok: true, processed, completed };
+}
+
 async function runOnce() {
   const relay = await drainRenderOutbox(20);
   const smtpQueue = await processLeadVerificationQueue();
   const mirror = await mirrorCloudCollectionsToLocalAndDrive();
   const axion = await syncAxionTelemetryAndDirectives();
-  return { relay, smtpQueue, mirror, axion, at: new Date().toISOString() };
+  const automation = await processPendingAutomations();
+  return { relay, smtpQueue, mirror, axion, automation, at: new Date().toISOString() };
 }
 
 if (require.main === module) {

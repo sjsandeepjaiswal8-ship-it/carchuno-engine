@@ -28,13 +28,31 @@ Respond crisply, honestly, and action-oriented in Hindi/Hinglish unless requeste
 class JarvisHermesOrchestrator {
   constructor() {
     this.brainLock = {
-      status: 'LOCKED_HYBRID_SUPER_POWER',
-      primaryModel: 'Gemini 4 Hydrogen (XHigh)',
-      autonomousExecutor: 'Hermes Sovereign Agent + OmniSales',
+      status: 'LOCKED_HYDROGEN_XHIGH_FULL_CASCADE',
+      primaryModel: 'gemini-4-hydrogen (thinkingLevel: XHIGH)',
+      fallbackModelsCount: 19,
+      localOpenSourceFallback: 'Ollama (qwen2.5-coder:1.5b / qwen2.5:0.5b @ 127.0.0.1:11434)',
+      autonomousExecutor: 'Hermes Sovereign Agent + Playwright/agent-desktop + OmniSales',
       frontendStyle: 'OpenJarvis Multi-Brand Cockpit',
       connectedBrands: ['CarChuno', 'DoctoReports', 'AstroMasterpiece', 'CloseTesters'],
-      lockedAt: '2026-11-17T11:00:00Z'
+      lockedAt: '2026-11-17T15:30:00Z'
     };
+  }
+
+  async tryLocalOllamaFallback(prompt) {
+    try {
+      const res = await fetch('http://127.0.0.1:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(12000),
+        body: JSON.stringify({ model: 'qwen2.5:0.5b', prompt, stream: false })
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      return j?.response?.trim() || null;
+    } catch (_) {
+      return null;
+    }
   }
 
   async handleCommand(userCommand, ctx = {}) {
@@ -127,14 +145,14 @@ class JarvisHermesOrchestrator {
       trace.push({ step: 'AXION Terminal Bridge', status: 'DONE', detail: `AXION Status: ${results.axionTelemetry.status}` });
     }
 
-    // 7. Web / Social / Form Automation Planner (Zero CAPTCHA bypass)
-    if (/instagram|facebook|linkedin|play store|ai studio|form|automate|सोशल|फॉर्म/i.test(lower)) {
-      trace.push({ step: 'Jarvis Automation Planner', status: 'RUNNING', detail: 'Designing policy-compliant workflow (Official API / Human-in-the-Loop Safe Pause)...' });
-      results.automationPlan = await jarvisAutomation.planWorkflow({ goal: cmd }, geminiRotator);
-      trace.push({ step: 'Jarvis Automation Planner', status: 'DONE', detail: `${results.automationPlan.adapter} (${results.automationPlan.id})` });
+    // 7. Web / Social / Form / API Automation Executor (Zero CAPTCHA bypass)
+    if (/https?:\/\/|instagram|facebook|linkedin|play store|ai studio|form|automate|api|सोशल|फॉर्म/i.test(lower)) {
+      trace.push({ step: 'Jarvis Live Automation Engine', status: 'RUNNING', detail: 'Executing live DOM/REST workflow (Human-in-the-Loop CAPTCHA Safe)...' });
+      results.automationPlan = await jarvisAutomation.executeWorkflow({ goal: cmd }, geminiRotator);
+      trace.push({ step: 'Jarvis Live Automation Engine', status: 'DONE', detail: `${results.automationPlan.status} (${results.automationPlan.id})` });
     }
 
-    // 6. Synthesize Intelligent Response via 17-Key Gemini Rotator
+    // 8. Synthesize Intelligent Response via Gemini 4 Hydrogen XHigh -> 19-Model Cascade -> Local Ollama Fallback
     const hubSnapshot = {
       brands: unifiedHub.getBrandMetrics(),
       outbox: unifiedHub.getAllOutboxStats(),
@@ -146,9 +164,7 @@ class JarvisHermesOrchestrator {
     let aiReply = '';
     let aiMeta = { modelUsed: 'local-orchestrator', keyMasked: 'N/A', aiPowered: false };
 
-    if (geminiRotator) {
-      try {
-        const prompt = `${SYSTEM_DIRECTIVE}
+    const prompt = `${SYSTEM_DIRECTIVE}
 
 User Command: "${cmd}"
 
@@ -157,16 +173,26 @@ ${JSON.stringify(hubSnapshot, null, 2)}
 
 Write a clear, helpful response in Hindi/Hinglish summarizing what was checked/executed right now using ONLY the verified facts above.`;
 
-        const gen = await geminiRotator.generateContentWithMeta(prompt, { timeoutMs: 20000, maxOutputTokens: 2048 });
+    if (geminiRotator) {
+      try {
+        const gen = await geminiRotator.generateContentWithMeta(prompt, { maxOutputTokens: 2048 });
         aiReply = gen.text;
         aiMeta = { modelUsed: gen.modelUsed, keyMasked: gen.keyMasked, aiPowered: true };
-        trace.push({ step: 'Gemini 17-Key Synthesis', status: 'DONE', detail: `Model: ${gen.modelUsed} | Key: ${gen.keyMasked}` });
+        trace.push({ step: 'Gemini Hydrogen/Multi-Model Synthesis', status: 'DONE', detail: `Model: ${gen.modelUsed} | Key: ${gen.keyMasked}` });
       } catch (err) {
-        aiReply = `कमांड प्रोसेस हो गई (${trace.map(t => t.step).join(' → ')})। Gemini API नोट: ${err.message}`;
-        trace.push({ step: 'Gemini 17-Key Synthesis', status: 'FALLBACK', detail: err.message });
+        const localText = await this.tryLocalOllamaFallback(prompt.slice(0, 1800));
+        if (localText) {
+          aiReply = localText;
+          aiMeta = { modelUsed: 'ollama/qwen2.5:0.5b (Local Fallback)', keyMasked: 'LOCAL_OSS', aiPowered: true };
+          trace.push({ step: 'Local Ollama Open-Source Fallback', status: 'DONE', detail: 'qwen2.5:0.5b @ 127.0.0.1:11434' });
+        } else {
+          aiReply = `कमांड प्रोसेस हो गई (${trace.map(t => t.step).join(' → ')})। Gemini API नोट: ${err.message}`;
+          trace.push({ step: 'Gemini Synthesis', status: 'FALLBACK', detail: err.message });
+        }
       }
     } else {
-      aiReply = `कमांड सफलतापूर्वक पूर्ण हुई (${trace.map(t => t.step).join(' → ')})।`;
+      const localText = await this.tryLocalOllamaFallback(prompt.slice(0, 1800));
+      aiReply = localText || `कमांड सफलतापूर्वक पूर्ण हुई (${trace.map(t => t.step).join(' → ')})।`;
     }
 
     unifiedHub.recordActivity('hermes', 'JARVIS_COMMAND', `Command: "${cmd.slice(0, 80)}"`, {
