@@ -1,29 +1,5 @@
 [
   {
-    "id": "MH-01",
-    "name": "Wasan Motors Tata (Mumbai)",
-    "email": "sales@wasanmotors.com",
-    "brand": "Tata Motors",
-    "city": "Mumbai",
-    "state": "Maharashtra",
-    "zone": "West",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:13:55.784Z"
-  },
-  {
-    "id": "MH-02",
-    "name": "Heritage Mahindra (Thane / Mumbai)",
-    "email": "sales@heritagemahindra.com",
-    "brand": "Mahindra",
-    "city": "Mumbai",
-    "state": "Maharashtra",
-    "zone": "West",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:14:01.399Z"
-  },
-  {
     "id": "MH-03",
     "name": "Modi Hyundai (Mumbai)",
     "email": "info@modihyundai.com",
@@ -48,42 +24,6 @@
     "lastDispatched": "2026-11-08T09:14:12.947Z"
   },
   {
-    "id": "MH-05",
-    "name": "Silver Mahindra (Pune)",
-    "email": "sales@silvermahindra.com",
-    "brand": "Mahindra",
-    "city": "Pune",
-    "state": "Maharashtra",
-    "zone": "West",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:14:18.292Z"
-  },
-  {
-    "id": "MH-06",
-    "name": "Garve Hyundai (Pune)",
-    "email": "sales@garvehyundai.com",
-    "brand": "Hyundai",
-    "city": "Pune",
-    "state": "Maharashtra",
-    "zone": "West",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:14:40.504Z"
-  },
-  {
-    "id": "MH-07",
-    "name": "Bafna Motors Tata (Pune)",
-    "email": "sales@bafnamotors.com",
-    "brand": "Tata Motors",
-    "city": "Pune",
-    "state": "Maharashtra",
-    "zone": "West",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:14:46.036Z"
-  },
-  {
     "id": "DL-01",
     "name": "Koncept Mahindra (South Delhi)",
     "email": "sales@konceptmahindra.com",
@@ -94,18 +34,6 @@
     "status": "dispatched",
     "dispatchedCount": 1,
     "lastDispatched": "2026-11-08T09:14:51.456Z"
-  },
-  {
-    "id": "DL-02",
-    "name": "Trehan Tata Motors (Gurugram)",
-    "email": "crm@trehantata.com",
-    "brand": "Tata Motors",
-    "city": "Gurugram",
-    "state": "Haryana",
-    "zone": "North",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T09:14:57.047Z"
   },
   {
     "id": "DL-03",
@@ -142,18 +70,6 @@
     "status": "dispatched",
     "dispatchedCount": 1,
     "lastDispatched": "2026-11-08T11:50:20.184Z"
-  },
-  {
-    "id": "DL-06",
-    "name": "Frontier Kia (Gurugram)",
-    "email": "sales@frontierkia.com",
-    "brand": "Kia",
-    "city": "Gurugram",
-    "state": "Haryana",
-    "zone": "North",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T11:50:25.615Z"
   },
   {
     "id": "DL-07",
@@ -240,18 +156,6 @@
     "lastDispatched": "2026-11-08T11:52:57.786Z"
   },
   {
-    "id": "TS-01",
-    "name": "Malik Motors Tata (Hyderabad)",
-    "email": "sales@maliktata.com",
-    "brand": "Tata Motors",
-    "city": "Hyderabad",
-    "state": "Telangana",
-    "zone": "South",
-    "status": "dispatched",
-    "dispatchedCount": 1,
-    "lastDispatched": "2026-11-08T11:53:03.393Z"
-  },
-  {
     "id": "TS-02",
     "name": "Neon Motors Mahindra (Hyderabad)",
     "email": "sales@neonmotors.in",
@@ -268,18 +172,6 @@
     "name": "Kun United Hyundai (Hyderabad)",
     "email": "sales@kununited.com",
     "brand": "Hyundai",
-    "city": "Hyderabad",
-    "state": "Telangana",
-    "zone": "South",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "TS-04",
-    "name": "Varun Motors Maruti Nexa (Hyderabad)",
-    "email": "sales@varunmotors.com",
-    "brand": "Maruti Suzuki",
     "city": "Hyderabad",
     "state": "Telangana",
     "zone": "South",
@@ -317,18 +209,6 @@
     "email": "sales@kunhyundai.com",
     "brand": "Hyundai",
     "city": "Chennai",
-    "state": "Tamil Nadu",
-    "zone": "South",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "TN-04",
-    "name": "Anamallais Mahindra (Coimbatore)",
-    "email": "sales@anamallais.com",
-    "brand": "Mahindra",
-    "city": "Coimbatore",
     "state": "Tamil Nadu",
     "zone": "South",
     "status": "active",
@@ -384,59 +264,11 @@
     "lastDispatched": null
   },
   {
-    "id": "GJ-05",
-    "name": "Kiran Motors Maruti (Vadodara)",
-    "email": "sales@kiranmotors.com",
-    "brand": "Maruti Suzuki",
-    "city": "Vadodara",
-    "state": "Gujarat",
-    "zone": "West",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "UP-01",
-    "name": "SRM Motors Tata (Lucknow)",
-    "email": "sales@srmmotors.com",
-    "brand": "Tata Motors",
-    "city": "Lucknow",
-    "state": "Uttar Pradesh",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
     "id": "UP-02",
     "name": "SAS Motors Mahindra (Lucknow)",
     "email": "sales@sashyundai.com",
     "brand": "Mahindra",
     "city": "Lucknow",
-    "state": "Uttar Pradesh",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "UP-03",
-    "name": "Bright 4 Wheels Maruti (Lucknow)",
-    "email": "sales@bright4wheels.com",
-    "brand": "Maruti Suzuki",
-    "city": "Lucknow",
-    "state": "Uttar Pradesh",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "UP-04",
-    "name": "Speed Hyundai (Kanpur)",
-    "email": "sales@speedhyundai.com",
-    "brand": "Hyundai",
-    "city": "Kanpur",
     "state": "Uttar Pradesh",
     "zone": "North",
     "status": "active",
@@ -456,30 +288,6 @@
     "lastDispatched": null
   },
   {
-    "id": "RJ-02",
-    "name": "K.S. Motors Mahindra (Jaipur)",
-    "email": "sales@ksmotors.in",
-    "brand": "Mahindra",
-    "city": "Jaipur",
-    "state": "Rajasthan",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "RJ-03",
-    "name": "Morani Hyundai (Jaipur)",
-    "email": "sales@moranihyundai.com",
-    "brand": "Hyundai",
-    "city": "Jaipur",
-    "state": "Rajasthan",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
     "id": "RJ-04",
     "name": "Vipul Motors Maruti (Jaipur)",
     "email": "sales@vipulmotors.com",
@@ -487,18 +295,6 @@
     "city": "Jaipur",
     "state": "Rajasthan",
     "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "WB-01",
-    "name": "Dulichand Motors Tata (Kolkata)",
-    "email": "sales@dulichandmotors.com",
-    "brand": "Tata Motors",
-    "city": "Kolkata",
-    "state": "West Bengal",
-    "zone": "East",
     "status": "active",
     "dispatchedCount": 0,
     "lastDispatched": null
@@ -520,18 +316,6 @@
     "name": "Mukesh Hyundai (Kolkata)",
     "email": "sales@mukeshhyundai.com",
     "brand": "Hyundai",
-    "city": "Kolkata",
-    "state": "West Bengal",
-    "zone": "East",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "WB-04",
-    "name": "Machino Techno Maruti (Kolkata)",
-    "email": "sales@machinotechno.com",
-    "brand": "Maruti Suzuki",
     "city": "Kolkata",
     "state": "West Bengal",
     "zone": "East",
@@ -564,42 +348,6 @@
     "lastDispatched": null
   },
   {
-    "id": "PB-03",
-    "name": "Berkeley Hyundai (Chandigarh)",
-    "email": "sales@berkeleyhyundai.com",
-    "brand": "Hyundai",
-    "city": "Chandigarh",
-    "state": "Punjab",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "PB-04",
-    "name": "Stan Auto Maruti (Ludhiana)",
-    "email": "sales@stanauto.com",
-    "brand": "Maruti Suzuki",
-    "city": "Ludhiana",
-    "state": "Punjab",
-    "zone": "North",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "KL-01",
-    "name": "Malayalam Vehicles Tata (Kochi)",
-    "email": "sales@malayalamvehicles.com",
-    "brand": "Tata Motors",
-    "city": "Kochi",
-    "state": "Kerala",
-    "zone": "South",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
     "id": "KL-02",
     "name": "TVS Mahindra (Kochi)",
     "email": "sales@tvsmotors.com",
@@ -624,83 +372,11 @@
     "lastDispatched": null
   },
   {
-    "id": "KL-04",
-    "name": "Indus Motors Maruti (Kochi)",
-    "email": "sales@indusmotors.com",
-    "brand": "Maruti Suzuki",
-    "city": "Kochi",
-    "state": "Kerala",
-    "zone": "South",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "MP-01",
-    "name": "Sanjay Motors Tata (Bhopal)",
-    "email": "sales@sanjaytatamotors.com",
-    "brand": "Tata Motors",
-    "city": "Bhopal",
-    "state": "Madhya Pradesh",
-    "zone": "Central",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "MP-02",
-    "name": "Winwin Mahindra (Bhopal)",
-    "email": "winwin.bhopal@mahindra.dealers.com",
-    "brand": "Mahindra",
-    "city": "Bhopal",
-    "state": "Madhya Pradesh",
-    "zone": "Central",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "MP-03",
-    "name": "Chhajed Hyundai (Bhopal)",
-    "email": "gm.sales@chhajedhyundai.com",
-    "brand": "Hyundai",
-    "city": "Bhopal",
-    "state": "Madhya Pradesh",
-    "zone": "Central",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
     "id": "MP-04",
     "name": "My Car Maruti Suzuki (Bhopal)",
     "email": "sales@mycarmaruti.com",
     "brand": "Maruti Suzuki",
     "city": "Bhopal",
-    "state": "Madhya Pradesh",
-    "zone": "Central",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "MP-05",
-    "name": "Bhopal Kia (Speed Auto)",
-    "email": "crm@bhopalkia.com",
-    "brand": "Kia",
-    "city": "Bhopal",
-    "state": "Madhya Pradesh",
-    "zone": "Central",
-    "status": "active",
-    "dispatchedCount": 0,
-    "lastDispatched": null
-  },
-  {
-    "id": "MP-06",
-    "name": "Sanghi Brothers Mahindra (Indore)",
-    "email": "sales.sanghi@mahindra.dealers.com",
-    "brand": "Mahindra",
-    "city": "Indore",
     "state": "Madhya Pradesh",
     "zone": "Central",
     "status": "active",
