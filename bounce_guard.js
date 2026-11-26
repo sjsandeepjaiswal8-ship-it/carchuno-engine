@@ -53,7 +53,7 @@ class BounceGuard {
     this.suppressionList = loadJson(SUPPRESSION_PATH, INITIAL_SUPPRESSED);
     if (!fs.existsSync(SUPPRESSION_PATH)) saveJson(SUPPRESSION_PATH, this.suppressionList);
     this.ledger = loadJson(LEDGER_PATH, []);
-    this.breaker = loadJson(BREAKER_PATH, { paused: false, reason: null, updatedAt: null });
+    this.breaker = loadJson(BREAKER_PATH, { paused: true, reason: 'Hard-stopped by Admin to protect carchuno.com domain/ID', updatedAt: new Date().toISOString() });
     this.mxCache = new Map();
     this.consecutiveFailures = 0;
     this.isScanning = false;
