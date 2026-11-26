@@ -6,10 +6,9 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
 // Strict Anti-Ban & Safety Guardrails (Zero-Ban Tolerance Policy)
 const { SAFETY_POLICY, AntiBanController } = require('./safety_guardrails');
+const { bounceGuard } = require('./bounce_guard');
 const GeminiKeyRotator = require('./gemini_rotator');
 const geminiRotator = new GeminiKeyRotator();
-const sovereignDb = require('./sovereign_db_engine');
-const auditVault = require('./audit_vault');
 let crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport;
 try {
   ({ crawlAndAudit, generateAiOptimization, generateExecutiveHtmlReport } = require('./dynamic_seo_engine'));
@@ -52,40 +51,11 @@ try {
   console.warn('[Server Startup] closetesters_auto_responder load skipped:', e.message);
 }
 
-let ApexOmniStudioEngine, ApexHermesPoster;
-try {
-  ApexOmniStudioEngine = require('./apex_omni_studio_engine');
-  ApexHermesPoster = require('./apex_hermes_poster');
-  console.log('[Server Startup] APEX OMNI STUDIO™ & Hermes Poster modules loaded.');
-} catch (e) {
-  console.warn('[Server Startup] apex_omni_studio load skipped:', e.message);
-}
-
-let startOracleCloudCatcher, attemptProvision, getOracleStatus;
-try {
-  ({ startOracleCloudCatcher, attemptProvision, getOracleStatus } = require('./oracle_cloud_catcher'));
-  console.log('[Server Startup] ORACLE CLOUD 24/7 CAPACITY CATCHER module loaded.');
-} catch (e) {
-  console.warn('[Server Startup] oracle_cloud_catcher load skipped:', e.message);
-}
-
-const unifiedHub = require('./unified_activity_hub');
-const leadVerifier = require('./lead_smtp_verifier');
-const jarvisLeadCollector = require('./jarvis_lead_collector');
-const jarvisOrchestrator = require('./jarvis_hermes_orchestrator');
-const axionBridge = require('./axion_bridge');
-const jarvisAutomation = require('./jarvis_automation_bridge');
-const doctoreportsOutreach = require('./doctoreports_outreach');
-const astromasterpieceOutreach = require('./astromasterpiece_outreach');
-const JARVIS_MASTER_PINS = new Set(['2026', '8899', '09-10-2026', '2009-10-2026']);
-
-
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
 
 // Global CORS Middleware for Web & Mobile App (AstroMasterpiece)
 app.use((req, res, next) => {
@@ -102,99 +72,42 @@ app.use((req, res, next) => {
 const getBrevoKey = () => process.env.BREVO_PASS || Buffer.from('eHNtdHBzaWItMDgzYzJlMDRiMWI0ZjI1YTY4NmQ3ZDk5ZGZkZjQzYWFjMTVlZWE5MWQ1YWQ3ZmIxODIwMmMwM2IyYWQwYjA4ZS1HaHR2NWNXZmsxa1hndmk0', 'base64').toString('utf8');
 const getGodaddyPass = () => process.env.GODADDY_PASS || Buffer.from('Q2xvc2V0ZXN0ZXJzQDEx', 'base64').toString('utf8');
 
-// Multi-Relay SMTP Providers Configuration (Brevo 2525 connects fast from Render; 465/587 timeout fast at 3.5s)
-const SMTP_CHAIN = [
-  {
-    id: 'brevo-2525',
-    name: 'Brevo Cloud Relay (2525)',
-    host: 'smtp-relay.brevo.com',
-    port: 2525,
-    secure: false,
-    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 3500,
-    greetingTimeout: 3500,
-    socketTimeout: 5000
-  },
-  {
-    id: 'brevo-587',
-    name: 'Brevo Cloud Relay (587)',
+// SMTP Providers Configuration
+const SMTP_CONFIGS = {
+  brevo: {
+    name: 'Brevo Cloud Relay',
     host: 'smtp-relay.brevo.com',
     port: 587,
     secure: false,
-    auth: { user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com', pass: getBrevoKey() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 3500,
-    greetingTimeout: 3500,
-    socketTimeout: 5000
+    auth: {
+      user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com',
+      pass: getBrevoKey()
+    }
   },
-  {
-    id: 'godaddy-465',
-    name: 'GoDaddy SecureServer (465 SSL)',
+  godaddy: {
+    name: 'GoDaddy SecureServer',
     host: 'smtpout.secureserver.net',
     port: 465,
     secure: true,
-    auth: { user: process.env.GODADDY_USER || 'partners@carchuno.com', pass: getGodaddyPass() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 3500,
-    greetingTimeout: 3500,
-    socketTimeout: 5000
-  },
-  {
-    id: 'godaddy-587',
-    name: 'GoDaddy SecureServer (587 STARTTLS)',
-    host: 'smtpout.secureserver.net',
-    port: 587,
-    secure: false,
-    auth: { user: process.env.GODADDY_USER || 'partners@carchuno.com', pass: getGodaddyPass() },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 3500,
-    greetingTimeout: 3500,
-    socketTimeout: 5000
-  }
-];
-
-const SMTP_CONFIGS = {
-  brevo: SMTP_CHAIN[0],
-  godaddy: SMTP_CHAIN[2]
-};
-
-let currentProvider = 'brevo';
-
-// Failover-aware Virtual Transporter (drop-in compatible with nodemailer.sendMail)
-const activeTransporter = {
-  async sendMail(mailOptions) {
-    const errors = [];
-    for (const conf of SMTP_CHAIN) {
-      try {
-        const t = nodemailer.createTransport(conf);
-        const info = await t.sendMail(mailOptions);
-        currentProvider = conf.id.startsWith('brevo') ? 'brevo' : 'godaddy';
-        return { ...info, usedProvider: conf.id };
-      } catch (err) {
-        errors.push(`${conf.id}: ${err.message}`);
-      }
+    auth: {
+      user: process.env.GODADDY_USER || 'partners@carchuno.com',
+      pass: getGodaddyPass()
     }
-    throw new Error(`All SMTP relays failed -> ${errors.join(' | ')}`);
-  },
-  async verify() {
-    const errors = [];
-    for (const conf of SMTP_CHAIN) {
-      try {
-        const t = nodemailer.createTransport(conf);
-        await t.verify();
-        currentProvider = conf.id.startsWith('brevo') ? 'brevo' : 'godaddy';
-        return true;
-      } catch (err) {
-        errors.push(`${conf.id}: ${err.message}`);
-      }
-    }
-    throw new Error(errors.join(' | '));
   }
 };
+
+let activeTransporter = null;
+let currentProvider = 'godaddy';
 
 function initTransporter() {
-  console.log('[Cloud Engine] Multi-Relay Failover SMTP Active (Brevo 587/2525 -> GoDaddy 465/587).');
+  const conf = SMTP_CONFIGS[currentProvider] || SMTP_CONFIGS.brevo;
+  console.log(`[Cloud Engine] Initializing SMTP transporter with ${conf.name}...`);
+  activeTransporter = nodemailer.createTransport({
+    ...conf,
+    pool: true,
+    maxConnections: 1,
+    rateLimit: 1
+  });
 }
 initTransporter();
 
@@ -234,47 +147,19 @@ loadDealers();
 
 let dealerIndex = 0;
 
-// Dispatch Single Verified Active Pan-India Dealer Pitch
+// Dispatch Single Pan-India Dealer Pitch
 async function dispatchDealerPitch() {
   if (!DEALERS || DEALERS.length === 0) loadDealers();
-  const rejected = jarvisLeadCollector.getRejectedSet();
-  const verifiedCarPool = (jarvisLeadCollector.getVerifiedPool().CarChuno || []).map((v) => ({
-    name: v.name,
-    email: v.email,
-    brand: v.category || 'Automotive',
-    city: (v.city || 'India').split(',')[0].trim(),
-    state: (v.city || '').split(',')[1]?.trim() || '',
-    zone: 'Verified-250OK',
-    smtpVerified: true
-  }));
+  if (DEALERS.length === 0) return;
 
-  const combined = [...verifiedCarPool, ...DEALERS];
-  if (combined.length === 0) return;
-
-  let dealer = null;
-  for (let tries = 0; tries < combined.length; tries++) {
-    if (dealerIndex >= combined.length) dealerIndex = 0;
-    const cand = combined[dealerIndex++];
-    const hygiene = leadVerifier.checkEmailHygiene(cand?.email);
-    if (!hygiene.valid || rejected.has(hygiene.email)) continue;
-    if (cand.smtpVerified) {
-      dealer = cand;
-      break;
-    }
-    const mx = await leadVerifier.resolveMxSorted(hygiene.domain, 2500);
-    if (mx.length > 0) {
-      dealer = cand;
-      break;
-    }
-  }
-  if (!dealer) return { delivered: false, reason: 'No active MX-verified dealer available' };
+  if (dealerIndex >= DEALERS.length) dealerIndex = 0;
+  const dealer = DEALERS[dealerIndex++];
 
   const stateStr = dealer.state ? `, ${dealer.state}` : '';
-  const zoneBadge = dealer.zone ? `[${dealer.zone}]` : '';
+  const zoneBadge = dealer.zone ? `[${dealer.zone} Zone]` : '';
 
   const mailOptions = {
     from: '"CarChuno National Dealer Network" <partners@carchuno.com>',
-    replyTo: 'support@carchuno.com',
     to: dealer.email,
     subject: `Pan-India Partnership: Verified Car Buyers & Zero-Commission Leads in ${dealer.city}${stateStr}`,
     html: `
@@ -302,112 +187,61 @@ async function dispatchDealerPitch() {
   };
 
   try {
+    const preCheck = await bounceGuard.verifyBeforeSend(dealer.email, { dealershipOnly: true });
+    if (!preCheck.ok) {
+      bounceGuard.recordDispatch({
+        to: dealer.email,
+        subject: mailOptions.subject,
+        provider: currentProvider,
+        status: 'BLOCKED_PRE_DELIVERY',
+        error: preCheck.reason
+      });
+      addLog(`🚫 [PRE-DELIVERY BLOCKED] ${dealer.email}: ${preCheck.reason}`);
+      return;
+    }
+
     const info = await activeTransporter.sendMail(mailOptions);
     state.totalDispatched++;
     state.dealersSent++;
     dealer.dispatchedCount = (dealer.dispatchedCount || 0) + 1;
     dealer.lastDispatched = new Date().toISOString();
+    bounceGuard.recordDispatch({
+      to: preCheck.email,
+      subject: mailOptions.subject,
+      provider: currentProvider,
+      status: 'DELIVERED',
+      messageId: info.messageId
+    });
     addLog(`✅ [PAN-INDIA DISPATCHED] ${dealer.name} (${dealer.city}, ${dealer.state}) - Brand: ${dealer.brand}`);
-    unifiedHub.recordActivity('carchuno', 'EMAIL_DISPATCHED', `Sent dealer pitch -> ${dealer.email} (${dealer.city})`, { messageId: info.messageId });
 
     // Persist dispatch tracking asynchronously
     try {
       fs.writeFileSync(path.join(__dirname, 'dealers_database.json'), JSON.stringify(DEALERS, null, 2));
     } catch (_) {}
-    return { delivered: true, messageId: info.messageId };
   } catch (err) {
     state.failed++;
-    const job = unifiedHub.enqueueHybridEmail('carchuno', mailOptions, err.message);
-    addLog(`📥 [CarChuno Hybrid Queue] ${dealer.email} queued (${job.id}) -> Direct cloud SMTP notice: ${err.message}`);
-    currentProvider = currentProvider === 'brevo' ? 'godaddy' : 'brevo';
-    initTransporter();
-    return { delivered: false, queued: true, jobId: job.id, error: err.message };
-  }
-}
-
-/**
- * Shared Hybrid Dispatcher (HTTPS REST API -> SMTP Failover -> Hybrid Local Relay Queue)
- */
-async function dispatchWithHybridFallback(brandId, mailOptions, logFn = addLog) {
-  // 1. Try Brevo HTTPS v3 REST API (Port 443 — never blocked on Render)
-  if (process.env.BREVO_API_KEY) {
-    try {
-      const apiRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender: { name: 'OmniSales Hybrid Desk', email: brandId === 'carchuno' ? 'partners@carchuno.com' : 'partners@closetesters.com' },
-          to: [{ email: mailOptions.to }],
-          replyTo: { email: mailOptions.replyTo || 'partners@closetesters.com' },
-          subject: mailOptions.subject,
-          htmlContent: mailOptions.html
-        })
-      });
-      const apiJson = await apiRes.json().catch(() => ({}));
-      if (apiRes.ok && apiJson.messageId) {
-        state.totalDispatched++;
-        unifiedHub.recordActivity(brandId, 'EMAIL_DISPATCHED', `Sent via Brevo HTTPS API -> ${mailOptions.to}`, { messageId: apiJson.messageId });
-        logFn(`✅ [${brandId.toUpperCase()} HTTPS API] Dispatched to ${mailOptions.to}`);
-        return { delivered: true, provider: 'brevo-https-443', messageId: apiJson.messageId };
-      }
-    } catch (_) {}
-  }
-
-  // 2. Try Active SMTP Failover Chain
-  try {
-    const info = await activeTransporter.sendMail(mailOptions);
-    state.totalDispatched++;
-    unifiedHub.recordActivity(brandId, 'EMAIL_DISPATCHED', `Sent via ${info.usedProvider || 'SMTP'} -> ${mailOptions.to}`, { messageId: info.messageId });
-    logFn(`✅ [${brandId.toUpperCase()} SMTP] Dispatched to ${mailOptions.to}`);
-    return { delivered: true, provider: info.usedProvider || 'smtp', messageId: info.messageId };
-  } catch (err) {
-    state.failed++;
-    const job = unifiedHub.enqueueHybridEmail(brandId, mailOptions, err.message);
-    logFn(`📥 [${brandId.toUpperCase()} HYBRID QUEUE] ${mailOptions.to} queued (${job.id}) -> awaiting GoDaddy/Brevo relay`);
-    return { delivered: false, queued: true, jobId: job.id, error: err.message };
-  }
-}
-
-let closeTestersOutreach = null;
-try {
-  closeTestersOutreach = require('./closetesters_autonomous_outreach');
-} catch (e) {
-  console.warn('[Server Startup] closetesters_autonomous_outreach skipped:', e.message);
-}
-
-let unifiedCycleCount = 0;
-
-// Scheduled Background Loop: Runs every 12 minutes smoothly across ALL 4 BRANDS
-async function runUnifiedDispatchCycle() {
-  unifiedCycleCount++;
-  state.lastRun = new Date().toISOString();
-  addLog(`⏳ [OmniSales 24/7 Cycle #${unifiedCycleCount}] Unified 4-Brand Hybrid Execution initiated...`);
-
-  const cycleReport = {};
-  cycleReport.carchuno = await dispatchDealerPitch().catch(e => ({ error: e.message }));
-  cycleReport.doctoreports = await doctoreportsOutreach.dispatchNextLead(dispatchWithHybridFallback, addLog, geminiRotator).catch(e => ({ error: e.message }));
-  cycleReport.astromasterpiece = await astromasterpieceOutreach.dispatchNextLead(dispatchWithHybridFallback, addLog).catch(e => ({ error: e.message }));
-  if (closeTestersOutreach && typeof closeTestersOutreach.dispatchNextLead === 'function') {
-    cycleReport.closetesters = await closeTestersOutreach.dispatchNextLead(activeTransporter, addLog, typeof sovereignDb !== 'undefined' ? sovereignDb : null).catch(e => ({ error: e.message }));
-    unifiedHub.recordActivity('closetesters', cycleReport.closetesters?.delivered ? 'EMAIL_DISPATCHED' : 'OUTREACH_CYCLE', `CloseTesters cycle status: ${cycleReport.closetesters?.reason || cycleReport.closetesters?.delivered || 'executed'}`);
-  }
-
-  // Every 1st cycle and every 6th cycle (~72 mins), run daily Jarvis Lead Collection & Activity Report across all 4 products
-  if (unifiedCycleCount === 1 || unifiedCycleCount % 6 === 0) {
-    try {
-      cycleReport.jarvisLeadCollection = await jarvisLeadCollector.runAllProductsDailyCollection(15, geminiRotator, {
-        oracleStatus: getOracleStatus ? getOracleStatus() : null
-      });
-      addLog('📊 [Jarvis Lead Collector] Zero-Bounce 4-Product Active Lead Collection & Report updated!');
-    } catch (colErr) {
-      addLog(`⚠️ [Jarvis Lead Collector] Cycle note: ${colErr.message}`);
+    bounceGuard.recordDispatch({
+      to: dealer.email,
+      subject: mailOptions.subject,
+      provider: currentProvider,
+      status: 'FAILED',
+      error: err.message
+    });
+    addLog(`❌ [PAN-INDIA FAILED] ${dealer.email} (${dealer.city}): ${err.message}`);
+    if (err.message && err.message.includes('535')) {
+      currentProvider = currentProvider === 'brevo' ? 'godaddy' : 'brevo';
+      addLog(`⚠️ Switching active SMTP provider to: ${currentProvider}`);
+      initTransporter();
     }
   }
-
-  return cycleReport;
 }
 
-setInterval(runUnifiedDispatchCycle, 12 * 60 * 1000);
+// Scheduled Background Loop: Runs every 15 minutes smoothly
+setInterval(async () => {
+  state.lastRun = new Date().toISOString();
+  addLog('⏳ Scheduled dispatch cycle initiated...');
+  await dispatchDealerPitch();
+}, 15 * 60 * 1000);
 
 // ==========================================
 // 24/7 AUTONOMOUS SELF-KEEPALIVE PINGER
@@ -427,58 +261,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), state });
 });
 
-// ==========================================
-// 24/7 OMNISALES AGENT CLOUD MISSION CONTROL
-// ==========================================
-let omnisalesRouter;
-try {
-  const createOmniSalesRouter = require('./omnisales_router');
-  omnisalesRouter = createOmniSalesRouter({
-    state,
-    DEALERS,
-    activeTransporter,
-    currentProvider,
-    SMTP_CONFIGS,
-    geminiRotator,
-    sovereignDb,
-    processInboundInquiry,
-    auditVault,
-    dispatchDealerPitch,
-    addLog
-  });
-  app.use(omnisalesRouter);
-  console.log('[Server Startup] ⚡ OmniSales 24/7 Cloud Router mounted (Live Audit, APK Analyzer, Vault & CRM).');
-} catch (e) {
-  console.warn('[Server Startup] omnisales_router load skipped:', e.message);
-}
-
-// Serve Static Assets without hijacking '/' (so '/' always serves OpenJarvis Cockpit)
-app.use(express.static(path.join(__dirname, 'public'), { index: false }));
-
-function sendNoCacheJarvis(res) {
-  res.set({
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'Surrogate-Control': 'no-store'
-  });
-  const jarvisPath = path.join(__dirname, 'public', 'jarvis.html');
-  if (fs.existsSync(jarvisPath)) {
-    return res.sendFile(jarvisPath);
-  }
-  return res.redirect('/omnisales');
-}
-
-// Dedicated OpenJarvis Hybrid Cockpit Routes (No-Cache Guaranteed)
-app.get(['/', '/jarvis', '/openjarvis', '/cockpit'], (req, res) => sendNoCacheJarvis(res));
-
-// Classic OmniSales Mission Control Direct Route
-app.get('/omnisales', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Legacy Dashboard UI
-app.get('/legacy-dashboard', (req, res) => {
+// Main Dashboard UI
+app.get('/', (req, res) => {
   const uptimeMinutes = Math.floor(process.uptime() / 60);
   res.send(`
     <!DOCTYPE html>
@@ -550,7 +334,7 @@ app.get('/api/webhook/whatsapp', (req, res) => {
   return res.status(403).send('Forbidden: Invalid verify token');
 });
 
-// 2. POST Incoming Messages from Customer / Devotee (Dual Engine: AstroMasterpiece + CarChuno)
+// 2. POST Incoming Messages from Customer / Dealer
 app.post('/api/webhook/whatsapp', async (req, res) => {
   try {
     const payload = req.body;
@@ -564,104 +348,16 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
     }
 
     const fromPhone = message.from;
-    const customerName = value?.contacts?.[0]?.profile?.name || 'भक्त';
-    const messageText = (message.text?.body || message.interactive?.button_reply?.title || '').trim();
-    const displayPhone = value?.metadata?.display_phone_number || '';
-    const incomingPhoneId = value?.metadata?.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    const customerName = value?.contacts?.[0]?.profile?.name || 'Customer';
+    const messageText = message.text?.body || message.interactive?.button_reply?.title || '';
 
-    addLog(`📩 [Inbound WhatsApp] From: ${customerName} (${fromPhone}) | Display: ${displayPhone} | Msg: "${messageText}"`);
+    addLog(`📩 [Inbound WhatsApp] From: ${customerName} (${fromPhone}) | Msg: "${messageText}"`);
 
-    // Determine Brand Routing:
-    // If incoming number is 8820344711, or message mentions Astro / Kundali / Pooja / Jyotish, or doesn't mention car/auto/dealer
-    const isAstro = 
-      displayPhone.includes('8820344711') ||
-      messageText.includes('AstroMasterpiece') ||
-      messageText.includes('कुंडली') ||
-      messageText.includes('kundali') ||
-      messageText.includes('ज्योतिष') ||
-      messageText.includes('horoscope') ||
-      messageText.includes('सेवा') ||
-      messageText.includes('नमस्ते') ||
-      messageText.includes('जन्म') ||
-      !messageText.toLowerCase().includes('car');
-
-    let replyText = '';
-    let brandTag = 'AstroMasterpiece';
-
-    if (isAstro) {
-      brandTag = 'AstroMasterpiece';
-      
-      // Parse birth details: Date of Birth, Time, Place
-      const dobMatch = messageText.match(/\b(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})\b/);
-      const tobMatch = messageText.match(/\b(\d{1,2}[:.]\d{2}(?:\s*(?:AM|PM|am|pm))?|\d{1,2}\s*(?:बजे|am|pm|AM|PM))\b/i);
-      
-      const hasBirthDetails = Boolean(dobMatch);
-
-      if (hasBirthDetails) {
-        const dob = dobMatch ? dobMatch[1] : '';
-        const tob = tobMatch ? tobMatch[1] : '12:00 PM';
-        
-        let pob = 'भारत';
-        const lines = messageText.split('\n');
-        for (const line of lines) {
-          if (line.includes('स्थान') || line.includes('place') || line.includes('city') || line.includes('शहर')) {
-            const parts = line.split(/[:\-]/);
-            if (parts[1]) pob = parts[1].trim();
-          }
-        }
-        if (pob === 'भारत' && lines.length >= 4) {
-          pob = lines[3].trim();
-        }
-
-        const devoteeName = customerName && customerName !== 'भक्त' && customerName !== 'Customer' ? customerName : 'सादर';
-
-        // Auto-save lead to sovereignDb and persistent disk ledger
-        try {
-          const leadRecord = {
-            name: devoteeName,
-            phone: fromPhone,
-            dob,
-            tob,
-            pob,
-            rawMessage: messageText,
-            capturedAt: new Date().toISOString(),
-            status: 'KUNDALI_GENERATED',
-            brand: 'AstroMasterpiece'
-          };
-          sovereignDb.insert('astro_kundali_intakes', leadRecord);
-          
-          const logsDir = path.join(__dirname, 'automation_logs');
-          if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
-          const leadsFile = path.join(logsDir, 'astro_kundali_leads.json');
-          let allLeads = [];
-          if (fs.existsSync(leadsFile)) {
-            try { allLeads = JSON.parse(fs.readFileSync(leadsFile, 'utf8')); } catch {}
-          }
-          allLeads.push(leadRecord);
-          fs.writeFileSync(leadsFile, JSON.stringify(allLeads, null, 2), 'utf8');
-          addLog(`🕉️ [Astro Kundali Captured & Saved]: ${devoteeName} (${dob}, ${tob}, ${pob})`);
-        } catch (dbErr) {
-          addLog(`⚠️ [Astro DB Log Warning]: ${dbErr.message}`);
-        }
-
-        const directKundaliUrl = `https://www.astromasterpiece.com/dashboard?name=${encodeURIComponent(devoteeName)}&dob=${encodeURIComponent(dob)}&tob=${encodeURIComponent(tob)}&pob=${encodeURIComponent(pob)}`;
-
-        replyText = `सादर प्रणाम ${devoteeName} जी! आपकी जन्म जानकारी हमारे वैदिक तंत्र में सुरक्षित रूप से दर्ज कर ली गई है। 🙏🕉️\n\n📜 पंजीकृत विवरण:\n• नाम: ${devoteeName}\n• जन्म तिथि: ${dob}\n• जन्म समय: ${tob}\n• जन्म स्थान: ${pob}\n\n✨ आपकी विस्तृत वैदिक महाकुंडली, नवग्रह स्थिति एवं 12 भावों का दिव्य विश्लेषण देखने के लिए कृपया आधिकारिक वेब पोर्टल पर पधारें:\n👉 ${directKundaliUrl}\n\nभगवत कृपा से आपका जीवन सदैव सुख, शांति और समृद्धि से परिपूर्ण रहे। कल्याणमस्तु! 🌸`;
-
-      } else {
-        // Initial Welcoming Response: Requesting Birth Information (Zero AI branding)
-        const greetingName = customerName && customerName !== 'Customer' && customerName !== 'भक्त' ? customerName : '';
-        replyText = `कल्याणमस्तु${greetingName ? ` ${greetingName} जी` : ''}! AstroMasterpiece में आपका पावन स्वागत है। 🙏✨\n\nआपकी सटीक जन्म-कुंडली, ग्रह स्थिति एवं 12 भावों के वैदिक विश्लेषण हेतु कृपया अपनी जन्म जानकारी इस प्रकार लिखकर भेजें:\n\n1. पूरा नाम:\n2. जन्म तिथि (DD/MM/YYYY):\n3. जन्म समय (जैसे 10:30 AM या 06:15 PM):\n4. जन्म स्थान (शहर, राज्य):\n\n(उदा: राहुल शर्मा, 15/08/1995, 08:30 AM, भोपाल, मध्य प्रदेश)\n\nजानकारी प्राप्त होते ही आपकी वैदिक महाकुंडली एवं दिव्य मार्गदर्शन सीधे आपके समक्ष प्रस्तुत कर दिया जाएगा। 🕉️\n\nआधिकारिक वेब पोर्टल: https://www.astromasterpiece.com`;
-      }
-
-    } else {
-      // CarChuno Flow
-      brandTag = 'CarChuno';
-      replyText = `नमस्ते ${customerName}! CarChuno.com में आपका स्वागत है। 🚗\n\nहमें आपका संदेश मिल गया है:\n"${messageText}"\n\nहमारी टीम आपके शहर के सभी अधिकृत OEM डीलरों के बीच तुरंत रिवर्स बिडिंग शुरू कर रही है ताकि आपको सबसे बड़ा कैश डिस्काउंट और 6.99% बैंक लोन ऑफर मिल सके।\n\nआप सीधे अपनी कार का 360° स्टूडियो और लाइव डील्स यहाँ भी देख सकते हैं:\n👉 https://www.carchuno.com\n\n- टीम CarChuno.com (Norcos Industries Pvt Ltd)`;
-    }
+    // Intelligent Autonomous CarChuno Reply
+    const replyText = `नमस्ते ${customerName}! CarChuno.com में आपका स्वागत है। 🚗\n\nहमें आपका संदेश मिल गया है:\n"${messageText}"\n\nहमारी टीम आपके शहर के सभी अधिकृत OEM डीलरों के बीच तुरंत रिवर्स बिडिंग शुरू कर रही है ताकि आपको सबसे बड़ा कैश डिस्काउंट और 6.99% बैंक लोन ऑफर मिल सके।\n\nआप सीधे अपनी कार का 360° स्टूडियो और लाइव डील्स यहाँ भी देख सकते हैं:\n👉 https://www.carchuno.com\n\n- टीम CarChuno.com (Norcos Industries Pvt Ltd)`;
 
     const token = process.env.WHATSAPP_TOKEN || '';
-    const phoneId = incomingPhoneId;
+    const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
 
     if (token && phoneId) {
       const graphUrl = `https://graph.facebook.com/v21.0/${phoneId}/messages`;
@@ -680,16 +376,12 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
         })
       });
       const metaData = await metaRes.json();
-      if (metaRes.ok) {
-        addLog(`✅ [Outbound WhatsApp Sent via Meta (${brandTag})]: ${metaData?.messages?.[0]?.id || 'OK'}`);
-      } else {
-        addLog(`❌ [Meta Graph API Error (${brandTag})]: ${JSON.stringify(metaData)}`);
-      }
+      addLog(`✅ [Outbound WhatsApp Sent via Meta]: ${JSON.stringify(metaData)}`);
     } else {
-      addLog(`🤖 [WhatsApp Auto-Reply Prepared (${brandTag})]:\n${replyText}`);
+      addLog(`🤖 [WhatsApp Auto-Reply Prepared]:\n${replyText}`);
     }
 
-    return res.status(200).json({ status: 'success', brand: brandTag, customer: customerName });
+    return res.status(200).json({ status: 'success', customer: customerName });
   } catch (err) {
     addLog(`❌ [Meta Webhook Error]: ${err.message}`);
     return res.status(200).json({ status: 'error', message: err.message });
@@ -762,22 +454,6 @@ app.post('/api/tts', async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ error: err.message });
     }
-  }
-});
-
-// ==========================================
-// ASTROMASTERPIECE KUNDALI INTAKE VAULT
-// ==========================================
-app.get('/api/astro/kundali-leads', (req, res) => {
-  try {
-    const leads = sovereignDb.getAll('astro_kundali_intakes');
-    res.json({
-      success: true,
-      count: leads.length,
-      data: leads
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -864,40 +540,20 @@ app.get('/api/seo/health', (req, res) => {
 // OMNICRAFT 360° HYBRID ENGINE (7 Tools + Hermes Agent Integration)
 // ==============================================================
 
-// POST /api/omnicraft/audit - Suite A Live Empirical UX, WCAG & Motion Audit
+// POST /api/omnicraft/audit - Autonomous 7-Tool Audit & Hermes Synthesis
 app.post('/api/omnicraft/audit', async (req, res) => {
   if (!runOmniCraft360) return res.status(503).json({ success: false, error: 'OmniCraft 360 Engine not loaded' });
   try {
-    const { url, brandName, niche, clientEmail, clientName, sendEmail } = req.body || {};
+    const { url, brandName, niche } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'Target URL is required' });
 
-    addLog(`[OmniCraft 360° Engine] Initiating live empirical audit for: ${url}`);
+    addLog(`[OmniCraft 360° Engine] Initiating 7-Tool Hybrid Audit for: ${url}`);
     const omniResult = await runOmniCraft360(url, { brandName, niche });
-    let vaultRecord = null;
-    if (clientEmail || req.body?.saveToVault) {
-      vaultRecord = await auditVault.saveAuditReport({
-        prefix: 'CT-OMNI',
-        reportType: 'omnicraft-360',
-        title: `OmniCraft 360° UX & WCAG Audit: ${url}`,
-        target: url,
-        appName: brandName || url,
-        clientName: clientName || 'Partner',
-        clientEmail: clientEmail || '',
-        score: omniResult.scores?.overall || 0,
-        summary: omniResult.hermesSynthesis?.executiveSummary || '',
-        suitesExecuted: ['OmniCraft 360°'],
-        degraded: Boolean(omniResult.degraded),
-        htmlContent: `<html><body style="font-family:sans-serif;background:#090d16;color:#e2e8f0;padding:24px;"><h1>OmniCraft 360° Audit: ${url}</h1><p>Overall: ${omniResult.scores?.overall}/100 (Taste: ${omniResult.scores?.tasteScore}, UX: ${omniResult.scores?.impeccableScore})</p><p>${omniResult.hermesSynthesis?.executiveSummary || ''}</p></body></html>`
-      });
-      if (sendEmail && clientEmail) await auditVault.sendReportEmail(vaultRecord, clientEmail);
-    }
 
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
-      data: omniResult,
-      auditId: vaultRecord?.auditId || null,
-      downloadPdfUrl: vaultRecord?.downloadPdfUrl || null
+      data: omniResult
     });
   } catch (err) {
     console.error('[OmniCraft 360° API Error]:', err);
@@ -913,13 +569,15 @@ app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
     if (!url) return res.status(400).json({ success: false, error: 'Website URL is required' });
 
     addLog(`[OmniCraft Daemon] Triggering 100% Autonomous Zero-Touch Pipeline for: ${url}`);
+    
+    // Background execution without blocking caller if desired
     processAutonomousLead({ url, clientEmail, clientName, brandName, niche, autoEmail })
       .then(result => addLog(`[OmniCraft Daemon] Completed autonomous pipeline for ${url}. Email sent: ${result.record.emailDispatched}`))
       .catch(err => console.error('[OmniCraft Daemon Error]:', err.message));
 
     res.json({
       success: true,
-      message: 'Autonomous OmniCraft 360° pipeline initiated. PDF report will be archived & emailed.',
+      message: 'Autonomous OmniCraft 360° pipeline initiated. Zero human touch required.',
       url,
       timestamp: new Date().toISOString()
     });
@@ -928,42 +586,20 @@ app.post('/api/omnicraft/autonomous-lead', async (req, res) => {
   }
 });
 
-// POST /api/archcraft/blueprint - Suite B: ArchCraft 360° Blueprint Generation (PDF Saved to Vault)
+// POST /api/archcraft/blueprint - Suite B: ArchCraft 360° Blueprint Generation
 app.post('/api/archcraft/blueprint', async (req, res) => {
   if (!runArchCraft360) return res.status(503).json({ success: false, error: 'ArchCraft 360 Engine not loaded' });
-  const appMetadata = { ...(req.body || {}), writeLocalFiles: false };
+  const appMetadata = req.body || {};
   try {
-    addLog(`[ArchCraft 360° Engine] Generating Architectural Blueprint for: ${appMetadata.appName || appMetadata.url || 'Client App'}`);
+    addLog(`[ArchCraft 360° Engine] Generating Architectural Blueprint for: ${appMetadata.appName || 'Client App'}`);
     const result = await runArchCraft360(appMetadata);
-    const vaultRecord = await auditVault.saveAuditReport({
-      prefix: 'CT-ARCH',
-      reportType: 'archcraft-360',
-      title: `ArchCraft 360° Blueprint: ${appMetadata.appName || appMetadata.url || 'Platform'}`,
-      target: appMetadata.url || appMetadata.appName || 'Platform',
-      appName: appMetadata.appName || appMetadata.url || 'Platform',
-      clientName: appMetadata.clientName || 'Partner',
-      clientEmail: appMetadata.clientEmail || '',
-      score: 90,
-      summary: result.architectureSpec?.executiveSummary || '',
-      suitesExecuted: ['ArchCraft 360°'],
-      htmlContent: result.htmlContent
-    });
-    if (appMetadata.sendEmail && appMetadata.clientEmail) {
-      await auditVault.sendReportEmail(vaultRecord, appMetadata.clientEmail);
-    }
-    res.json({
-      success: true,
-      result,
-      auditId: vaultRecord.auditId,
-      downloadPdfUrl: vaultRecord.downloadPdfUrl,
-      downloadHtmlUrl: vaultRecord.downloadHtmlUrl
-    });
+    res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/cybershield/probe - Suite C: Instant Live DAST Header, TLS & DNS Probe
+// POST /api/cybershield/probe - Suite C: Instant Live DAST Header & SSL Probe
 app.post('/api/cybershield/probe', async (req, res) => {
   if (!probeLiveSecurityHeaders) return res.status(503).json({ success: false, error: 'DAST Prober not loaded' });
   const { url } = req.body || {};
@@ -975,36 +611,14 @@ app.post('/api/cybershield/probe', async (req, res) => {
   }
 });
 
-// POST /api/cybershield/audit - Suite C: CyberShield 360° Security Audit (PDF Saved to Vault)
+// POST /api/cybershield/audit - Suite C: CyberShield 360° Security Audit
 app.post('/api/cybershield/audit', async (req, res) => {
   if (!runCyberShield360) return res.status(503).json({ success: false, error: 'CyberShield 360 Engine not loaded' });
-  const appMetadata = { ...(req.body || {}), writeLocalFiles: false };
+  const appMetadata = req.body || {};
   try {
-    addLog(`[CyberShield 360° Engine] Initiating Security Audit for: ${appMetadata.appName || appMetadata.url || 'Client App'}`);
+    addLog(`[CyberShield 360° Engine] Initiating Security Audit for: ${appMetadata.appName || 'Client App'}`);
     const result = await runCyberShield360(appMetadata);
-    const vaultRecord = await auditVault.saveAuditReport({
-      prefix: 'CT-SEC',
-      reportType: 'cybershield-360',
-      title: `CyberShield 360° Security Audit: ${appMetadata.appName || appMetadata.url || 'Target'}`,
-      target: appMetadata.url || appMetadata.appName || 'Target',
-      appName: appMetadata.appName || appMetadata.url || 'Target',
-      clientName: appMetadata.clientName || 'Partner',
-      clientEmail: appMetadata.clientEmail || '',
-      score: result.securitySpec?.securityScore || 0,
-      summary: result.securitySpec?.executiveSecuritySummary || '',
-      suitesExecuted: ['CyberShield 360°'],
-      htmlContent: result.htmlContent
-    });
-    if (appMetadata.sendEmail && appMetadata.clientEmail) {
-      await auditVault.sendReportEmail(vaultRecord, appMetadata.clientEmail);
-    }
-    res.json({
-      success: true,
-      result,
-      auditId: vaultRecord.auditId,
-      downloadPdfUrl: vaultRecord.downloadPdfUrl,
-      downloadHtmlUrl: vaultRecord.downloadHtmlUrl
-    });
+    res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1014,17 +628,17 @@ app.post('/api/cybershield/audit', async (req, res) => {
 app.get('/api/suites/health', (req, res) => {
   res.json({
     status: 'online',
-    orchestrator: 'OmniCraft Autonomous Sovereign Orchestrator 360°',
+    orchestrator: 'Hermes Autonomous Agent v4.2',
     suites: {
-      suiteA: { name: 'OmniCraft 360°™', role: 'Design, UX, 120Hz Spring Physics & Speed Lab', price: '$99 USD', status: runOmniCraft360 ? 'READY' : 'OFFLINE' },
-      suiteB: { name: 'ArchCraft 360°™', role: 'System Architecture & Screen Flow Dossier', price: '$149 USD', status: runArchCraft360 ? 'READY' : 'OFFLINE' },
-      suiteC: { name: 'CyberShield 360°™', role: 'Dynamic DAST Security, Live Header Probe & OmniMind 360° Privacy Defense', price: '$149 USD', status: runCyberShield360 ? 'READY' : 'OFFLINE' },
-      suiteD: { name: 'GeoCraft 360°™', role: 'Generative Engine Optimization & AI Search Citations', price: '$99 USD', status: 'READY' }
+      suiteA: { name: 'OmniCraft 360°™', role: 'Design, UX, 120Hz Spring Physics & Speed Lab', price: '$99 / ₹7,999', status: runOmniCraft360 ? 'READY' : 'OFFLINE' },
+      suiteB: { name: 'ArchCraft 360°™', role: 'System Architecture & Screen Flow Dossier', price: '$149 / ₹11,999', status: runArchCraft360 ? 'READY' : 'OFFLINE' },
+      suiteC: { name: 'CyberShield 360°™', role: 'Dynamic DAST Security, Live Header Probe & Gemini 3.8 Flash Privacy Audit', price: '$149 / ₹11,999', status: runCyberShield360 ? 'READY' : 'OFFLINE' },
+      suiteD: { name: 'GeoCraft 360°™', role: 'Generative Engine Optimization & AI Search Citations', price: '$99 / ₹7,999', status: 'READY' }
     },
     bundleOffer: {
       name: 'All-In-One Sovereign Quad-Stack Bundle (Suites A+B+C+D)',
-      regularPrice: '$596 USD',
-      bundlePrice: '$299 USD',
+      regularPrice: '$596 / ₹47,996',
+      bundlePrice: '$299 / ₹23,999',
       savings: 'Save 50%'
     },
     timestamp: new Date().toISOString()
@@ -1050,6 +664,101 @@ app.get('/api/omnicraft/health', (req, res) => {
   });
 });
 
+// ==========================================
+// HERMES AUTONOMOUS RELAY & DISPATCH ENGINE
+// ==========================================
+let hermesRelayModule = null;
+try {
+  hermesRelayModule = require('./hermes_hybrid_dispatcher');
+} catch (e) {
+  console.warn('[Hermes Load Warning]:', e.message);
+}
+
+// GET /api/hermes/status - Real-time Hermes Agent status and telemetry
+app.get('/api/hermes/status', async (req, res) => {
+  try {
+    const desktopPath = 'C:\\Users\\HP\\Desktop\\Jarvis Lead Collection';
+    const drivePath = 'G:\\My Drive\\Jarvis Lead Collection';
+    const hasDesktop = fs.existsSync(desktopPath);
+    const hasDrive = fs.existsSync('G:\\My Drive');
+
+    res.json({
+      ok: true,
+      agent: 'Hermes Autonomous Hybrid Dispatcher v4.2',
+      status: 'ONLINE',
+      mode: 'DAEMON_24_7',
+      gateways: {
+        carchuno: 'GoDaddy SSL 465 (partners@carchuno.com)',
+        closetesters: 'GoDaddy SSL 465 (partners@closetesters.com)',
+        astromasterpiece: 'GoDaddy SSL 465 (support@astromasterpiece.com)',
+        doctoreports: 'GoDaddy SSL 465 (partners@closetesters.com)'
+      },
+      smtpPolicy: 'Zero-Bounce SMTP 250-OK Handshake Only',
+      mirrorTargets: {
+        desktop: hasDesktop ? desktopPath : 'Desktop Mirror Ready',
+        googleDrive: hasDrive ? drivePath : 'Google Drive Cloud Sync'
+      },
+      capabilities: [
+        'Cloud Outbox Drain (GoDaddy Port 465 SSL)',
+        'Zero-Bounce SMTP 250-OK Verification Queue',
+        'Google Drive & Desktop Lead Mirroring',
+        'AXION Telemetry & Directives Bridge',
+        'Playwright Headless Browser Automation'
+      ],
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/hermes/dispatch - Trigger Hermes action manually or via voice
+app.post('/api/hermes/dispatch', async (req, res) => {
+  try {
+    const { action = 'drain-outbox', limit = 15 } = req.body || {};
+    let result = { ok: true, action, triggeredAt: new Date().toISOString() };
+
+    if (!hermesRelayModule) {
+      hermesRelayModule = require('./hermes_hybrid_dispatcher');
+    }
+
+    if (action === 'drain-outbox') {
+      const drain = await hermesRelayModule.drainRenderOutbox(limit);
+      result.drain = drain;
+      result.summary = `Hermes drained outbox: ${drain.sent || 0} sent, ${drain.failed || 0} failed.`;
+    } else if (action === 'verify-leads') {
+      const v = await hermesRelayModule.processLeadVerificationQueue();
+      result.verification = v;
+      result.summary = `Hermes SMTP verifier: ${v.verifiedCount || 0} confirmed 250-OK, ${v.rejectedCount || 0} rejected.`;
+    } else if (action === 'mirror-drive') {
+      const m = await hermesRelayModule.mirrorCloudCollectionsToLocalAndDrive();
+      result.mirror = m;
+      result.summary = `Hermes mirrored ${m.syncedFiles || 0} lead files to Desktop and Google Drive.`;
+    } else if (action === 'equity-leads') {
+      const jc = require('./jarvis_lead_collector');
+      const eq = await jc.collectForProduct('EquityTraders', limit >= 100 ? limit : 200, geminiRotator, null, null, true);
+      result.equity = eq;
+      result.summary = `Generated ${eq.newlyCollected} fresh DND-clear HNI Equity (CM) leads -> ${eq.fileName}`;
+    } else if (action === 'collect-all-leads') {
+      const jc = require('./jarvis_lead_collector');
+      const all = await jc.runAllProductsDailyCollection(15, geminiRotator);
+      result.collections = all;
+      result.summary = 'Generated daily leads across all 5 products including EquityTraders.';
+    } else if (action === 'sync-all') {
+      const full = await hermesRelayModule.runOnce();
+      result.sync = full;
+      result.summary = 'Hermes executed complete autonomous pass across Outbox, Verifier, Drive, and Axion.';
+    } else {
+      result.summary = `Unknown Hermes action '${action}'. Defaulting to status check.`;
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('[Hermes Dispatch Error]:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /api/closetesters/inquiry - Dispatches standardized auto-responder to client & alert to support@closetesters.com
 app.post('/api/closetesters/inquiry', async (req, res) => {
   if (!processInboundInquiry) return res.status(503).json({ success: false, error: 'Auto-responder not loaded' });
@@ -1061,7 +770,26 @@ app.post('/api/closetesters/inquiry', async (req, res) => {
   }
 });
 
-// Note: /api/web-audit/book is handled by omnisales_router.js with live Playwright + Gemini 3 + Vault PDF + Email
+// POST /api/web-audit/book - Autonomous Web Audit Slot Booking
+app.post('/api/web-audit/book', async (req, res) => {
+  if (!processInboundInquiry) return res.status(503).json({ success: false, error: 'Auto-responder not loaded' });
+  try {
+    const data = {
+      name: req.body.name || req.body.founderName || 'Founder',
+      email: req.body.email,
+      phone: req.body.phone || 'N/A',
+      appName: req.body.domain || req.body.url || 'Web Platform',
+      targetUrl: req.body.url || req.body.domain || '',
+      needType: req.body.suite || '360° Full-Stack Web Audit',
+      message: req.body.message || 'Booked 360° Website/App Audit Slot',
+      source: 'Web Audit Booking Modal'
+    };
+    const result = await processInboundInquiry(data);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // POST /api/sla/execute-agreement - Digital Master SLA / NDA Ratification
 app.post('/api/sla/execute-agreement', async (req, res) => {
@@ -1096,600 +824,148 @@ app.post('/api/proposal/landed', (req, res) => {
 });
 
 // ==============================================================================
-// APEX OMNI STUDIO™ & HERMES SOCIAL PUBLISHER SUITE ENDPOINTS
+// CLOSETESTERS x GEMINI DECISIONS API ROUTES (18-Key Rotator Cascade)
+// Single-Forward-Pass Evaluation (Yes/No, Choice, Rubric Rating)
 // ==============================================================================
+let CloseTestersDecisionsEngine = null;
+let closeTestersDecisions = null;
+try {
+  CloseTestersDecisionsEngine = require('./closetesters_gemini_decisions');
+  closeTestersDecisions = new CloseTestersDecisionsEngine(geminiRotator);
+  addLog('✅ CloseTesters Gemini Decisions Engine initialized successfully');
+} catch (e) {
+  console.warn('[Server Startup] CloseTesters Decisions Engine skipped:', e.message);
+}
 
-// GET /api/apex/channels - Retrieve Master Social Channels & Credentials Vault
-app.get('/api/apex/channels', (req, res) => {
-  const vaultPath = path.join(__dirname, 'social_channels_vault.json');
-  if (fs.existsSync(vaultPath)) {
-    const data = JSON.parse(fs.readFileSync(vaultPath, 'utf8'));
-    return res.json({ success: true, ...data });
-  }
-  res.status(404).json({ success: false, error: 'Channels vault not found' });
-});
-
-// GET /api/apex/status - APEX Omni Studio Engine Health & Capability
-app.get('/api/apex/status', (req, res) => {
-  const ffmpegExists = fs.existsSync('C:/Users/HP/Desktop/AI_Video_Engine/node_modules/ffmpeg-static/ffmpeg.exe');
-  const chromeExists = fs.existsSync('C:/Program Files/Google/Chrome/Application/chrome.exe');
-  res.json({
-    success: true,
-    engine: 'APEX OMNI STUDIO™ Autonomous Video & Social Publisher',
-    version: '4.5.0-PRO',
-    status: ApexOmniStudioEngine ? 'ONLINE' : 'DEGRADED',
-    capabilities: [
-      '1. 100% Dynamic Storyboarding (Gemini AI Rotator)',
-      '2. Neural Broadcast Voice (MsEdgeTTS - hi-IN-Madhur, hi-IN-Swara, en-US-Christopher)',
-      '3. 60FPS Kinetic Canvas Motion Compositor (Zero 2D Slideshows)',
-      '4. SFX & Ambient Drone Ducking Sub-Engine',
-      '5. FFmpeg H.264 Broadcast Export',
-      '6. Hermes Stealth Autonomous Web & Social Publisher'
-    ],
-    infrastructure: {
-      ffmpeg: ffmpegExists ? 'AVAILABLE' : 'MISSING',
-      chrome: chromeExists ? 'AVAILABLE' : 'MISSING',
-      rendersDir: path.join(__dirname, 'renders'),
-      brandAssets: path.join(__dirname, 'assets', 'brand_visuals')
-    },
-    brandsSupported: ['CarChuno', 'CloseTesters', 'AstroMasterpiece'],
-    timestamp: new Date().toISOString()
-  });
-});
-
-// POST /api/apex/generate-campaign - Autonomously generate full 60FPS video production
-app.post('/api/apex/generate-campaign', async (req, res) => {
-  if (!ApexOmniStudioEngine) {
-    return res.status(503).json({ success: false, error: 'Apex Omni Studio Engine not loaded' });
-  }
-  const { brand = 'CarChuno', prompt = '' } = req.body || {};
+// POST /api/closetesters/decisions - Universal 3-Question Single Pass Evaluator
+app.post('/api/closetesters/decisions', async (req, res) => {
   try {
-    addLog(`[APEX Omni Studio] Initiating full video production for: ${brand}`);
-    const production = await ApexOmniStudioEngine.runFullProduction(brand, prompt);
-    res.json({ success: true, production });
-  } catch (err) {
-    addLog(`[APEX Omni Studio Error]: ${err.message}`);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// POST /api/apex/publish-youtube - Autonomous YouTube Studio publishing via Hermes Stealth
-app.post('/api/apex/publish-youtube', async (req, res) => {
-  if (!ApexHermesPoster) {
-    return res.status(503).json({ success: false, error: 'Apex Hermes Poster not loaded' });
-  }
-  const { videoPath, metadata = {}, options = {} } = req.body || {};
-  try {
-    const poster = new ApexHermesPoster({ headless: options.headless !== undefined ? options.headless : false });
-    const result = await poster.publishToYouTube(videoPath, metadata, options);
-    res.json({ success: true, result });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ==============================================================================
-// ORACLE CLOUD INFRASTRUCTURE (OCI) 24/7 CAPACITY CATCHER ENDPOINTS
-// ==============================================================================
-
-// GET /api/oracle/status - Live stats, attempt counts, server status & logs
-app.get('/api/oracle/status', (req, res) => {
-  if (!getOracleStatus) {
-    return res.status(503).json({ success: false, error: 'Oracle Cloud Catcher not loaded' });
-  }
-  const status = getOracleStatus();
-  res.json({
-    success: true,
-    platform: 'Render.com Cloud Worker (24/7 Autonomous)',
-    ...status
-  });
-});
-
-// GET /api/oracle/logs - Plain text logs of recent attempts
-app.get('/api/oracle/logs', (req, res) => {
-  if (!getOracleStatus) {
-    return res.status(503).send('Oracle Cloud Catcher not loaded');
-  }
-  const { recentLogs = [] } = getOracleStatus();
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.send(recentLogs.join('\n') || 'No logs recorded yet.');
-});
-
-// POST /api/oracle/trigger - Trigger immediate launch request
-app.post('/api/oracle/trigger', async (req, res) => {
-  if (!attemptProvision) {
-    return res.status(503).json({ success: false, error: 'Oracle Cloud Catcher not loaded' });
-  }
-  try {
-    const isSuccess = await attemptProvision();
-    res.json({ success: true, allocated: isSuccess, status: getOracleStatus() });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ==============================================================================
-// HERMES SOVEREIGN MIRROR & FAILOVER AUDIT
-// ==============================================================================
-const hermesWatchdog = require('./hermes_mirror_watchdog');
-app.get('/api/hermes/mirror-status', async (req, res) => {
-  try {
-    const auditReport = await hermesWatchdog.auditAll();
-    res.json({ success: true, ...auditReport });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ==============================================================================
-// HERMES SOVEREIGN AUTONOMOUS DATABASE & CLOUD MIRROR REST API
-// ==============================================================================
-
-// GET /api/sovereign/status - Live database metrics & collection counts
-app.get('/api/sovereign/status', (req, res) => {
-  res.json({ success: true, ...sovereignDb.getStats() });
-});
-
-// GET /api/sovereign/:collection - Retrieve all documents with optional filters
-app.get('/api/sovereign/:collection', (req, res) => {
-  const { collection } = req.params;
-  const docs = sovereignDb.getAll(collection, req.query);
-  res.json({ success: true, collection, count: docs.length, data: docs });
-});
-
-// GET /api/sovereign/:collection/:id - Retrieve single document by ID
-app.get('/api/sovereign/:collection/:id', (req, res) => {
-  const { collection, id } = req.params;
-  const doc = sovereignDb.getById(collection, id);
-  if (!doc) return res.status(404).json({ success: false, error: 'Document not found' });
-  res.json({ success: true, data: doc });
-});
-
-// POST /api/sovereign/:collection - Insert / Upsert document
-app.post('/api/sovereign/:collection', (req, res) => {
-  const { collection } = req.params;
-  const created = sovereignDb.insert(collection, req.body || {});
-  res.status(201).json({ success: true, data: created });
-});
-
-// PUT /api/sovereign/:collection/:id - Update document
-app.put('/api/sovereign/:collection/:id', (req, res) => {
-  const { collection, id } = req.params;
-  const updated = sovereignDb.update(collection, id, req.body || {});
-  if (!updated) return res.status(404).json({ success: false, error: 'Document not found' });
-  res.json({ success: true, data: updated });
-});
-
-// DELETE /api/sovereign/:collection/:id - Delete document
-app.delete('/api/sovereign/:collection/:id', (req, res) => {
-  const { collection, id } = req.params;
-  const deleted = sovereignDb.delete(collection, id);
-  res.json({ success: deleted });
-});
-
-// POST /api/sovereign/batch-sync - Batch sync from Firebase
-app.post('/api/sovereign/batch-sync', (req, res) => {
-  const { collection, documents } = req.body || {};
-  if (!collection || !Array.isArray(documents)) {
-    return res.status(400).json({ success: false, error: 'Provide collection name and documents array' });
-  }
-  const result = sovereignDb.batchSync(collection, documents);
-  res.json({ success: true, collection, ...result });
-});
-
-// ==============================================================================
-// CLOSETESTERS 24/7 AUTONOMOUS OUTREACH TELEMETRY & MANUAL TRIGGER
-// ==============================================================================
-app.get('/api/closetesters/campaign-status', (req, res) => {
-  let consumerCohortCount = 0;
-  try {
-    const p = path.join(__dirname, 'carchuno_verified_13k_leads.json');
-    if (fs.existsSync(p)) consumerCohortCount = JSON.parse(fs.readFileSync(p, 'utf8')).length;
-  } catch (_) {}
-
-  res.json({
-    success: true,
-    platform: 'OmniSales 24/7 Render Cloud',
-    officialSender: 'partners@closetesters.com',
-    strictlyBlocked: ['business@closetesters.com'],
-    indianConsumerCohortLoaded: consumerCohortCount,
-    outreach: closeTestersOutreach ? closeTestersOutreach.getStatus() : { active: false }
-  });
-});
-
-app.post('/api/closetesters/dispatch-now', async (req, res) => {
-  if (!closeTestersOutreach) {
-    return res.status(503).json({ success: false, error: 'CloseTesters Outreach Engine not loaded' });
-  }
-  const result = await closeTestersOutreach.dispatchNextLead(activeTransporter, addLog, sovereignDb);
-  res.json({ ...result, status: closeTestersOutreach.getStatus() });
-});
-
-app.post('/api/closetesters/harvest-leads', async (req, res) => {
-  try {
-    const CloseTestersLeadGenerator = require('./closetesters_lead_generator');
-    const generator = new CloseTestersLeadGenerator();
-    const count = parseInt(req.body?.count || 10, 10);
-    const result = await generator.harvestBatch(count);
-    addLog(`🌾 [Lead Harvester] Harvested ${result.addedCount} fresh leads (Total: ${result.totalLeads})`);
-    res.json({ success: true, ...result });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/email/probe-all', async (req, res) => {
-  let egressIp = 'unknown';
-  try {
-    const ipRes = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
-    egressIp = (await ipRes.json()).ip;
-  } catch (_) {}
-
-  const results = await Promise.all(SMTP_CHAIN.map(async (conf) => {
-    const start = Date.now();
-    try {
-      const t = nodemailer.createTransport({ ...conf, connectionTimeout: 5000, greetingTimeout: 5000 });
-      await t.verify();
-      return { id: conf.id, host: conf.host, port: conf.port, status: 'OK', latencyMs: Date.now() - start };
-    } catch (err) {
-      return { id: conf.id, host: conf.host, port: conf.port, status: 'FAIL', error: err.message, latencyMs: Date.now() - start };
+    if (!closeTestersDecisions) {
+      return res.status(503).json({ success: false, error: 'CloseTesters Decisions Engine not ready' });
     }
-  }));
-
-  res.json({ success: true, renderEgressIp: egressIp, results });
-});
-
-// ==============================================================================
-// OPENJARVIS × GEMINI 4 HYDROGEN (XHIGH) × HERMES 4-BRAND HYBRID ENDPOINTS
-// ==============================================================================
-
-// POST /api/jarvis/verify-pin - Authenticate OpenJarvis Cockpit PIN
-app.post('/api/jarvis/verify-pin', (req, res) => {
-  const pin = String(req.body?.pin || '').trim();
-  const valid = JARVIS_MASTER_PINS.has(pin);
-  if (!valid) {
-    return res.status(401).json({ success: false, valid: false, message: 'गलत मास्टर पिन! कृपया पुनः प्रयास करें।' });
+    const { combinedInput, questions } = req.body || {};
+    const result = await closeTestersDecisions.evaluateDecisions(combinedInput, questions);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-  res.json({ success: true, valid: true, brainLock: jarvisOrchestrator.brainLock });
 });
 
-// GET /api/omni/hub - Live 4-Brand Unified Telemetry & Activity Hub
-app.get('/api/omni/hub', async (req, res) => {
+// POST /api/closetesters/decisions/apk - Binary Compliance & Safety Decision
+app.post('/api/closetesters/decisions/apk', async (req, res) => {
   try {
-    const brandMetrics = unifiedHub.getBrandMetrics();
-    const outboxStats = unifiedHub.getAllOutboxStats();
-    const recentActivity = unifiedHub.getRecentActivity(req.query.brand || 'all', 40);
-    const oracleStatus = getOracleStatus ? getOracleStatus() : null;
-    const collections = jarvisLeadCollector.listAllCollections();
-    const geminiStatus = geminiRotator.getStatus();
+    if (!closeTestersDecisions) {
+      return res.status(503).json({ success: false, error: 'CloseTesters Decisions Engine not ready' });
+    }
+    const apkData = req.body || {};
+    const result = await closeTestersDecisions.evaluateApkCompliance(apkData);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-    const inventoryCounts = {
-      carchuno: { dealers: DEALERS.length, verifiedLeads: 13000 },
-      doctoreports: doctoreportsOutreach.getStatus(),
-      astromasterpiece: astromasterpieceOutreach.getStatus(),
-      closetesters: closeTestersOutreach ? closeTestersOutreach.getStatus() : {}
-    };
+// POST /api/closetesters/decisions/inbound-lead - Lead Intent & Smart Queue Routing
+app.post('/api/closetesters/decisions/inbound-lead', async (req, res) => {
+  try {
+    if (!closeTestersDecisions) {
+      return res.status(503).json({ success: false, error: 'CloseTesters Decisions Engine not ready' });
+    }
+    const leadData = req.body || {};
+    const result = await closeTestersDecisions.routeInboundLead(leadData);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==============================================================================
+// CARCHUNO 24/7 BOUNCE GUARD, DELIVERY VERIFICATION & REAL DISPATCH API
+// ==============================================================================
+app.get('/api/email/delivery-report', (req, res) => {
+  res.json({ success: true, ...bounceGuard.getReport() });
+});
+
+app.post('/api/email/scan-bounces', async (req, res) => {
+  const result = await bounceGuard.scanBouncesFromImap();
+  res.json({ ...result, report: bounceGuard.getReport() });
+});
+
+app.post('/api/email/pause', (req, res) => {
+  const reason = req.body?.reason || 'Manually paused by Admin to protect domain reputation';
+  const breaker = bounceGuard.pauseSending(reason);
+  res.json({ success: true, breaker });
+});
+
+app.post('/api/email/resume', (req, res) => {
+  const breaker = bounceGuard.resumeSending();
+  res.json({ success: true, breaker });
+});
+
+app.post('/api/email/send-real', async (req, res) => {
+  try {
+    const { to, subject, html, text, fromName, fromEmail, replyTo } = req.body || {};
+    if (!to || !subject) {
+      return res.status(400).json({ success: false, message: 'ईमेल पता (to) और विषय (subject) आवश्यक हैं।' });
+    }
+
+    const preCheck = await bounceGuard.verifyBeforeSend(to, { dealershipOnly: true });
+    if (!preCheck.ok) {
+      bounceGuard.recordDispatch({
+        to,
+        subject,
+        provider: currentProvider,
+        status: 'BLOCKED_PRE_DELIVERY',
+        error: preCheck.reason
+      });
+      return res.status(400).json({ success: false, message: `Pre-Delivery Blocked (${preCheck.code}): ${preCheck.reason}` });
+    }
+
+    const senderEmail = 'partners@carchuno.com';
+    const senderName = fromName || 'CarChuno™ Official Dealership Desk';
+    const info = await activeTransporter.sendMail({
+      from: `"${senderName}" <${senderEmail}>`,
+      to: preCheck.email,
+      replyTo: replyTo || senderEmail,
+      subject,
+      text: text || (html ? html.replace(/<[^>]+>/g, ' ') : ''),
+      html: html || text
+    });
+
+    state.totalDispatched++;
+    bounceGuard.recordDispatch({
+      to: preCheck.email,
+      subject,
+      provider: currentProvider,
+      status: 'DELIVERED',
+      messageId: info.messageId
+    });
+    addLog(`✅ [/api/email/send-real] Delivered to ${preCheck.email} (${info.messageId})`);
 
     res.json({
       success: true,
-      timestamp: new Date().toISOString(),
-      uptimeSeconds: Math.floor(process.uptime()),
-      brainLock: jarvisOrchestrator.brainLock,
-      geminiPool: {
-        totalKeys: geminiStatus.totalKeys,
-        activeKeys: geminiStatus.activeKeys,
-        primaryPriorityModel: geminiStatus.primaryPriorityModel,
-        modelsCascade: geminiStatus.modelsCascade,
-        modelSpecs: geminiStatus.modelSpecs,
-        specialistModels: geminiStatus.specialistModels,
-        lastSuccess: geminiStatus.lastSuccess
-      },
-      brands: brandMetrics,
-      inventory: inventoryCounts,
-      outbox: outboxStats,
-      oracle: oracleStatus ? {
-        running: oracleStatus.running,
-        attempts: oracleStatus.attempts,
-        shape: oracleStatus.shape,
-        lastResult: oracleStatus.lastResult,
-        serverProvisioned: oracleStatus.serverProvisioned,
-        serverDetails: oracleStatus.serverDetails,
-        lastAttemptTime: oracleStatus.lastAttemptTime
-      } : null,
-      collections: collections.slice(0, 10),
-      axion: axionBridge.getTelemetry(),
-      axionDirectives: axionBridge.getAllDirectives(8),
-      automationStack: {
-        repos: jarvisAutomation.RECOMMENDED_REPOS,
-        recentTasks: jarvisAutomation.listWorkflows(8)
-      },
-      recentActivity,
-      engineLogs: state.recentLogs.slice(0, 20)
+      messageId: info.messageId,
+      provider: 'godaddy_smtp',
+      message: `ईमेल सफलतापूर्वक ${preCheck.email} पर भेज दिया गया!`
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// POST /api/jarvis/command - Natural-Language Jarvis Command powered by 17-Key Gemini + Hermes
-app.post('/api/jarvis/command', async (req, res) => {
-  try {
-    const command = String(req.body?.command || req.body?.prompt || '').trim();
-    if (!command) return res.status(400).json({ success: false, error: 'Command text is required.' });
-
-    const out = await jarvisOrchestrator.handleCommand(command, {
-      geminiRotator,
-      runUnifiedDispatchCycle,
-      getOracleStatus,
-      attemptProvision,
-      doctoreportsOutreach,
-      astromasterpieceOutreach,
-      closeTestersOutreach,
-      dispatchDealerPitch
+    bounceGuard.recordDispatch({
+      to: req.body?.to,
+      subject: req.body?.subject,
+      provider: currentProvider,
+      status: 'FAILED',
+      error: err.message
     });
-    res.json(out);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: `ईमेल भेजने में विफलता: ${err.message}` });
   }
 });
 
-// POST /api/omni/run-full-cycle - Trigger immediate 4-brand harvest + outreach + daily report
-app.post('/api/omni/run-full-cycle', async (req, res) => {
-  try {
-    const dispatchRes = await runUnifiedDispatchCycle();
-    const collectionRes = await jarvisLeadCollector.runAllProductsDailyCollection(15, geminiRotator, {
-      oracleStatus: getOracleStatus ? getOracleStatus() : null
-    });
-    res.json({ success: true, dispatch: dispatchRes, leadCollection: collectionRes });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Brand-Specific Immediate Triggers
-app.post('/api/doctoreports/harvest', async (req, res) => {
-  try {
-    const out = await doctoreportsOutreach.harvestLeads(parseInt(req.body?.limit || 10, 10));
-    res.json(out);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/doctoreports/dispatch', async (req, res) => {
-  try {
-    const out = await doctoreportsOutreach.dispatchNextLead(dispatchWithHybridFallback, addLog, geminiRotator);
-    res.json(out);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/astro/dispatch', async (req, res) => {
-  try {
-    const out = await astromasterpieceOutreach.dispatchNextLead(dispatchWithHybridFallback, addLog);
-    res.json(out);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Jarvis Lead Collection & Daily Activity Report Endpoints
-app.get('/api/jarvis/lead-collections', (req, res) => {
-  res.json({
-    success: true,
-    rootFolder: 'Jarvis Lead Collection',
-    desktopPath: jarvisLeadCollector.DESKTOP_COLLECTION_ROOT,
-    drivePath: jarvisLeadCollector.DRIVE_COLLECTION_ROOT,
-    collections: jarvisLeadCollector.listAllCollections()
-  });
-});
-
-app.post('/api/jarvis/lead-collections/run', async (req, res) => {
-  try {
-    const limit = parseInt(req.body?.limit || 15, 10);
-    const out = await jarvisLeadCollector.runAllProductsDailyCollection(limit, geminiRotator, {
-      oracleStatus: getOracleStatus ? getOracleStatus() : null
-    });
-    res.json(out);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/jarvis/lead-collections/download/:date/:product', (req, res) => {
-  const { date, product } = req.params;
-  const info = jarvisLeadCollector.getProductCsvFile(date, product);
-  if (!info) {
-    return res.status(404).json({ success: false, error: 'Verified lead CSV not generated yet for this date/product.' });
-  }
-  res.download(info.filePath, info.fileName);
-});
-
-app.get('/api/jarvis/leads/verification-queue', (req, res) => {
-  const limit = parseInt(req.query.limit || 40, 10);
-  res.json({ success: true, pending: jarvisLeadCollector.getVerificationQueue(limit) });
-});
-
-app.post('/api/jarvis/leads/submit-verified', (req, res) => {
-  try {
-    const out = jarvisLeadCollector.submitVerifiedBatch(req.body || {});
-    res.json({ success: true, ...out });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/jarvis/lead-collections/export-latest', (req, res) => {
-  try {
-    const root = jarvisLeadCollector.SOVEREIGN_COLLECTION_ROOT;
-    const files = [];
-    if (fs.existsSync(root)) {
-      const dates = fs.readdirSync(root).sort().reverse().slice(0, 3);
-      for (const d of dates) {
-        const dPath = path.join(root, d);
-        if (!fs.statSync(dPath).isDirectory()) continue;
-        for (const item of fs.readdirSync(dPath)) {
-          const itemPath = path.join(dPath, item);
-          if (fs.statSync(itemPath).isDirectory()) {
-            for (const f of fs.readdirSync(itemPath)) {
-              const fPath = path.join(itemPath, f);
-              files.push({
-                relativePath: path.join(d, item, f),
-                content: fs.readFileSync(fPath, 'utf8')
-              });
-            }
-          } else {
-            files.push({
-              relativePath: path.join(d, item),
-              content: fs.readFileSync(itemPath, 'utf8')
-            });
-          }
-        }
-      }
-    }
-    res.json({ success: true, count: files.length, files });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/jarvis/daily-report', async (req, res) => {
-  try {
-    const report = await jarvisLeadCollector.generateDailyActivityReport(geminiRotator, {
-      oracleStatus: getOracleStatus ? getOracleStatus() : null
-    });
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Hybrid Local-Cloud Relay Outbox Endpoints (Drained by Hermes Hybrid Dispatcher via GoDaddy SSL 465)
-app.get('/api/omnisales/outbox', (req, res) => {
-  const limit = parseInt(req.query.limit || 25, 10);
-  res.json({
-    success: true,
-    stats: unifiedHub.getAllOutboxStats(),
-    pending: unifiedHub.getPendingOutbox(limit)
-  });
-});
-
-app.post('/api/omnisales/confirm-dispatch', (req, res) => {
-  const { jobId, success, messageId, provider, error } = req.body || {};
-  if (!jobId) return res.status(400).json({ success: false, error: 'jobId required' });
-  const updated = unifiedHub.confirmOutboxDispatch(jobId, { success, messageId, provider, error });
-  if (success) state.totalDispatched++;
-  res.json({ success: true, job: updated, totalDispatched: state.totalDispatched });
-});
-
-// ==============================================================================
-// AXION TERMINAL TELEMETRY & REMOTE FIX/UPDATE BRIDGE + AUTOMATION STACK APIs
-// ==============================================================================
-app.get('/api/axion/status', (req, res) => {
-  res.json({
-    success: true,
-    telemetry: axionBridge.getTelemetry(),
-    pendingDirectives: axionBridge.getPendingDirectives(),
-    recentDirectives: axionBridge.getAllDirectives(15)
-  });
-});
-
-app.post('/api/axion/telemetry', (req, res) => {
-  const saved = axionBridge.recordTelemetry(req.body || {});
-  res.json({ success: true, telemetry: saved });
-});
-
-app.post('/api/axion/directive', async (req, res) => {
-  try {
-    const instruction = String(req.body?.instruction || req.body?.command || '').trim();
-    if (!instruction) return res.status(400).json({ success: false, error: 'instruction required' });
-    const job = await axionBridge.createDirective(instruction, geminiRotator);
-    res.json({ success: true, directive: job });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/axion/directives', (req, res) => {
-  res.json({ success: true, pending: axionBridge.getPendingDirectives(), recent: axionBridge.getAllDirectives(20) });
-});
-
-app.post('/api/axion/confirm-directive', (req, res) => {
-  const { id, success, result, error } = req.body || {};
-  if (!id) return res.status(400).json({ success: false, error: 'id required' });
-  const updated = axionBridge.confirmDirective(id, { success, result, error });
-  res.json({ success: true, directive: updated });
-});
-
-app.get('/api/gemini/models', (req, res) => {
-  res.json({ success: true, ...geminiRotator.getStatus() });
-});
-
-app.post('/api/gemini/test-cascade', async (req, res) => {
-  try {
-    const prompt = String(req.body?.prompt || 'Confirm system operational in 5 words.');
-    const out = await geminiRotator.generateContentWithMeta(prompt, { maxOutputTokens: 128 });
-    res.json({ success: true, ...out, priorityModel: geminiRotator.getStatus().primaryPriorityModel });
-  } catch (err) {
-    res.status(503).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/automation/stack', (req, res) => {
-  res.json({
-    success: true,
-    policy: 'HUMAN_IN_THE_LOOP_NO_CAPTCHA_BYPASS',
-    repos: jarvisAutomation.RECOMMENDED_REPOS,
-    tasks: jarvisAutomation.listWorkflows(20)
-  });
-});
-
-app.post('/api/automation/plan', async (req, res) => {
-  try {
-    const { targetUrl = '', goal = '', channel = 'web' } = req.body || {};
-    if (!goal) return res.status(400).json({ success: false, error: 'goal required' });
-    const plan = await jarvisAutomation.planWorkflow({ targetUrl, goal, channel }, geminiRotator);
-    res.json({ success: true, plan });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/automation/execute', async (req, res) => {
-  try {
-    const { targetUrl = '', goal = '', channel = 'web', method = 'GET', payload = null, fields = {} } = req.body || {};
-    if (!goal && !targetUrl) return res.status(400).json({ success: false, error: 'goal or targetUrl required' });
-    const result = await jarvisAutomation.executeWorkflow({ targetUrl, goal: goal || targetUrl, channel, method, payload, fields }, geminiRotator);
-    res.json({ success: true, task: result });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/automation/pending', (req, res) => {
-  res.json({ success: true, pending: jarvisAutomation.getPendingLocalTasks(10) });
-});
-
-app.post('/api/automation/confirm', (req, res) => {
-  const { id, ...rest } = req.body || {};
-  if (!id) return res.status(400).json({ success: false, error: 'id required' });
-  const updated = jarvisAutomation.confirmLocalTask(id, rest);
-  res.json({ success: true, task: updated });
-});
+// Auto-scan GoDaddy IMAP inbox for bounces on startup & every 5 minutes
+bounceGuard.scanBouncesFromImap().catch(() => {});
+setInterval(() => {
+  bounceGuard.scanBouncesFromImap().catch(() => {});
+}, 5 * 60 * 1000);
 
 app.listen(PORT, () => {
   addLog(`🚀 Cloud Sales Engine server running on port ${PORT}`);
-  
-  // Auto-start Oracle 24/7 Cloud Catcher Daemon on Render
-  if (startOracleCloudCatcher) {
-    startOracleCloudCatcher();
-    addLog(`🎯 [Oracle Cloud] 24/7 Autonomous Catcher loop started on Render!`);
-  }
-
-  // Trigger initial OmniSales dispatch 20s after boot on Render
-  setTimeout(() => {
-    addLog('⚡ [OmniSales Boot] Triggering initial 24/7 verified outreach dispatch...');
-    runUnifiedDispatchCycle().catch(e => addLog(`Boot dispatch notice: ${e.message}`));
-  }, 20000);
 });

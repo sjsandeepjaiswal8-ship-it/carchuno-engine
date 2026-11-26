@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const { renderHtmlToPdfBuffer } = require('./browser_launcher');
+const { bounceGuard } = require('./bounce_guard');
 
 const DATA_DIR = path.join(__dirname, 'sovereign_data');
 const REPORTS_DIR = path.join(DATA_DIR, 'audit_reports');
@@ -30,6 +31,18 @@ const getGodaddyPass = () =>
 
 function getSmtpProvidersChain() {
   return [
+    {
+      id: 'godaddy-465',
+      name: 'GoDaddy SecureServer (465)',
+      host: 'smtpout.secureserver.net',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GODADDY_USER || 'partners@carchuno.com',
+        pass: getGodaddyPass()
+      },
+      tls: { rejectUnauthorized: false }
+    },
     {
       id: 'brevo-587',
       name: 'Brevo Cloud Relay (587)',
@@ -51,18 +64,6 @@ function getSmtpProvidersChain() {
       auth: {
         user: process.env.BREVO_USER || 'c0ee43001@smtp-brevo.com',
         pass: getBrevoPass()
-      },
-      tls: { rejectUnauthorized: false }
-    },
-    {
-      id: 'godaddy-465',
-      name: 'GoDaddy SecureServer (465)',
-      host: 'smtpout.secureserver.net',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.GODADDY_USER || 'partners@carchuno.com',
-        pass: getGodaddyPass()
       },
       tls: { rejectUnauthorized: false }
     }
@@ -216,7 +217,31 @@ function getReportFile(auditId, format = 'pdf') {
 }
 
 async function sendEmailWithFailover(mailOptions) {
-  const providers = getSmtpProvidersChain();
+  // Block CloseTesters / non-dealership emails from using partners@carchuno.com unless explicitly allowed
+  const targetTo = mailOptions?.to;
+  const preCheck = await bounceGuard.verifyBeforeSend(targetTo, { dealershipOnly: false });
+  if (!preCheck.ok) {
+    return { delivered: false, provider: 'bounce_guard', error: preCheck.reason, attempts: [] };
+  }
+
+  const providers = getSmtpProvidersChain().filter((cfg) => {
+    // Prevent CloseTesters non-dealership mails from being sent via partners@carchuno.com
+    const isCloseTestersMail = !mailOptions?.from || String(mailOptions.from).toLowerCase().includes('closetesters');
+    if (isCloseTestersMail && cfg.auth?.user === 'partners@carchuno.com' && process.env.ALLOW_CROSS_BRAND_MAIL !== 'true') {
+      return false;
+    }
+    return true;
+  });
+
+  if (providers.length === 0) {
+    return {
+      delivered: false,
+      provider: null,
+      error: 'Blocked cross-brand send: CloseTesters emails cannot use partners@carchuno.com',
+      attempts: []
+    };
+  }
+
   const attempts = [];
 
   for (const cfg of providers) {
