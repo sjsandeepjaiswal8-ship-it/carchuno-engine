@@ -236,12 +236,14 @@ async function dispatchDealerPitch() {
   }
 }
 
-// Scheduled Background Loop: Runs every 15 minutes smoothly
-setInterval(async () => {
-  state.lastRun = new Date().toISOString();
-  addLog('⏳ Scheduled dispatch cycle initiated...');
-  await dispatchDealerPitch();
-}, 15 * 60 * 1000);
+// Scheduled Background Loop: Only runs if AUTO_DISPATCH_ENABLED=true (prevents unwanted background bounces)
+if (process.env.AUTO_DISPATCH_ENABLED === 'true') {
+  setInterval(async () => {
+    state.lastRun = new Date().toISOString();
+    addLog('⏳ Scheduled dispatch cycle initiated...');
+    await dispatchDealerPitch();
+  }, 15 * 60 * 1000);
+}
 
 // ==========================================
 // 24/7 AUTONOMOUS SELF-KEEPALIVE PINGER

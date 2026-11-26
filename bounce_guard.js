@@ -23,6 +23,8 @@ const DEAD_OR_DISPOSABLE_DOMAINS = new Set([
 
 // Known bounced dealer/system emails from live IMAP audit
 const INITIAL_SUPPRESSED = [
+  { email: 'v.prasad@sireeshauto.com', reason: 'Bounce Detected (Bengaluru Mahindra guessed email)', addedAt: '2026-11-26T17:10:00.000Z' },
+  { email: 'srinivas.m@preranamotors.com', reason: '550-5.1.1 Mailbox does not exist', addedAt: '2026-11-26T17:05:00.000Z' },
   { email: 'sales@patelmotors.com', reason: 'IMAP DSN Bounce (Delivery Status Notification Failure)', addedAt: '2026-11-26T16:18:00.000Z' },
   { email: 'hameed@zulaikhamotors.com', reason: 'IMAP DSN Bounce (Undeliverable)', addedAt: '2026-11-26T16:23:00.000Z' },
   { email: 'ashok.rao@mandovimotors.com', reason: 'SMTP Bounce / Suppression', addedAt: '2026-11-26T16:23:00.000Z' },
